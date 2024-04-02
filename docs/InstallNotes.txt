@@ -34,4 +34,7 @@ poetry export --without-hashes --format=requirements.txt > requirements.txt
 
 fly.io deployment signup:
 pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"
-this did not work; did not add it to path
+flyctl auth login
+flyctl launch
+flyctl deploy
+flyctl open
