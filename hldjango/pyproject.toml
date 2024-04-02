@@ -8,6 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 django = "^5.0.3"
+black = "^24.3.0"
+gunicorn = "^21.2.0"
+poetry-plugin-export = "^1.7.1"
 
 
 [build-system]

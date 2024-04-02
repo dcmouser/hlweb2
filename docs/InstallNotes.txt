@@ -1,0 +1,37 @@
+https://builtwithdjango.com/blog/basic-django-setup <-- FAILS but see comment to use "poetry run django-admin startproject hldjango ." leaving off the py
+
+mkdir hldjango
+cd hldjango
+poetry init
+
+code .  <-- sets up visual studio code environment
+
+poetry add Django
+
+poetry update
+
+poetry run django-admin startproject hldjango .
+
+poetry run python manage.py runserver
+
+-----
+
+poetry shell  <-- starts a powershell with the virtual environment
+
+-----
+
+poetry run python manage.py startapp games
+or after poetry shell just: python manage.py startapp games
+
+
+-----
+
+// following instructions on docker deployment
+poetry add gunicorn
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+
+-----
+
+fly.io deployment signup:
+pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"
+this did not work; did not add it to path
