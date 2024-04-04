@@ -19,8 +19,18 @@ from django.urls import path, include
 
 
 urlpatterns = [
+    # django admin
     path("admin/", admin.site.urls),
 
+    # django account routes for login/logout
+    path("accounts/", include("django.contrib.auth.urls")),
+
+    # custom account app
+    path("accounts/", include("accounts.urls")),
+
     # our app url paths
-    path("", include("games.urls")),
+    path("games/", include("games.urls")),
+
+    # our app url paths
+    path("", include("core.urls")),
 ]

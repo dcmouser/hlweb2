@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+
+
+{% block content %}
+<div class="gameEntry">
+    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <p>{{ game.text }}</p>
+</div>
+
+{% if game.author.pk == request.user.pk %}
+    <a href="{% url 'gameEdit' game.pk %}">+ Edit Game</a>
+    <a href="{% url 'gameDelete' game.pk %}">+ Delete Game</a>
+{% endif %}
+
+{% endblock content %}
