@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Game Files{% endblock title %}
+
+
+{% block content %}
+<h1>Game File List for Game "{{game.name}}"</h1>
+
+{% for gamefile in gamefile_list %}
+<div class="gameFileEntry">
+    <h3><a href="{{ gamefile.get_absolute_url }}">{{ gamefile.label }} ({{ gamefile.filefield.path }})</a></h3>
+</div>
+{% endfor %}
+
+
+<hr/>
+<div>
+    <a href="{% url 'gameFileCreate' game.pk %}">Add new file to game</a>
+</div>
+
+
+{% endblock content %}

@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+
+
+{% load crispy_forms_tags %}
+{% block title %}Game File Details{% endblock title %}
+
+{% block content %}
+<div class="gameFileEntry">
+    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,15 @@
+
+#navbarSupportedContent  > .navbar-nav .nav-link.active {
+    /* active navbar menu item; this selector overrides default django bootstrap selector so we can customize */
+}
+
+
+
+
+/* these two go together, the latter overriding the former when making a link visible only in certain cases */
+.jrnavhide {
+    display: none;
+}
+.jrnavshow {
+    display: block;
+}

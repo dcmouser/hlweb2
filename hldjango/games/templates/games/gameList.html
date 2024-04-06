@@ -1,21 +1,24 @@
 {% extends "core/base.html" %}
 
-{% block header %}
-<div class="nav-left">
-    <h1><a href="{% url 'home' %}">Games</a></h1>
-</div>
-{% if user.is_authenticated %}
-    <div class="nav-right">
-    <a href="{% url 'gameCreate' %}">+ Create new game</a>
-    </div>
-{% endif %}
-{% endblock header %}
+{% load crispy_forms_tags %}
+{% block title %}Game List{% endblock title %}
+
 
 {% block content %}
+<h1>Game List</h1>
+
 {% for game in game_list %}
 <div class="gameEntry">
-    <h2><a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a></h2>
+    <h3><a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a></h3>
     <p>{{ game.summary }}</p>
 </div>
 {% endfor %}
+
+{% if user.is_authenticated %}
+    <hr/>
+    <div>
+        <a href="{% url 'gameCreate' %}">Create new game</a>
+    </div>
+{% endif %}
+
 {% endblock content %}

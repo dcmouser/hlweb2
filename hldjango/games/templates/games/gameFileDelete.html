@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Delete Game File{% endblock title %}
+
+
+{% block content %}
+<h1>Delete Game File</h1>
+<div class="gameFileEntry">
+    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
+</div>
+
+<form action="" method="post"> {% csrf_token %}
+    <p>Are you sure you want to delete this attached game file?</p>
+    <a href="{% url 'gameFileDetail' game.pk gamefile.pk %}" class="btn btn-primary" role="button">Cancel</a>
+    <input class="btn btn-danger" type="submit" value="Confirm">
+</form>
+{% endblock content %}

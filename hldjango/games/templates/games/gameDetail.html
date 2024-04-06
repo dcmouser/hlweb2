@@ -1,6 +1,9 @@
 {% extends "core/base.html" %}
 
 
+{% load crispy_forms_tags %}
+{% block title %}Game Details{% endblock title %}
+
 {% block content %}
 <div class="gameEntry">
     <h2>{{ game.title }} ({{ game.name }})</h2>
@@ -8,8 +11,9 @@
 </div>
 
 {% if game.author.pk == request.user.pk %}
-    <a href="{% url 'gameEdit' game.pk %}">+ Edit Game</a>
-    <a href="{% url 'gameDelete' game.pk %}">+ Delete Game</a>
+    <a href="{% url 'gameEdit' game.pk %}" class="btn btn-info" role="button">Edit</a>
+    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameDelete' game.pk %}" class="btn btn-info" role="button">Delete</a>
 {% endif %}
 
 {% endblock content %}

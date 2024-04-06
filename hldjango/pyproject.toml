@@ -11,6 +11,9 @@ django = "^5.0.3"
 black = "^24.3.0"
 gunicorn = "^21.2.0"
 poetry-plugin-export = "^1.7.1"
+django-active-link = "^0.1.8"
+django-crispy-forms = "^2.1"
+crispy-bootstrap5 = "^2024.2"
 
 
 [build-system]

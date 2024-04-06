@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # 3rd party addons
+    'active_link', # for active link highlighting
+    "crispy_forms",
+    "crispy_bootstrap5",
+
     # our apps
     "accounts",
     "core",
@@ -59,7 +64,7 @@ ROOT_URLCONF = "hldjango.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -132,8 +137,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # django account redirects
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "coreHome"
+LOGOUT_REDIRECT_URL = "coreHome"
 
 # custom user model
 AUTH_USER_MODEL = "accounts.CustomUser"
+
+# crispy forms 3rd party addon
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+# backend tools
+# send emails to console for testing
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# media
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"

@@ -11,8 +11,6 @@ class Game(models.Model):
     text = models.TextField(help_text="Game text", default="", blank=True)
 
     # foreign keys
-    
-    #author = models.ForeignKey("auth.User", on_delete=models.SET_NULL, blank=True, null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
 
     # these properties should be extracted from the text
@@ -34,3 +32,27 @@ class Game(models.Model):
 
     def get_absolute_url(self):
         return reverse("gameDetail", kwargs={"pk": self.pk})
+
+
+
+
+
+
+class GameFile(models.Model):
+    """File object manages files attached to games"""
+
+    # optinal label
+    label = models.CharField(max_length=80, help_text="File label", default="", blank=True)
+
+    # django file field helper
+    filefield = models.FileField(upload_to="games/files/")
+
+    # foreign keys
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.filefield.name
+    
+    def get_absolute_url(self):
+        return reverse("gameFileDetail", kwargs={'pk':self.pk})
