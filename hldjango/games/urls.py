@@ -19,5 +19,5 @@ urlpatterns = [
 
     # GameList related
     path("game/file/<int:pk>", GameFileDetailView.as_view(), name="gameFileDetail"),
-    path("game/ile/<int:pk>/delete/", GameFileDeleteView.as_view(), name="gameFileDelete"),
+    path("game/file/<int:pk>/delete/", GameFileDeleteView.as_view(), name="gameFileDelete"),
 ]

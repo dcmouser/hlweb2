@@ -8,6 +8,8 @@
 <div class="gameFileEntry">
     <h2>{{ game.title }} ({{ game.name }})</h2>
     <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
+    <p><img src="{{ gamefile.filefield.url }}" class="img-fluid"/></p>
+    <a href="{% url 'gameFileDelete' gamefile.pk %}" class="btn btn-info" role="button">Delete</a>
 </div>
 
 {% endblock content %}

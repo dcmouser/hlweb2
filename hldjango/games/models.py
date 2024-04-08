@@ -38,6 +38,14 @@ class Game(models.Model):
 
 
 
+def calculateGameFileUploadPathRuntime(instance, filename):
+    game = instance.game
+    gamePk = game.pk
+    return '/'.join(['games', str(gamePk), 'uploads', filename])
+
+
+
+
 class GameFile(models.Model):
     """File object manages files attached to games"""
 
@@ -45,7 +53,7 @@ class GameFile(models.Model):
     label = models.CharField(max_length=80, help_text="File label", default="", blank=True)
 
     # django file field helper
-    filefield = models.FileField(upload_to="games/files/")
+    filefield = models.FileField(upload_to=calculateGameFileUploadPathRuntime)
 
     # foreign keys
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
@@ -56,3 +64,11 @@ class GameFile(models.Model):
     
     def get_absolute_url(self):
         return reverse("gameFileDetail", kwargs={'pk':self.pk})
+
+
+    # when we delete a GameFile, we want to delete the actual file on disk
+    # note django resources on web have various auto smart ways to do this using signals, but this seems most straightforward for simple case
+    def delete(self, *args, **kwargs):
+        self.filefield.delete()
+        super(GameFile, self).delete(*args, **kwargs)
+    

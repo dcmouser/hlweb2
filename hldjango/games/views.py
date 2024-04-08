@@ -177,7 +177,6 @@ class GameFileDetailView(UserPassesTestMixin, DetailView):
 class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = GameFile
     template_name = "games/gameFileDelete.html"
-    success_url = reverse_lazy("home")
 
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
@@ -185,3 +184,11 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         game = obj.game
         self.extra_context={'game': game}
         return (game.author == self.request.user)
+
+    def get_success_url(self):
+        # success after delete goes to file list of game
+        game = self.extra_context['game']
+        gamePk = game.pk
+        success_url = reverse_lazy("gameFileList", args = (gamePk,))
+        return success_url
+        #return success_url
