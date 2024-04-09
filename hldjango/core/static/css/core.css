@@ -13,3 +13,23 @@
 .jrnavshow {
     display: block;
 }
+
+
+
+
+
+/* sizing images on a page so they can be clicked for lightbox */
+img.imgReasonableSized {
+    max-width: 15%;
+    max-height: 15%;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+
+img.imgThumbnailSized {
+    max-width: 5%;
+    max-height: 5%;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+

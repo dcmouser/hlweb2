@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load gametemplatetags %}
+{% block title %}Profile for {{customuser.username}} {% endblock title %}
+
+{% block content %}
+<h2>Profile for {{customuser.username}}</h2>
+
+<ul>
+  <li><strong>Username</strong>: {{customuser.username}}</li>
+  <li><strong>First name</strong>: {{customuser.first_name}}</li>
+  <li><strong>Last name</strong>: {{customuser.last_name}}</li>
+
+  {% if user.is_authenticated %}
+    {% if customuser.pk == user.pk %}
+      <li><strong>Email</strong>: {{customuser.email}}</li>
+    {% endif %}
+  {% endif %}
+
+</ul>
+
+<ul>
+  <li><strong>BGG Link</strong>: {{customuser.bgglink}}</li>
+</ul>
+
+{% userGameList customuser.pk user %}
+
+
+<a href="{% url 'accountEditProfile' customuser.pk %}" class="btn btn-primary" role="button">Edit Profile</a>
+
+{% endblock content %}

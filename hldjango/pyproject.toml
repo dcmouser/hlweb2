@@ -14,6 +14,7 @@ poetry-plugin-export = "^1.7.1"
 django-active-link = "^0.1.8"
 django-crispy-forms = "^2.1"
 crispy-bootstrap5 = "^2024.2"
+django-debug-toolbar = "^4.3.0"
 
 
 [build-system]

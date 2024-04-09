@@ -7,7 +7,7 @@
 {% block content %}
 <h1>Delete Game File</h1>
 <div class="gameFileEntry">
-    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <h2><a href="{% url 'gameFileList' game.pk %}"></a>{{ game.title }} ({{ game.name }})</a></h2>
     <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
 </div>
 

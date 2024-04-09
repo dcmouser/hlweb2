@@ -1,14 +1,26 @@
 {% extends "core/base.html" %}
 
-
 {% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+
 {% block title %}Game File Details{% endblock title %}
 
 {% block content %}
 <div class="gameFileEntry">
-    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <h2><a href="{% url 'gameFileList' game.pk %}">{{ game.title }} ({{ game.name }})</a></h2>
+
     <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
-    <p><img src="{{ gamefile.filefield.url }}" class="img-fluid"/></p>
+
+    {% if gamefile.filefield.url|isImageFilePath %}
+        <p>
+            <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
+                <img src="{{ gamefile.filefield.url }}" class="imgReasonableSized"/>
+            </a>
+        </p>
+    {% else %}
+        <p><a href="{{ gamefile.filefield.url }}" target="_blank">Open file in new tab</a></p>
+    {% endif %}
+
     <a href="{% url 'gameFileDelete' gamefile.pk %}" class="btn btn-info" role="button">Delete</a>
 </div>
 

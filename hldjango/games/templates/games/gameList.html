@@ -7,12 +7,16 @@
 {% block content %}
 <h1>Game List</h1>
 
+
+<ul>
 {% for game in game_list %}
-<div class="gameEntry">
-    <h3><a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a></h3>
-    <p>{{ game.summary }}</p>
-</div>
+    <li class="gameEntry">
+        <a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a>
+        <p>{{ game.summary }}</p>
+    </li>
 {% endfor %}
+</ul>
+
 
 {% if user.is_authenticated %}
     <hr/>

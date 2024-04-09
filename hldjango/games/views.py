@@ -6,6 +6,10 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 
+# python modules
+import os
+
+# user modules
 from .models import Game, GameFile
 
 
@@ -46,7 +50,7 @@ class GameDetailView(DetailView):
 class GameCreateView(LoginRequiredMixin, CreateView):
     model = Game
     template_name = "games/gameCreate.html"
-    fields = ["name", "text"]
+    fields = ["name", "text", "ispublic"]
 
     def form_valid(self, form):
         # force author field to logged in creating user
@@ -57,7 +61,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "text"]
+    fields = ["name", "text", "ispublic"]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -81,6 +85,9 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
         return (obj.author == self.request.user)
+
+
+
 
 
 
@@ -137,7 +144,6 @@ class GameFileListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return (game.author == self.request.user)
 
 
-
 class GameFileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = GameFile
     template_name = "games/gameFileCreate.html"
@@ -173,6 +179,11 @@ class GameFileDetailView(UserPassesTestMixin, DetailView):
         self.extra_context={'game': game}
         return (game.author == self.request.user)
 
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        return context
+
 
 class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = GameFile
@@ -192,3 +203,8 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         success_url = reverse_lazy("gameFileList", args = (gamePk,))
         return success_url
         #return success_url
+
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        return context

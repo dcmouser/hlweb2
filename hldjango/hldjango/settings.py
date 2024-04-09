@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'active_link', # for active link highlighting
     "crispy_forms",
     "crispy_bootstrap5",
+    "debug_toolbar",
 
     # our apps
     "accounts",
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -153,3 +155,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # media
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
+
+# for django-debug-toolbar
+INTERNAL_IPS = ["127.0.0.1",]
+

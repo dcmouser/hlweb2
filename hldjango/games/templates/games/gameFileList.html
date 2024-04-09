@@ -1,18 +1,29 @@
 {% extends "core/base.html" %}
 
 {% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+
 {% block title %}Game Files{% endblock title %}
 
 
 {% block content %}
 <h1>Game File List for Game "{{game.name}}"</h1>
 
+<ul>
 {% for gamefile in gamefile_list %}
 <div class="gameFileEntry">
-    <h3><a href="{{ gamefile.get_absolute_url }}">{{ gamefile.label }} ({{ gamefile.filefield.path }})</a></h3>
+    <li>
+        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.label }} ({{ gamefile.filefield.path }})</a>
+        {% if gamefile.filefield.url|isImageFilePath %}
+            <br/>
+                <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
+                    <img src="{{ gamefile.filefield.url }}" class="imgThumbnailSized"/>
+                </a>
+        {% endif %}
+    </li>
 </div>
 {% endfor %}
-
+</ul>
 
 <hr/>
 <div>

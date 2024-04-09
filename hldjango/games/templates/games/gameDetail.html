@@ -7,7 +7,8 @@
 {% block content %}
 <div class="gameEntry">
     <h2>{{ game.title }} ({{ game.name }})</h2>
-    <p>{{ game.text }}</p>
+    <p><b>Author:</b> {{ game.author }}</p>
+    <p>{{ game.summary }}</p>
 </div>
 
 {% if game.author.pk == request.user.pk %}
