@@ -14,7 +14,7 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserChangeForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = "__all__"
+        #fields = "__all__"
         fields = ("username", "first_name", "last_name", "email", "bgglink", )
         #fields = UserChangeForm.Meta.fields + ("bgglink",)
 

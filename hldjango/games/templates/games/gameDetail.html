@@ -7,14 +7,16 @@
 {% block content %}
 <div class="gameEntry">
     <h2>{{ game.title }} ({{ game.name }})</h2>
-    <p><b>Author:</b> {{ game.author }}</p>
+    <p><b>Owner:</b> {{ game.owner }}</p>
     <p>{{ game.summary }}</p>
 </div>
 
-{% if game.author.pk == request.user.pk %}
+{% if game.owner.pk == request.user.pk %}
     <a href="{% url 'gameEdit' game.pk %}" class="btn btn-info" role="button">Edit</a>
     <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameBuild' game.pk %}" class="btn btn-info" role="button">Build</a>
+    <a href="{% url 'gamePlay' game.pk %}" class="btn btn-info" role="button">Play</a>
     <a href="{% url 'gameDelete' game.pk %}" class="btn btn-info" role="button">Delete</a>
-{% endif %}
+    {% endif %}
 
 {% endblock content %}

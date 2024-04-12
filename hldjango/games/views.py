@@ -1,16 +1,19 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.shortcuts import render, redirect
+from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
+
 
 # python modules
 import os
 
 # user modules
 from .models import Game, GameFile
+from .forms import BuildGameForm
+from .models import calculateGameFilePathRuntime
+
+
 
 
 
@@ -50,18 +53,18 @@ class GameDetailView(DetailView):
 class GameCreateView(LoginRequiredMixin, CreateView):
     model = Game
     template_name = "games/gameCreate.html"
-    fields = ["name", "text", "ispublic"]
+    fields = ["name", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "isPublic", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
 
     def form_valid(self, form):
-        # force author field to logged in creating user
-        form.instance.author = self.request.user
+        # force owner field to logged in creating user
+        form.instance.owner = self.request.user
         return super().form_valid(form)
 
 
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "text", "ispublic"]
+    fields = ["name", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "isPublic", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -73,7 +76,7 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.author == self.request.user)
+        return (obj.owner == self.request.user)
 
 
 class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -84,7 +87,7 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.author == self.request.user)
+        return (obj.owner == self.request.user)
 
 
 
@@ -141,7 +144,7 @@ class GameFileListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         game = gameFileViewHelperGetQuaryArgGameObj(self, 'pk')
         # add it to context so template can see it, and also later funcs
         self.extra_context={'game': game}
-        return (game.author == self.request.user)
+        return (game.owner == self.request.user)
 
 
 class GameFileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -150,7 +153,7 @@ class GameFileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     fields = ["label", "filefield"]
 
     def form_valid(self, form):
-        # force author field to logged in creating user
+        # force owner field to logged in creating user
         form.instance.owner = self.request.user
         # get game from extra_context found during tesxt
         game = self.extra_context['game']
@@ -165,7 +168,7 @@ class GameFileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         game = gameFileViewHelperGetQuaryArgGameObj(self, 'pk')
         # add it to context so template can see it, and also later funcs
         self.extra_context={'game': game}
-        return (game.author == self.request.user)
+        return (game.owner == self.request.user)
 
 
 class GameFileDetailView(UserPassesTestMixin, DetailView):
@@ -177,7 +180,7 @@ class GameFileDetailView(UserPassesTestMixin, DetailView):
         obj = self.get_object()
         game = obj.game
         self.extra_context={'game': game}
-        return (game.author == self.request.user)
+        return (game.owner == self.request.user)
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -194,7 +197,7 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         obj = self.get_object()
         game = obj.game
         self.extra_context={'game': game}
-        return (game.author == self.request.user)
+        return (game.owner == self.request.user)
 
     def get_success_url(self):
         # success after delete goes to file list of game
@@ -202,9 +205,61 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         gamePk = game.pk
         success_url = reverse_lazy("gameFileList", args = (gamePk,))
         return success_url
-        #return success_url
 
     def get_context_data(self, **kwargs):
         # override to add context
         context = super().get_context_data(**kwargs)
         return context
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class GameBuildView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Game
+    template_name = "games/gameBuild.html"
+
+    def test_func(self):
+        # ensure access to this view only if it is owner accessing it
+        obj = self.get_object()
+        return (obj.owner == self.request.user)
+
+    #def get_success_url(self):
+    #    success_url = reverse_lazy("gameBuild", args = (self.pk,))
+    #    return success_url
+
+    def post(self, request, *args, **kwargs):
+        # handle BUILD request
+        obj = self.get_object()
+
+        # get the game file directory
+        retv = obj.buildGame(request)
+
+        # redirect to detail view; the buildGame() function should set flash messages to tell user what is happening
+        return redirect("gameDetail", pk=obj.pk)
+
+
+
+
+class GamePlayView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Game
+    template_name = "games/gamePlay.html"
+    form_class = BuildGameForm
+
+
+    def test_func(self):
+        # ensure access to this view only if game is public
+        obj = self.get_object()
+        return (obj.isPublic == True)
+

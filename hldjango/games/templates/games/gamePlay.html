@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+
+
+{% load crispy_forms_tags %}
+{% block title %}Play Game{% endblock title %}
+
+{% block content %}
+<div class="gameEntry">
+    <h2>Play Game: "{{ game.title }} ({{ game.name }})"</h2>
+    <p><b>Owner:</b> {{ game.owner }}</p>
+    <p>{{ game.summary }}</p>
+</div>
+
+{% endblock content %}

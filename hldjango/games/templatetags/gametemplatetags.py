@@ -28,9 +28,9 @@ def userGameList(userPk, requestingUser):
 
   #
   if (flagShowUnpublic):
-    games = Game.objects.filter(Q(author=userPk))
+    games = Game.objects.filter(Q(owner=userPk))
   else:
-    games = Game.objects.filter(Q(author=userPk) & Q(ispublic=True))
+    games = Game.objects.filter(Q(owner=userPk) & Q(isPublic=True))
   #
   game_list = games
   return {'game_list': game_list}

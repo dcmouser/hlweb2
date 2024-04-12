@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Build Game{% endblock title %}
+
+{% block content %}
+<div class="gameEntry">
+    <h2>Build Game "{{ game.title }} ({{ game.name }})"</h2>
+    <p>{{ game.summary }}</p>
+</div>
+
+<form method="post"> {% csrf_token %}
+    {{ form|crispy }}
+    <a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Cancel</a>
+    <input class="btn btn-success" type="submit" value="Build Now">
+  </form>
+
+
+
+{% endblock content %}
