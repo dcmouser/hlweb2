@@ -39,10 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # 3rd party addons
-    'active_link', # for active link highlighting
-    "crispy_forms",
-    "crispy_bootstrap5",
-    "debug_toolbar",
+    "huey.contrib.djhuey", # huey task manager
+    "active_link", # for active link highlighting
+    "crispy_forms", # better forms
+    "crispy_bootstrap5", # better forms
+    "debug_toolbar", # debug toolbar on each view
 
     # our apps
     "accounts",
@@ -88,7 +89,7 @@ WSGI_APPLICATION = "hldjango.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": BASE_DIR / "HlDjangoDb.sqlite3",
     }
 }
 
@@ -158,3 +159,34 @@ MEDIA_URL = "/media/"
 
 # for django-debug-toolbar
 INTERNAL_IPS = ["127.0.0.1",]
+
+
+# see https://huey.readthedocs.io/en/latest/django.html
+HUEY = {
+    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
+    'name': 'HlHueyDb',
+    'filename': 'HlHueyDb.sqlite3',
+    'results': True,  # Store return values of tasks.
+    'store_none': False,  # If a task returns None, do not save to results.
+
+    'immediate': False,
+
+    'utc': True,  # Use UTC for all times internally.
+    'connection': {
+    },
+    'consumer': {
+        'workers': 1,
+        'worker_type': 'thread',
+        'initial_delay': 0.1,  # Smallest polling interval, same as -d.
+        'backoff': 1.15,  # Exponential backoff using this rate, -b.
+        'max_delay': 10.0,  # Max possible polling interval, -m.
+        'scheduler_interval': 1,  # Check schedule every second, -s.
+        'periodic': True,  # Enable crontab feature.
+        'check_worker_health': True,  # Enable worker health checks.
+        'health_check_interval': 1,  # Check worker health every second.
+    },
+
+    # To run Huey in "immediate" mode with a live storage API, specify
+    # immediate_use_memory=False.
+    #'immediate_use_memory': False,
+}

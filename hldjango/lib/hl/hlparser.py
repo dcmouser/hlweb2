@@ -172,6 +172,9 @@ class HlParser:
         # mindmap
         mindMapOptions = self.getOptionVal('mindMapOptions', {})
         self.mindMap = jrmindmap.JrMindMap(mindMapOptions)
+        #
+        self.buildLog = ''
+        self.buildErrorStatus = False
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
@@ -224,6 +227,26 @@ class HlParser:
             hlDataDirVersionedPrev = self.getOptionValThrowException('hlDataDir') + '/' + dversionPrev
             hlDataDirVersionedPrev = self.resolveTemplateVars(hlDataDirVersionedPrev)
             api2.setDataDir(hlDataDirVersionedPrev)
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+    def clearBuildLog(self):
+        self.buildLog = ''
+        self.buildErrorStatus = False
+
+    def getBuildLog(self):
+        return self.buildLog
+
+    def getBuildErrorStatus(self):
+        return self.buildErrorStatus
+
+    def addBuildLog(self, msg, isError):
+        self.buildErrorStatus = (self.buildErrorStatus or isError)
+        if (self.buildLog != ''):
+            self.buildLog += '\n-----\n'
+        self.buildLog += msg
 # ---------------------------------------------------------------------------
 
 
@@ -5103,6 +5126,8 @@ class HlParser:
         decodeCharSet = 'latin-1'
         #
         flagSwitchToNonQuietOnError = False
+        #
+        errored = False
 
         renderOptions = self.getOptionValThrowException('renderOptions')
         extraTimesToRun = jrfuncs.getDictValueOrDefault(renderOptions, 'latexExtraRuns', 0)
@@ -5132,7 +5157,8 @@ class HlParser:
                 stdErrText += '.  Error found in output of pdflatex (is PDF file in use?)\n'
                 if (flagSwitchToNonQuietOnError):
                     quietMode = False
-                break
+                errored = True
+                self.addBuildLog(stdErrText, True)
 
             # pdflatex may require multiple runs
             if (b'Rerun to' not in stdout_data):
@@ -5161,6 +5187,9 @@ class HlParser:
         
         if (stderr_data is not None):
             jrprint('PDFLATEX ERR: {}'.format(stdErrText))
+
+        if (not errored):
+            self.addBuildLog('Pdf generation from Latex complete.', False)
 # ---------------------------------------------------------------------------
 
 

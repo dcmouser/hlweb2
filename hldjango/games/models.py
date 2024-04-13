@@ -170,6 +170,13 @@ class Game(models.Model):
             "imageDir": gameFileImageDirectoryAbsolute,
         }
 
+        # update model to show it needs building
+        self.queueStatus = "Queued"
+        self.needsBuild = True
+        self.isBuildErrored = False
+        self.buildLog = ""
+        self.save()
+
         # hlstory object manages our story
         hlstory = HlStory()
         retv = hlstory.buildGame(self.pk, buildOptions, self.text)

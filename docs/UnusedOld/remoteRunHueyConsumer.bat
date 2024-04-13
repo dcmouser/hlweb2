@@ -1,0 +1,1 @@
+poetry run python C:\Users\jesse\AppData\Local\pypoetry\Cache\virtualenvs\hldjango-wqY2tNa6-py3.10\Lib\site-packages\huey\bin\huey_consumer.py ./lib/hl/hlstory.huey
