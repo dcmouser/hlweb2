@@ -647,6 +647,20 @@ setproctitle = ["setproctitle"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
+name = "huey"
+version = "2.5.0"
+description = "huey, a little task queue"
+optional = false
+python-versions = "*"
+files = [
+    {file = "huey-2.5.0.tar.gz", hash = "sha256:2ffb52fb5c46a1b0d53c79d59df3622312b27e2ab68d81a580985a8ea4ca3480"},
+]
+
+[package.extras]
+backends = ["redis (>=3.0.0)"]
+redis = ["redis (>=3.0.0)"]
+
+[[package]]
 name = "idna"
 version = "3.6"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -1427,4 +1441,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "83258c88f1cf367f24e17ca36e189129ecea68062443610e2a4e00e62464e328"
+content-hash = "a4e167d3bc5bdc8bd320edd0270454c4079635344a5c8745222e5c4321f10bfd"

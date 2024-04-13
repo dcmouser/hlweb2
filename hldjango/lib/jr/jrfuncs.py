@@ -22,7 +22,7 @@ import json
 
 
 #---------------------------------------------------------------------------
-logFileDir = 'logs/'
+LogFilePath = 'logs'
 moduleLogFile = None
 moduleErrorPrintCount = 0
 
@@ -31,8 +31,18 @@ def setLogFileDir(path):
     LogFilePath = path
 
 def calcLogFilePath():
-    global logFileDir
-    createDirIfMissing(LogFilePath)
+    global LogFilePath
+
+    # do this ourselves to avoid recurrent loop of log messages when creating missing dir
+    if (True):
+        dirPath = LogFilePath
+        dirExists = os.path.exists(dirPath)
+        if not dirExists:
+            print('creating directory: ' + dirPath)
+            os.makedirs(dirPath)
+    else:
+        createDirIfMissing(LogFilePath)
+
     filePath = LogFilePath + '/log_' + time.strftime('%Y%m%d_%H%M%S') + '.txt'
     return filePath
 

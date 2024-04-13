@@ -172,7 +172,7 @@ class Game(models.Model):
 
         # hlstory object manages our story
         hlstory = HlStory()
-        retv = hlstory.buildGame(buildOptions, self.text)
+        retv = hlstory.buildGame(self.pk, buildOptions, self.text)
 
         # send to detail view with flash message
         message = retv["message"]

@@ -10,6 +10,8 @@ from lib.jr.jrfuncs import jrprint
 from lib.jr import jrfuncs
 from lib.hl import hlparser
 
+from lib.hl.hltasks import queueTaskBuildStoryPdf
+
 
 
 class HlStory:
@@ -59,7 +61,7 @@ class HlStory:
 
 
 
-    def buildGame(self, buildOptions, inText=None):
+    def buildGame(self, gameModelPk, buildOptions, inText=None):
         # compile the story text into pdfs, etc.
         result = {}
         if (inText is not None):
@@ -77,10 +79,7 @@ class HlStory:
         leadsFilePath = buildDir + '/leads.txt'
         jrfuncs.saveTxtToFile(leadsFilePath, self.text, "utf-8")
 
-        # store message for caller
-        result['message'] = "Building to '{}' with images at '{}'.".format(buildDir, imageDir)
-
-        # create hlparser object
+        # create options
         hlDirPath = os.path.abspath(os.path.dirname(__file__))
         optionsDirPath = hlDirPath + "/options"
         dataDirPath = hlDirPath + "/hldata"
@@ -93,12 +92,13 @@ class HlStory:
             "savedir": buildDir,
             "imagedir": imageDir,
             }
-        hlParser = hlparser.HlParser(optionsDirPath, overrideOptions)
+        
+        # build story
+        queueTaskBuildStoryPdf(gameModelPk, self.text, optionsDirPath, overrideOptions)
 
-        # parse text
-        hlParser.parseStoryTextIntoBlocks(self.text, 'hlweb2')
-
-        # run steps
-        hlParser.runAllSteps()
+        # store message for caller
+        result['message'] = "Queued story compilation to '{}' with images at '{}'.".format(buildDir, imageDir)
 
         return result
+
+
