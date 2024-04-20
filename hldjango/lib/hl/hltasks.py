@@ -249,7 +249,12 @@ def generateCompleteBuildList(game):
     preferredFormatPaperSize = game.preferredFormatPaperSize
     preferredFormatLayout = game.preferredFormatLayout
     #
-    if (False):
+    if (True):
+        # customs
+        index += 1
+        buildList.append({"label": "_SOLOPRN_LETTER_LargeFont", "suffix": "SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "16pt",})
+
+    if (True):
         # programmatic
         for stage in ["precount","run"]:
             for paperSize in Game.GameFormatPaperSizeCompleteList:
@@ -267,10 +272,6 @@ def generateCompleteBuildList(game):
                     index += 1
                     label = "complete build {} of {} ({} x {})".format(index, buildCount, layout, paperSize)
                     buildList.append({"label": label, "format": "pdf", "paperSize": paperSize, "layout": layout, "variant": "normal", })
-    if (True):
-        # customs
-        index += 1
-        buildList.append({"label": "_SOLOPRN_LETTER_LargeFont", "suffix": "SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "20pt",})
 
     # also debug, in preferred format
     index += 1
