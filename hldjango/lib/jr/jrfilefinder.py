@@ -100,14 +100,26 @@ class JrFileFinder:
         return name
 
 
-    def findImagesForName(self, name, flagMarkUsage):
+    def findImagesForName(self, name, flagMarkUsage, flagRevertToPrefix):
         name = self.canonicalName(name)
+
+        if (not name in self.fileDict) and (flagRevertToPrefix):
+            # try to find a prefix
+            sname = name + '_'
+            for k,v in self.fileDict.items():
+                if (k.startswith(sname)):
+                    # got a prefix
+                    name = k
+                    break
+
         if (name in self.fileDict):
-            if (name not in self.useCount):
-                self.useCount[name] = 1
-            else:
-                self.useCount[name] += 1
+            if (flagMarkUsage):
+                if (name not in self.useCount):
+                    self.useCount[name] = 1
+                else:
+                    self.useCount[name] += 1
             return self.fileDict[name]
+
         # not found
         return None
 
@@ -159,7 +171,7 @@ class JrFileFinder:
                     # add it
                     self.fileDict[baseName] = [filePath]
                 #
-                jrprint('Adding entry for {} pointing to "{}".'.format(baseName, filePath))
+                #jrprint('Adding entry for {} pointing to "{}".'.format(baseName, filePath))
 
 
     def reportUnusedImages(self):

@@ -139,6 +139,80 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# see https://huey.readthedocs.io/en/latest/django.html
+HUEY = {
+    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
+    'name': 'HlHueyDb',
+    'filename': 'HlHueyDb.sqlite3',
+    'results': True,  # Store return values of tasks.
+    'store_none': False,  # If a task returns None, do not save to results.
+
+    'immediate': True,
+
+    'utc': True,  # Use UTC for all times internally.
+    'connection': {
+    },
+    'consumer': {
+        'workers': 1,
+        'worker_type': 'thread',
+        'initial_delay': 0.1,  # Smallest polling interval, same as -d.
+        'backoff': 1.15,  # Exponential backoff using this rate, -b.
+        'max_delay': 10.0,  # Max possible polling interval, -m.
+        'scheduler_interval': 1,  # Check schedule every second, -s.
+        'periodic': True,  # Enable crontab feature.
+        'check_worker_health': True,  # Enable worker health checks.
+        'health_check_interval': 1,  # Check worker health every second.
+    },
+
+    # To run Huey in "immediate" mode with a live storage API, specify
+    # immediate_use_memory=False.
+    #'immediate_use_memory': False,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # django account redirects
 LOGIN_REDIRECT_URL = "coreHome"
 LOGOUT_REDIRECT_URL = "coreHome"
@@ -161,32 +235,11 @@ MEDIA_URL = "/media/"
 INTERNAL_IPS = ["127.0.0.1",]
 
 
-# see https://huey.readthedocs.io/en/latest/django.html
-HUEY = {
-    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
-    'name': 'HlHueyDb',
-    'filename': 'HlHueyDb.sqlite3',
-    'results': True,  # Store return values of tasks.
-    'store_none': False,  # If a task returns None, do not save to results.
 
-    'immediate': False,
 
-    'utc': True,  # Use UTC for all times internally.
-    'connection': {
-    },
-    'consumer': {
-        'workers': 1,
-        'worker_type': 'thread',
-        'initial_delay': 0.1,  # Smallest polling interval, same as -d.
-        'backoff': 1.15,  # Exponential backoff using this rate, -b.
-        'max_delay': 10.0,  # Max possible polling interval, -m.
-        'scheduler_interval': 1,  # Check schedule every second, -s.
-        'periodic': True,  # Enable crontab feature.
-        'check_worker_health': True,  # Enable worker health checks.
-        'health_check_interval': 1,  # Check worker health every second.
-    },
 
-    # To run Huey in "immediate" mode with a live storage API, specify
-    # immediate_use_memory=False.
-    #'immediate_use_memory': False,
-}
+
+# jr custom stuff
+# cachebuildversion, if changed, will invalidate game story build text cache calculations, which makes a story look like it needs rebuilding; so change this to force a rebuild when author changes game
+JR_STORYBUILDVERSION = "v1"
+JR_MAXUPLOADGAMEFILESIZE = 10000000

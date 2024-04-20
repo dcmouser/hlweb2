@@ -8,7 +8,8 @@
 <h1>Delete Game File</h1>
 <div class="gameFileEntry">
     <h2><a href="{% url 'gameFileList' game.pk %}"></a>{{ game.title }} ({{ game.name }})</a></h2>
-    <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
+    <p>FILE: {{ gamefile.filefield.path }}</p>
+    <p>{{ gamefile.note }}</p>
 </div>
 
 <form action="" method="post"> {% csrf_token %}
@@ -16,6 +17,10 @@
     <a href="{% url 'gameFileDetail' gamefile.pk %}" class="btn btn-primary" role="button">Cancel</a>
     <input class="btn btn-danger" type="submit" value="Confirm">
 </form>
-<p><img src="{{ gamefile.filefield.url }}" class="img-fluid"/></p>
+<p>
+    <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
+        <img src="{{ gamefile.filefield.url }}" class="imgReasonableSized"/>
+    </a>
+</p>
 
 {% endblock content %}

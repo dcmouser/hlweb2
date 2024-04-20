@@ -13,7 +13,10 @@
 {% for gamefile in gamefile_list %}
 <div class="gameFileEntry">
     <li>
-        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.label }} ({{ gamefile.filefield.path }})</a>
+        {% if gamefile.note %}
+            <p>{{ gamefile.note }}</p>
+        {% endif %}
+        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.filefield.name }}</a>
         {% if gamefile.filefield.url|isImageFilePath %}
             <br/>
                 <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">

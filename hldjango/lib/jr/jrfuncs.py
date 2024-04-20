@@ -10,6 +10,7 @@ import time
 import html
 import io
 import datetime
+import zipfile
 
 from functools import reduce
 
@@ -49,7 +50,8 @@ def calcLogFilePath():
 def openLogFile():
     global moduleLogFile
     filePath = calcLogFilePath()
-    moduleLogFile = open(filePath, 'a+')
+    encoding = 'utf-8'
+    moduleLogFile = open(filePath, 'a+', encoding=encoding)
     print('>LOGGING TO: {}..'.format(filePath))
     return moduleLogFile
 
@@ -698,7 +700,7 @@ def jrprint(*args, **kwargs):
         print(*args, file=logFile, **kwargs)
     except Exception as e:
         incLogErrorPrintCount()
-        print('EXCEPTION WHILE TRYING TO PRINT TO FILE: {}'.format(e))
+        print('EXCEPTION1 WHILE TRYING TO PRINT TO FILE: {}'.format(e))
         # invoke normal print
         print(*args, **kwargs)
         return
@@ -719,7 +721,7 @@ def jrlog(*args, **kwargs):
         print(*args, file=logFile, **kwargs)
     except Exception as e:
         incLogErrorPrintCount()
-        print('EXCEPTION WHILE TRYING TO PRINT TO FILE: {}'.format(e))
+        print('EXCEPTION2 WHILE TRYING TO PRINT TO FILE: {}'.format(e))
         return
 
 
@@ -1187,6 +1189,12 @@ def niceElapsedTimeStr(elapsedSecs):
     if (elapsedSecs<60):
         return '{:.1f} seconds'.format(elapsedSecs)
     return '{:.1f} minutes'.format(elapsedSecs/60)
+
+
+def niceElapsedTimeStrMinsSecs(elapsedSecs):
+    if (elapsedSecs<60):
+        return '{:.1f} seconds'.format(elapsedSecs)
+    return '{:.1f} minutes'.format(elapsedSecs/60)
 # ---------------------------------------------------------------------------
 
 
@@ -1268,3 +1276,25 @@ def fixupUtfQuotesEtc(text):
     text = text.replace('”', '"')
     return text
 # ---------------------------------------------------------------------------
+
+
+
+
+
+# ---------------------------------------------------------------------------
+def makeZipFile(generatedFileList, saveDir, fileBaseName):
+    outFilePath = '{}/{}.zip'.format(saveDir, fileBaseName)
+    deleteFilePathIfExists(outFilePath)
+    with zipfile.ZipFile(outFilePath, 'w') as zip:        
+        for filePath in generatedFileList:
+            filePathRelative = filePath
+            if (filePathRelative.startswith(saveDir)):
+                filePathRelative = filePathRelative[len(saveDir):]
+            else:
+                filePathRelative = os.path.baseName(filePath)
+            zip.write(filePath, compress_type=zipfile.ZIP_DEFLATED, arcname=filePathRelative)
+    return 
+# ---------------------------------------------------------------------------
+
+
+

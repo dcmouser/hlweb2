@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Upload File(s) for Game{% endblock title %}
+
+{% block content %}
+<h1>Upload File(s) for Game "<a href="{% url 'gameFileList' game.pk %}">{{game.name}}</a>"</h1>
+<form action="" method="post" enctype="multipart/form-data"> {% csrf_token %}
+    {{ form|crispy }}
+    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-danger" role="button">Cancel</a>
+    <input class="btn btn-success" type="submit" value="Save">
+</form>
+{% endblock content %}

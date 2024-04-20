@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
@@ -10,8 +10,9 @@ import os
 
 # user modules
 from .models import Game, GameFile
-from .forms import BuildGameForm
+from .forms import BuildGameForm, GameFileMultipleUploadForm
 from .models import calculateGameFilePathRuntime
+
 
 
 
@@ -53,7 +54,7 @@ class GameDetailView(DetailView):
 class GameCreateView(LoginRequiredMixin, CreateView):
     model = Game
     template_name = "games/gameCreate.html"
-    fields = ["name", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "isPublic", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -64,7 +65,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "isPublic", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -97,18 +98,7 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-# GameFiles
+# Game related to files
 
 
 # helpers -- these could go into MODEL?
@@ -122,10 +112,13 @@ def gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, keyname):
     game = get_object_or_404(Game, pk=gameId)
     return game
 
+def gameSetFileExtraGameContextAndCheckGameOwner(gameFileViewInstance):
+    game = gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, 'pk')
+    gameFileViewInstance.extra_context={'game': game}
+    return (game.owner == gameFileViewInstance.request.user)
 
 
-
-class GameFileListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class GameListFilesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = GameFile
     template_name = "games/gameFileList.html"
 
@@ -141,63 +134,64 @@ class GameFileListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     # is user allowed to look at the file list for this game?
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
-        game = gameFileViewHelperGetQuaryArgGameObj(self, 'pk')
-        # add it to context so template can see it, and also later funcs
-        self.extra_context={'game': game}
-        return (game.owner == self.request.user)
+        return gameSetFileExtraGameContextAndCheckGameOwner(self)
 
 
-class GameFileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+
+
+
+
+# specialty form when adding new files to a game which allows multiple uploads
+class GameCreateFileView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     model = GameFile
-    template_name = "games/gameFileCreate.html"
-    fields = ["label", "filefield"]
+    template_name = "games/gameFileMultipleUpload.html"
+    form_class = GameFileMultipleUploadForm
 
     def form_valid(self, form):
         # force owner field to logged in creating user
-        form.instance.owner = self.request.user
+        #form.instance.owner = self.request.user
+
         # get game from extra_context found during tesxt
         game = self.extra_context['game']
-        # force it
-        form.instance.game = game
-        # ok we approve, now to parent checks
-        return super().form_valid(form)
+
+        # handle (possibly multiple) file uploads
+        # delete existing file model (and disk file) with this name
+        if form.is_valid():
+            files = form.cleaned_data["files"]
+            for f in files:
+                self.handleFileUpload(game, f, form)
+
+        # we have handled the multiple uploads above, how do we avoid auto creating? simple, dont inherit from CreateView
+
+        #
+        # this call creates the new file and will give it a unique name if needed to avoid overwriting which we need to fix
+        formValidRetv = super().form_valid(form)
+        # return validity
+        return formValidRetv
+
 
     # is user allowed to do this?
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
-        game = gameFileViewHelperGetQuaryArgGameObj(self, 'pk')
-        # add it to context so template can see it, and also later funcs
-        self.extra_context={'game': game}
-        return (game.owner == self.request.user)
+        return gameSetFileExtraGameContextAndCheckGameOwner(self)
 
 
-class GameFileDetailView(UserPassesTestMixin, DetailView):
-    model = GameFile
-    template_name = "games/gameFileDetail.html"
+    def handleFileUpload(self, game, fileup, form):
+        # delete exisiting file with this same filename
+        # this is called during uploading so that author can reupload a new version of an image and it will just overwrite existing
 
-    def test_func(self):
-        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
-        obj = self.get_object()
-        game = obj.game
-        self.extra_context={'game': game}
-        return (game.owner == self.request.user)
+        # properties
+        formFileName = fileup.name
+        note = form.cleaned_data["note"]
+        owner = self.request.user
 
-    def get_context_data(self, **kwargs):
-        # override to add context
-        context = super().get_context_data(**kwargs)
-        return context
+        # delete existing file for this game if it already exists
+        game.deleteExistingFileIfFound(formFileName, True, None)
 
+        # create new GameFile instance and save it
+        instance = GameFile(filefield=fileup, game=game, gameFileType=GameFile.GameFileType_Up, owner=owner, note = note)
+        instance.save()
 
-class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = GameFile
-    template_name = "games/gameFileDelete.html"
-
-    def test_func(self):
-        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
-        obj = self.get_object()
-        game = obj.game
-        self.extra_context={'game': game}
-        return (game.owner == self.request.user)
 
     def get_success_url(self):
         # success after delete goes to file list of game
@@ -206,12 +200,87 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         success_url = reverse_lazy("gameFileList", args = (gamePk,))
         return success_url
 
-    def get_context_data(self, **kwargs):
-        # override to add context
-        context = super().get_context_data(**kwargs)
-        return context
 
 
+
+
+# GameFile
+
+def gameFileSetExtraGameContextAndCheckGameOwner(gameFileViewInstance):
+    obj = gameFileViewInstance.get_object()
+    game = obj.game
+    gameFileViewInstance.extra_context={'game': game}
+    return (game.owner == gameFileViewInstance.request.user)
+
+
+
+class GameFileDetailView(UserPassesTestMixin, DetailView):
+    model = GameFile
+    template_name = "games/gameFileDetail.html"
+
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameFileSetExtraGameContextAndCheckGameOwner(self)
+
+
+
+
+class GameFileEditView(UserPassesTestMixin, UpdateView):
+    model = GameFile
+    template_name = "games/gameFileEdit.html"
+    fields = ["note", "filefield"]
+
+    def form_valid(self, form):
+        game = self.extra_context['game']
+        #
+        formFileRelativePath = form.cleaned_data['filefield'].name
+        initialFileRelativePath = form.initial['filefield'].name
+
+        # delete existing file model (and disk file) with this name - PART 1
+        if form.is_valid():
+            if (formFileRelativePath != initialFileRelativePath):
+                # they are changing the file
+                formFileName = form.cleaned_data['filefield'].name
+                game.deleteExistingFileIfFound(formFileName, True, form.instance)
+
+        # this call creates the new file and will give it a unique name if needed to avoid overwriting which we need to fix
+        formValidRetv = super().form_valid(form)
+
+        # delete existing file model (and disk file) with this name - PART 2
+        if form.is_valid():
+            if (formFileRelativePath != initialFileRelativePath):
+                # they are changing the file
+                # so delete previous image held by this gamefile
+                # problem is django claims the file is in use
+                form.instance.filefield.close()
+                game.deleteExistingMediaPathedFileIfFound(initialFileRelativePath)
+
+
+        # return validity
+        return formValidRetv
+
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameFileSetExtraGameContextAndCheckGameOwner(self)
+
+
+
+
+class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = GameFile
+    template_name = "games/gameFileDelete.html"
+
+
+    def get_success_url(self):
+        # success after delete goes to file list of game
+        game = self.extra_context['game']
+        gamePk = game.pk
+        success_url = reverse_lazy("gameFileList", args = (gamePk,))
+        return success_url
+
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameFileSetExtraGameContextAndCheckGameOwner(self)
 
 
 

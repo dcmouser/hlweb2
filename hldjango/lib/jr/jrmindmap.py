@@ -96,8 +96,15 @@ class JrMindMap:
 
     def renderToDotImageFile(self, outFilePath):
         jrprint('Drawing graphizualization to: {}'.format(outFilePath))
+        outFilePathPdf = outFilePath + '.pdf'
+        jrfuncs.deleteFilePathIfExists(outFilePath)
+        jrfuncs.deleteFilePathIfExists(outFilePathPdf)
+        #
         self.buildGraphViz()
         self.dot.render(outFilePath)
+        #
+        fileSuccessfullyCreated = jrfuncs.pathExists(outFilePathPdf)
+        return fileSuccessfullyCreated
 # ---------------------------------------------------------------------------
  
 

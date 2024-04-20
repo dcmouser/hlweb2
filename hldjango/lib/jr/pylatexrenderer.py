@@ -12,11 +12,12 @@ from pylatex import *
 from pylatex.base_classes import *
 from pylatex.utils import *
 
-
+# python modules
 from itertools import chain
 from urllib.parse import quote
-
+import json
 import re
+
 
 
 # see https://github.com/miyuchina/mistletoe/blob/master/mistletoe/latex_renderer.py
@@ -119,7 +120,14 @@ class PyLaTeXRenderer(LaTeXRenderer):
             extra = '[' + extra + ']'
         #
         # new, we INSIST the image be found in our authorized image dirs via helper
-        imageSourceResolved = self.safelyResolveImageSource(imageSource)
+        try:
+            imageSourceResolved = self.safelyResolveImageSource(imageSource)
+        except Exception as e:
+            #parent = token.parent
+            #lineNumber = token.line_number
+            #tokenLocInfoStr = json.dumps(token)
+            #raise Exception('Exception generating latex while trying to include image at location {}: {}'.format(tokenLocInfoStr,str(e)))
+            raise Exception('Exception generating latex while trying to include image: {}'.format(str(e)))
         #
         retv = '\\includegraphics{}{{{}}}'.format(extra, imageSourceResolved)
         retv = '\\begin{center}' + retv + '\\end{center}'

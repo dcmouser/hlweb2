@@ -9,7 +9,8 @@
 <div class="gameFileEntry">
     <h2><a href="{% url 'gameFileList' game.pk %}">{{ game.title }} ({{ game.name }})</a></h2>
 
-    <p>FILE: {{ gamefile.label }} ({{ gamefile.filefield.path }})</p>
+    <p>FILE: {{ gamefile.filefield.name }}</p>
+    <p>{{ gamefile.note }}</p>
 
     {% if gamefile.filefield.url|isImageFilePath %}
         <p>
@@ -21,6 +22,7 @@
         <p><a href="{{ gamefile.filefield.url }}" target="_blank">Open file in new tab</a></p>
     {% endif %}
 
+    <a href="{% url 'gameFileEdit' gamefile.pk %}" class="btn btn-secondary" role="button">Edit</a>
     <a href="{% url 'gameFileDelete' gamefile.pk %}" class="btn btn-info" role="button">Delete</a>
 </div>
 

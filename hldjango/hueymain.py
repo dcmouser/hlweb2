@@ -9,7 +9,7 @@ import os
 # copied from huey_consumer.py
 from huey.bin import huey_consumer
 
-
+# user modules
 from lib.jr import jrfuncs
 
 # when running tasks via huey we need to set this global

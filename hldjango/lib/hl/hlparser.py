@@ -39,6 +39,42 @@ buildVersion = '3.1jr'
 
 
 
+
+
+
+
+# ---------------------------------------------------------------------------
+# NOT A CLASS FUNCTION
+def fastExtractSettingsDictionary(text):
+    # we might normally extract settings during parsing, but we want to have a quick way to do it.
+    # ATTN: TODO: Note that this code uses a regex to extract the settings, compared to how the settings might be extracted during full processing, which may be able to ignore comment lines, etc
+    # so it is possible that this version may error out in ways that the full function won't
+
+    #
+    settings = {}
+    # extract json settings
+    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE | re.IGNORECASE)
+    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE)
+    # evilness
+    text = jrfuncs.fixupUtfQuotesEtc(text)
+    #
+    regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE | re.IGNORECASE)
+    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*\})(\n+#)', re.MULTILINE | re.IGNORECASE)
+    matches = regexSettings.search(text)
+    if (matches):
+        settingsString = matches[1]
+        settings = json.loads(settingsString)
+    else:
+        raise Exception("No options block found in text.")
+    #
+    return settings
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
 # ---------------------------------------------------------------------------
 class HlParser:
 
@@ -161,7 +197,9 @@ class HlParser:
         #
         self.doLoadAllOptions(optionsDirPath, overrideOptions)
         #
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        self.calculatedRenderOptions = None
+        #
+        renderOptions = self.getComputedRenderOptions()
         markdownOptions = renderOptions['markdown']
         self.hlMarkdown = HlMarkdown(markdownOptions, self)
         #
@@ -173,8 +211,13 @@ class HlParser:
         mindMapOptions = self.getOptionVal('mindMapOptions', {})
         self.mindMap = jrmindmap.JrMindMap(mindMapOptions)
         #
-        self.buildLog = ''
-        self.buildErrorStatus = False
+        self.clearBuildLog()
+        #
+        self.didRunDebugExtraSteps = False
+        self.didRender = False
+        self.storegGameText = ''
+        #
+        self.generatedFiles = []
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
@@ -182,6 +225,25 @@ class HlParser:
         return buildVersion
 # ---------------------------------------------------------------------------
 
+
+
+
+
+# ---------------------------------------------------------------------------
+    def storedGameTextClear(self):
+        self.storedGameText = ''
+    def storedGameTextAdd(self, text):
+        if (self.storegGameText!=''):
+            self.storegGameText += '\n'
+        self.storegGameText += text
+    def getStoredGameText(self):
+        return self.storegGameText
+
+    def addGeneratedFile(self, filePath):
+        self.generatedFiles.append(filePath)
+    def getGeneratedFileList(self):
+        return self.generatedFiles
+# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
     def getHlApi(self):
@@ -235,49 +297,32 @@ class HlParser:
     def clearBuildLog(self):
         self.buildLog = ''
         self.buildErrorStatus = False
+        self.buildErrorCount = 0
 
     def getBuildLog(self):
         return self.buildLog
 
     def getBuildErrorStatus(self):
         return self.buildErrorStatus
+    def getBuildErrorCount(self):
+        return self.buildErrorCount
+
+    def addBuildErrorStatus(self):
+        self.buildErrorStatus = True
+        self.buildErrorCount += 1
 
     def addBuildLog(self, msg, isError):
-        self.buildErrorStatus = (self.buildErrorStatus or isError)
+        if (isError):
+            self.addBuildErrorStatus()
         if (self.buildLog != ''):
             self.buildLog += '\n-----\n'
         self.buildLog += msg
 # ---------------------------------------------------------------------------
 
 
-# ---------------------------------------------------------------------------
-    def runAll(self):
-        self.loadStoryFilesIntoBlocks()
-        #
-        self.runAllSteps()
-    
-    def runAllSteps(self):
-        self.processHeadBlocks()
-        self.addZeroLeadWarning()
-        self.createCommonMindMapNodes()
-        self.processLeads()
-        self.databaseDebugLeads()
-        self.postProcessMindMap()
-        self.addReportLogicLinks()
-        self.saveLeads()
-        self.renderLeadsDual()
-        #
-        self.saveAllManualLeads()
-        #
-        self.saveAltStoryFilesAddLeads()
-        #
-        self.saveMindMapStuff()
-        #
-        #self.debug()
-        self.reportNotes()
-        self.reportWarnings()
-        self.reportSummary()
-# ---------------------------------------------------------------------------
+
+
+
 
 
 
@@ -393,6 +438,7 @@ class HlParser:
 # ---------------------------------------------------------------------------
     def loadStoryFilesIntoBlocks(self):
         jrprint('Scanning for and loading lead files..')
+        self.storedGameTextClear()
         storyDirectoriesList = self.getOptionValThrowException("storyDirectories")
         for storyDir in storyDirectoriesList:
             self.findStoryFilesFromDir(storyDir)
@@ -422,6 +468,40 @@ class HlParser:
                 if (fileNameLower.endswith('.txt')):
                     jrprint('Adding file "{}" to lead queue.'.format(fileFinishedPath, baseName))
                     self.storyFileList.append(fileFinishedPath)
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+    def makeChapterSaveDirFileName(self, subdir, suffix):
+        info = self.getOptionValThrowException('info')
+        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        baseOutputFileName = chapterName + suffix
+        defaultSaveDir = self.getOptionValThrowException('savedir')
+        saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
+        saveDir = self.resolveTemplateVars(saveDir)
+        if (subdir!=''):
+            saveDir = saveDir + '/' + subdir
+        jrfuncs.createDirIfMissing(saveDir)
+        outFilePath = saveDir + '/' + baseOutputFileName
+        return outFilePath
+
+    def saveTextLeads(self):
+        fileText = self.getStoredGameText()
+        outFilePath = self.makeChapterSaveDirFileName('dataout','_leads.txt')
+        encoding = 'utf-8'
+        jrfuncs.saveTxtToFile(outFilePath, fileText, encoding)
+        self.addGeneratedFile(outFilePath)
+
+    def saveAltStoryTextDefault(self):
+        fileText = self.getStoredGameText()
+        #
+        outFilePath = self.makeChapterSaveDirFileName('dataout','_labeledLeads.txt')
+        encoding = 'utf-8'
+        self.saveAltStoryText(fileText, outFilePath, encoding)
+        #
+        self.addGeneratedFile(outFilePath)
 
 
     def saveAltStoryFilesAddLeads(self):
@@ -437,12 +517,19 @@ class HlParser:
         # load it
         encoding = self.getOptionValThrowException('storyFileEncoding')
         fileText = jrfuncs.loadTxtFromFile(filePath, True, encoding)
+        #
+        self.saveAltStoryText(fileText, outFilePath, encoding)
+
+
+    def saveAltStoryText(self, fileText, outFilePath, encoding):
         # 
         leadHeadRegex = re.compile(r'^# ([^:\(\)\/]*[^\s])(\s*\(.*\))?(\s*\/\/.*)?$')
         # walk it and write it
         with open(outFilePath, 'w', encoding=encoding) as outfile:
+            fileText.replace('\r\n','\n')
             lines = fileText.split('\n')
             for line in lines:
+                # fixup \r\n lines?
                 matches = leadHeadRegex.match(line)
                 if (matches is not None):
                     # got a match - can we find an id?
@@ -494,6 +581,7 @@ class HlParser:
         cprev = ''
         inDoubleQuotes = False
         #
+        self.storedGameTextAdd(text)
         #
         # add head comments to text so we skip all beginning stuff
         text = '# comments\n' + text
@@ -1830,7 +1918,9 @@ class HlParser:
         saveDir = self.resolveTemplateVars(saveDir)
         dataSaveDir = saveDir + '/dataout'
         jrfuncs.createDirIfMissing(dataSaveDir)
-        outFilePath = dataSaveDir + '/leadsout.json'
+        info = self.getOptionValThrowException('info')
+        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        outFilePath = dataSaveDir + '/' + chapterName + '_leadsout.json'
         #
         # sort
         self.sortLeadsIntoSections()
@@ -1840,6 +1930,8 @@ class HlParser:
         with open(outFilePath, 'w', encoding=encoding) as outfile:
             leadsJson = json.dumps(self.rootSection, indent=2)
             outfile.write(leadsJson)
+        # record it was written
+        self.addGeneratedFile(outFilePath)
 # ---------------------------------------------------------------------------
 
 
@@ -2597,7 +2689,7 @@ class HlParser:
 
 # ---------------------------------------------------------------------------
     def isRenderTextSyntaxMarkdown(self):
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         renderTextSyntax = renderOptions['textSyntax']
         if (renderTextSyntax=='markdown'):
             return True
@@ -3576,16 +3668,19 @@ class HlParser:
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
 
+        info = self.getOptionValThrowException('info')
+        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+
         # delete previous
         dataSaveDir = saveDir + '/dataout'
         jrfuncs.createDirIfMissing(dataSaveDir)
         for ptype in fictionalSourceList:
-            outFilePath = dataSaveDir + '/manualAdd_{}.json'.format(ptype)
+            outFilePath = dataSaveDir + '/{}_manualAdd_{}.json'.format(chapterName, ptype)
             jrfuncs.deleteFilePathIfExists(outFilePath)
         
         encoding = self.getOptionValThrowException('storyFileEncoding')
         for ptype, features in leadFeatures.items():
-            outFilePath = dataSaveDir + '/manualAdd_{}.json'.format(ptype)
+            outFilePath = dataSaveDir + '/{}_manualAdd_{}.json'.format(chapterName, ptype)
             
             # we write it out with manual text so that we can line break in customized way
             with open(outFilePath, 'w', encoding=encoding) as outfile:
@@ -3600,6 +3695,8 @@ class HlParser:
                         outfile.write('\n')
                 text = ']\n}\n'
                 outfile.write(text)
+            # record it was written
+            self.addGeneratedFile(outFilePath)
             #
             jrprint('   wrote {} of {} leads to {}.'.format(len(features), countAllLeads, outFilePath))
 # ---------------------------------------------------------------------------
@@ -3943,14 +4040,22 @@ class HlParser:
 
 
 
-    def saveMindMapStuff(self):
+    def saveMindMapStuff(self, flagCleanTemp):
         #outFilePath = self.calcOutFileDerivedName('MindMap.dot')
         #self.mindMap.renderToDotFile(outFilePath)
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         if (jrfuncs.getDictValueOrDefault(renderOptions, 'renderMindMap', False)):
-            self.renderLeads({'suffix':'', 'mode': 'normal'})
-            outFilePath = self.calcOutFileDerivedName('MindMap.dot')
-            self.mindMap.renderToDotImageFile(outFilePath)
+            if (not self.didRender):
+                self.renderLeads({'suffix':'', 'mode': 'normal'}, False)
+            fname = '_MindMap.dot'
+            outFilePath = self.calcOutFileDerivedName(fname)
+            retv = self.mindMap.renderToDotImageFile(outFilePath)
+            if (retv and flagCleanTemp):
+                # delete old filename
+                jrfuncs.deleteFilePathIfExists(outFilePath)
+            #
+            if (retv):
+                self.addGeneratedFile(outFilePath + '.pdf')
 
 
     def getRecentTestFromContextOrBlank(self, curBlock, context, defaultLabel):
@@ -4338,18 +4443,23 @@ class HlParser:
 
 
 # ---------------------------------------------------------------------------
-    def renderLeadsDual(self):
-        renderOptions = self.getOptionValThrowException('renderOptions')
-        self.renderLeads({'suffix':'', 'mode': 'normal'})
+    def renderLeadsDual(self, flagCleanAfter):
+        renderOptions = self.getComputedRenderOptions()
+        self.renderLeads({'suffix':'', 'mode': 'normal'}, flagCleanAfter)
         if (jrfuncs.getDictValueOrDefault(renderOptions, 'renderReport', False)):
-            self.renderLeads({'suffix':'Report', 'mode': 'report', 'format': 'latex'})
+            self.renderLeads({'suffix':'Report', 'mode': 'report', 'format': 'latex'}, flagCleanAfter)
         if (jrfuncs.getDictValueOrDefault(renderOptions, 'renderSummary', False)):
-            self.renderLeads({'suffix':'Summary', 'mode': 'normal', 'leadList': ['summary|cover']})
+            self.renderLeads({'suffix':'Summary', 'mode': 'normal', 'leadList': ['summary|cover']}, flagCleanAfter)
 
 
-    def renderLeads(self, leadOutputOptions):
+    def renderLeads(self, leadOutputOptions, flagCleanAfter):
+        errorCounterPreRun = self.getBuildErrorCount()
+
         # options
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        # incorporate leadOutputOptions as renderOptions overrides
+        self.recalcRenderOptions(leadOutputOptions)
+        # now get them
+        renderOptions = self.getComputedRenderOptions()
         renderFormat = leadOutputOptions['format'] if ('format' in leadOutputOptions) else renderOptions['format']
         #
         info = self.getOptionValThrowException('info')
@@ -4372,12 +4482,6 @@ class HlParser:
         jrfuncs.createDirIfMissing(saveDir)
         outFilePath = '{}/{}.{}'.format(saveDir, baseOutputFileName, renderFormat)
 
-        # image file helper
-        imageDir = self.getOptionVal('imagedir', saveDir + '/images')
-        imageDir = self.resolveTemplateVars(imageDir)
-        self.imageFileFinder.setDirectoryList([imageDir,])
-        self.imageFileFinder.scanDirs(False)
-
         # announce
         jrprint('Rendering leads in {} format to: {}'.format(renderFormat, outFilePath))
 
@@ -4388,7 +4492,7 @@ class HlParser:
         # build main text
         # recursively render sections and write leads, starting from root
         context = {}
-        layoutOptions = self.parseLayoutOptionsForSection(None)
+        layoutOptions = self.parseLayoutOptionsForSection(None, None, leadOutputOptions)
 
         
         if (leadList is None):
@@ -4429,7 +4533,7 @@ class HlParser:
 
 
         # latex main and top get wrapped by mistletoe packages
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         if (renderFormat=='latex'):
             preambleLatex = self.generateMetaInfo(renderFormat)
             text = self.hlMarkdown.wrapMistletoeLatexDoc(text, context, preambleLatex, renderOptions)
@@ -4459,31 +4563,61 @@ class HlParser:
         # final replacements
         text = self.textReplacementsLate(text, renderFormat)
 
-        # write out text to file
+        # delete files first
+        deleteFileExtensions = []
+        if (renderFormat=='latex'):
+            deleteFileExtensions = ['aux', 'latex', 'pdf', 'log', 'out', 'toc']
+        elif (renderFormat=='html'):
+            deleteFileExtensions = ['html', 'pdf']
+        self.deleteExtensionFilesIfExists(saveDir,baseOutputFileName, ['aux', 'latex', 'pdf', 'html', 'log', 'out', 'toc'])
+        self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
+
+        # write out text to file for input to latex
         encoding = self.getOptionValThrowException('storyFileEncoding')
         jrfuncs.saveTxtToFile(outFilePath, text, encoding)
 
         # compile latex?
         if (renderFormat=='latex'):
             if (optionCompileLatex):
-                # delete any aux file
-                auxFilePath = '{}/{}.{}'.format(saveDir, baseOutputFileName, 'aux')
-                jrfuncs.deleteFilePathIfExists(auxFilePath)
                 # we have to run it twice -- why?? some things fail the first time.. i dont really get it
                 self.generatePdflatex(optionPdflatexFullPath, outFilePath, True)
 
+        # cleanup delete files afterwards? but we would like to not do this if there were errors
+        errorCounterPostRun = self.getBuildErrorCount()
+        erroredRendering = (errorCounterPostRun > errorCounterPreRun)
+        if (not erroredRendering):
+            if (flagCleanAfter):
+                deleteFileExtensions = []
+                if (renderFormat=='latex'):
+                    deleteFileExtensions = ['aux', 'latex', 'log', 'out', 'toc']
+                elif (renderFormat=='html'):
+                    deleteFileExtensions = []
+                self.deleteExtensionFilesIfExists(saveDir,baseOutputFileName, ['aux', 'latex', 'html', 'log', 'out', 'toc'])
+                self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
+            #
+            outFilePathPdf = outFilePath
+            outFilePathPdf = outFilePathPdf.replace('.latex', '.pdf') 
+            self.addGeneratedFile(outFilePathPdf)
+
+        # keep track that we rendered for mindmap stuff
+        self.didRender = True
 
 
+    def deleteExtensionFilesIfExists(self, baseDir, baseFileName, extensionList):
+        for extension in extensionList:
+            filePath = '{}/{}.{}'.format(baseDir, baseFileName, extension)
+            jrfuncs.deleteFilePathIfExists(filePath)
 
-
-
+    def deleteSaveDirFileIfExists(self, baseDir, fileName):
+            filePath = '{}/{}'.format(baseDir, fileName)
+            jrfuncs.deleteFilePathIfExists(filePath)
 
     def renderSection(self, parentSection, section, parentLayoutOptions, renderFormat, skipSectionList, leadOutputOptions, context):
         text = ''
 
         # create a COPY of layout options which includes this sections overrides added to original parent layoutOptions
         # the layout options (used by latex/html can use css) which can be changed by the section
-        layoutOptions = self.parseLayoutOptionsForSection(section, parentLayoutOptions)
+        layoutOptions = self.parseLayoutOptionsForSection(section, parentLayoutOptions, None)
         outMode = leadOutputOptions['mode']
 
         # special?
@@ -4535,7 +4669,7 @@ class HlParser:
 
 
     def renderSectionLeads(self, leads, section, layoutOptions, renderFormat, leadOutputOptions, context):
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         renderSectionHeaders = renderOptions['sectionHeaders']
         renderLeadLabels = renderOptions['leadLabels']
         renderTextSyntax = renderOptions['textSyntax']
@@ -4616,7 +4750,7 @@ class HlParser:
 
 # ---------------------------------------------------------------------------
     def renderLead(self, lead, renderFormat, context, layoutOptions, leadOutputOptions, section):
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         renderLeadLabels = renderOptions['leadLabels']
         renderTextSyntax = renderOptions['textSyntax']
         outMode = leadOutputOptions['mode']
@@ -4802,16 +4936,24 @@ class HlParser:
 
 
 # ---------------------------------------------------------------------------
-    def parseLayoutOptionsForSection(self, section, inLayoutOptions = None):
+    def parseLayoutOptionsForSection(self, section, inParentLayoutOptions, leadOutputOptions):
         if (section is None):
-            # root options
+            # root/default options
             layoutOptions = {'columns': 1, 'solo': False, 'styleFileString': ''}
-            styleString = self.getOptionValThrowException('style')
+            # override with leadOutputOptions
+            if ('columns' in leadOutputOptions):
+                layoutOptions['columns'] = leadOutputOptions['columns']
+            if ('solo' in leadOutputOptions):
+                layoutOptions['solo'] = leadOutputOptions['solo']
+            # we no longer want to allow style to be specified at root
+            #styleString = self.getOptionValThrowException('style')
+            styleString = ''
+            #
             self.parseLayoutOptionsFromStyle(styleString, layoutOptions)
             return layoutOptions
         
         # now options from section override previous parents
-        layoutOptions = jrfuncs.deepCopyListDict(inLayoutOptions)
+        layoutOptions = jrfuncs.deepCopyListDict(inParentLayoutOptions)
         sectionStyleString = jrfuncs.getDictValueOrDefault(section, 'style', '')
         self.parseLayoutOptionsFromStyle(sectionStyleString, layoutOptions)
         # return it
@@ -4827,12 +4969,16 @@ class HlParser:
             styleFileName = styleFileName.strip()
             if ('onecolumn' in styleFileName):
                 layoutOptions['columns'] = 1
+                layoutOptions['solo'] = False
             elif ('twocolumn' in styleFileName):
                 layoutOptions['columns'] = 2
+                layoutOptions['solo'] = False
             elif ('threecolumn' in styleFileName):
                 layoutOptions['columns'] = 3
+                layoutOptions['solo'] = False
             elif ('fourcolumn' in styleFileName):
                 layoutOptions['columns'] = 4
+                layoutOptions['solo'] = False
             elif ('solo' in styleFileName):
                 layoutOptions['solo'] = True
                 layoutOptions['columns'] = 1
@@ -4861,7 +5007,8 @@ class HlParser:
         # section header
         sectionLabel = section['label']
 
-        style = self.getOptionValThrowException('style')
+        #style = self.getOptionValThrowException('style')
+        style = ''
         sectionStyle = jrfuncs.getDictValueOrDefault(section, 'style', '')
         if (sectionStyle==''):
             sectionStyle = style
@@ -5129,7 +5276,7 @@ class HlParser:
         #
         errored = False
 
-        renderOptions = self.getOptionValThrowException('renderOptions')
+        renderOptions = self.getComputedRenderOptions()
         extraTimesToRun = jrfuncs.getDictValueOrDefault(renderOptions, 'latexExtraRuns', 0)
         
         wantBreak = 0
@@ -5144,20 +5291,24 @@ class HlParser:
                 #stdOutText = stdout_data.decode('ascii')
                 stdOutText = stdout_data.decode(decodeCharSet)
             else:
-                stdErrText = 'None'
+                stdOutText = ''
             #
             if (stderr_data is not None):
                 stdErrText = stderr_data.decode(decodeCharSet)
             else:
-                stdErrText = 'None'
+                stdErrText = ''
 
             # check for error
             if (b'error occurred' in stdout_data) or ((stderr_data is not None) and (b'error occurred' in stderr_data)):
                 jrprint('\nERROR RUNNING PDF LATEX on {}!\n\n'.format(filepath))
-                stdErrText += '.  Error found in output of pdflatex (is PDF file in use?)\n'
+                msg = 'Error encountered running latex.\n'
+                if (stdErrText != ''):
+                    stdErrText += '. '
+                stdErrText += msg
                 if (flagSwitchToNonQuietOnError):
                     quietMode = False
                 errored = True
+                wantBreak = True
                 self.addBuildLog(stdErrText, True)
 
             # pdflatex may require multiple runs
@@ -5185,11 +5336,14 @@ class HlParser:
         jrlog('PDFLATEX OUTPUT:')
         jrlog(stdOutText)
         
-        if (stderr_data is not None):
-            jrprint('PDFLATEX ERR: {}'.format(stdErrText))
 
+        baseFileName = os.path.basename(filepath)
+        if (stderr_data is not None):
+            jrprint('PDFLATEX ERR processing "{}": {}'.format(baseFileName, stdErrText))
         if (not errored):
-            self.addBuildLog('Pdf generation from Latex complete.', False)
+            self.addBuildLog('Pdf generation of "{}" from Latex completed successfully.'.format(baseFileName), False)
+        else:
+            self.addBuildLog('\n\n----------\nError generating "{}".\nFULL LATEX OUTPUT: {}\n'.format(baseFileName, stdOutText), True)
 # ---------------------------------------------------------------------------
 
 
@@ -6691,17 +6845,395 @@ class HlParser:
 
 # ---------------------------------------------------------------------------
     def safelyResolveImageSource(self, filePath):
+        flagThrowException = True
+        #
         if (filePath.startswith("images/")):
             imageFilePath = filePath[7:]
         else:
             imageFilePath = filePath
         #
-        filePathResolvedList = self.imageFileFinder.findImagesForName(imageFilePath, True)
+        filePathResolvedList = self.imageFileFinder.findImagesForName(imageFilePath, True, True)
         #
         if (filePathResolvedList is None):
-            raise Exception("Failed to safely resolved referenced image file '{}'.".format(filePath))
-
-        filePathResolved = filePathResolvedList[0]
-        filePathResolved = filePathResolved.replace('\\','/')
+            if (flagThrowException):
+                raise Exception("Failed to safely resolve referenced image file '{}'; check that you have uploaded a file with this name.".format(filePath))
+            else:
+                filePathResolved = 'IMAGE_FILE_NOT_FOUND:' + pylatex.escape_latex(filePath)
+        else:
+            filePathResolved = filePathResolvedList[0]
+            filePathResolved = filePathResolved.replace('\\','/')
         return filePathResolved
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+    def scanImages(self):
+        # dirs for scanning for images
+        defaultSaveDir = self.getOptionValThrowException('savedir')
+        saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
+        saveDir = self.resolveTemplateVars(saveDir)
+
+        # image file helper
+        imageDir = self.getOptionVal('imagedir', saveDir + '/images')
+        imageDir = self.resolveTemplateVars(imageDir)
+        self.imageFileFinder.setDirectoryList([imageDir,])
+        self.imageFileFinder.scanDirs(False)
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+    def runAll(self):
+        self.loadStoryFilesIntoBlocks()
+        #
+        self.runAllSteps()
+    
+    def runAllSteps(self):
+        flagCleanAfter = False
+        #
+        self.processHeadBlocks()
+        self.addZeroLeadWarning()
+        self.createCommonMindMapNodes()
+        self.processLeads()
+        #
+        self.runDebugExtraStepsIfNeeded()
+        #
+        self.saveLeads()
+        self.scanImages()
+        self.renderLeadsDual(flagCleanAfter)
+        #
+        self.saveAllManualLeads()
+        #
+        self.saveAltStoryFilesAddLeads()
+        #
+        self.saveMindMapStuff(False)
+        #
+        #self.debug()
+        self.reportNotes()
+        self.reportWarnings()
+        self.reportSummary()
+
+
+    def runDebugExtraStepsIfNeeded(self):
+        if (self.didRunDebugExtraSteps):
+            return
+        self.didRunDebugExtraSteps = True
+        #
+        self.databaseDebugLeads()
+        self.postProcessMindMap()
+        self.addReportLogicLinks()
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+    def runPreBuildSteps(self):
+        self.processHeadBlocks()
+        self.addZeroLeadWarning()
+        self.createCommonMindMapNodes()
+        self.processLeads()
+        self.scanImages()
+
+
+    def runBuildList(self, flagCleanAfter):
+        # new build list generator
+        self.runPreBuildSteps()
+        #
+        self.clearBuildLog()
+        #
+        # clean all files in prep for running
+        self.cleanBuildList()
+        #
+        #
+        buildList = self.getOptionValThrowException('buildList')
+        skipCount = 0
+        for build in buildList:
+            success = self.runBuild(build, flagCleanAfter)
+            if (success=="skip"):
+                self.addBuildLog("Skipped build '{}' due to incompatible options (page size vs. column count?)".format(build["label"]), False)
+                skipCount += 1
+            elif (not success):
+                break
+        #
+        # error if all skipped
+        if (skipCount == len(buildList)):
+            self.addBuildLog("All builds skipped due to incompatible options (page size vs. column count?)", True)
+        #
+        return (not self.getBuildErrorStatus())
+
+
+    def cleanBuildList(self):
+        # new build list generator
+        buildList = self.getOptionValThrowException('buildList')
+        for build in buildList:
+            retv = self.cleanBuild(build)
+
+    def cleanBuild(self, build):
+        label = build["label"]
+        #jrprint("Cleaning build: {}".format(label))
+        format = build["format"]
+        paperSize = build["paperSize"]
+        layout = build["layout"]
+        buildVariant = build["variant"]    
+        # BUILD
+        suffix = calcBuildNameSuffixForVariant(build)
+        #
+        info = self.getOptionValThrowException('info')
+        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        baseOutputFileName = chapterName + suffix
+        defaultSaveDir = self.getOptionValThrowException('savedir')
+        saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
+        saveDir = self.resolveTemplateVars(saveDir)
+        jrfuncs.createDirIfMissing(saveDir)
+        renderFormat = build['format']
+        outFilePath = '{}/{}.{}'.format(saveDir, baseOutputFileName, renderFormat)
+        #
+        deleteFileExtensions = []
+        if (renderFormat=='latex') or (renderFormat=='pdf'):
+            deleteFileExtensions = ['aux', 'latex', 'pdf', 'log', 'out', 'toc']
+        elif (renderFormat=='html'):
+            deleteFileExtensions = ['html', 'pdf']
+        else:
+            raise Exception('Unknown build form: "{}".'.format(renderFormat))
+        self.deleteExtensionFilesIfExists(saveDir, baseOutputFileName, ['aux', 'latex', 'pdf', 'html', 'log', 'out', 'toc'])
+        self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
+
+
+    def runBuild(self, build, flagCleanAfter):
+        errorCounterPreRun = self.getBuildErrorCount()
+        label = build["label"]
+        jrprint("Building: {}".format(label))
+        format = build["format"]
+        paperSize = build["paperSize"]
+        layout = build["layout"]
+        buildVariant = build["variant"]
+
+        # sanity check
+        if (buildVariant not in ['normal', 'debug', 'summary']):
+            raise Exception("Unknown build variant in runbuild: '{}'.".format(buildVariant))
+
+
+        #
+        fontSize = build['fontSize'] if ('fontSize' in build) else calcFontSizeFromPaperSize(paperSize)
+        paperSizeLatex = build['paperSizeLatex'] if ('paperSizeLatex' in build) else calcPaperSizeLatexFromPaperSize(paperSize)
+        doubleSided = build['doubleSided'] if ('doubleSided' in build) else calcDoubledSidednessFromLayout(layout)
+        columns = build['columns'] if ('columns' in build) else calcColumnsFromLayout(layout)
+        solo = build['solo'] if ('solo' in build) else calcSoloFromLayout(layout)
+        #
+        #
+        buildVariantToMode = {'normal': 'normal', 'debug':'report', 'summary': 'normal'}
+        buildVariantToLeadList = {'normal': None, 'debug': None, 'summary': ['summary|cover']}
+
+        #
+        if (buildVariant=="debug"):
+            self.runDebugExtraStepsIfNeeded()
+        elif (buildVariant=="normal"):
+            pass
+        elif (buildVariant=="summary"):
+            pass
+        else:
+            raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
+
+
+        # BUILD
+        suffix = build['suffix'] if ('suffix' in build) else calcBuildNameSuffixForVariant(build)
+        options = {'suffix':suffix, 'layout': layout, 'paperSize': paperSizeLatex, 'fontSize': fontSize, 'doubleSided': doubleSided, 'columns': columns, 'solo': solo, 'mode': buildVariantToMode[buildVariant], 'leadList': buildVariantToLeadList[buildVariant]}
+        self.renderLeads(options, flagCleanAfter)
+
+
+        # debug extra steps
+        if (buildVariant=="debug"):
+            # extra things we do in debug mode?
+            self.saveLeads()
+            self.saveAllManualLeads()
+            if (len(self.storyFileList)>0):
+                self.saveAltStoryFilesAddLeads()
+            else:
+                self.saveAltStoryTextDefault()
+            #
+            self.saveMindMapStuff(True)
+            self.reportNotes()
+            self.reportWarnings()
+            self.reportSummary()
+            #
+            # just to make a file copy
+            self.saveTextLeads()
+
+        errorCounterPostRun = self.getBuildErrorCount()
+        success = (errorCounterPostRun <= errorCounterPreRun)
+        return success
+
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+    def recalcRenderOptions(self, overrideRenderOptions):
+        self.calculatedRenderOptions = jrfuncs.deepCopyListDict(self.getOptionValThrowException('renderOptions'))
+        jrfuncs.deepMergeOverwriteA(self.calculatedRenderOptions, overrideRenderOptions)
+        return self.calculatedRenderOptions
+
+    def getComputedRenderOptions(self):
+        if (self.calculatedRenderOptions is None):
+            self.recalcRenderOptions({})
+        return self.calculatedRenderOptions
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# helpers
+
+def calcBuildNameSuffixForVariant(build):
+    label = build["label"]
+    format = build["format"]
+    paperSize = build["paperSize"]
+    layout = build["layout"]
+    buildVariant = build["variant"]    
+    #
+    if (buildVariant=="normal"):
+        suffix = "_{}_{}".format(layout, paperSize)
+    elif (buildVariant=="debug"):
+        suffix = "_{}_{}_{}".format("debug", layout, paperSize)
+    elif (buildVariant=="summary"):
+        suffix = "_summary"
+    else:
+        raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
+    #
+    return suffix
+
+
+
+
+
+def calcFontSizeFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToFontMap = {
+        Game.GamePreferredFormatPaperSize_Letter: "10pt",
+        Game.GamePreferredFormatPaperSize_A4: "10pt",
+        Game.GamePreferredFormatPaperSize_B5: "8pt",
+        Game.GamePreferredFormatPaperSize_A5: "8pt",            
+    }
+    return paperSizeToFontMap[paperSize]
+
+
+def calcPaperSizeLatexFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToLatexPaperSizeMap = {
+        Game.GamePreferredFormatPaperSize_Letter: "letter",
+        Game.GamePreferredFormatPaperSize_A4: "a4",
+        Game.GamePreferredFormatPaperSize_B5: "b5",
+        Game.GamePreferredFormatPaperSize_A5: "a5",            
+    }
+    return paperSizeToLatexPaperSizeMap[paperSize]
+
+
+def calcDoubledSidednessFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToDoubleSidednessMap = {
+        Game.GamePreferredFormatLayout_Solo: False,
+        Game.GamePreferredFormatLayout_SoloPrint: True,
+        Game.GamePreferredFormatLayout_OneCol: True,
+        Game.GamePreferredFormatLayout_TwoCol: True,            
+    }
+    return layoutToDoubleSidednessMap[layout]
+
+
+def calcColumnsFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToColumnsMap = {
+        Game.GamePreferredFormatLayout_Solo: 1,
+        Game.GamePreferredFormatLayout_SoloPrint: 1,
+        Game.GamePreferredFormatLayout_OneCol: 1,
+        Game.GamePreferredFormatLayout_TwoCol: 2,            
+    }
+    return layoutToColumnsMap[layout]
+
+
+def calcSoloFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToSoloMap = {
+        Game.GamePreferredFormatLayout_Solo: True,
+        Game.GamePreferredFormatLayout_SoloPrint: True,
+        Game.GamePreferredFormatLayout_OneCol: False,
+        Game.GamePreferredFormatLayout_TwoCol: False,
+    }
+    return layoutToSoloMap[layout]
+
+
+def calcMaxColumnsFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToMaxColumnsMap = {
+        Game.GamePreferredFormatPaperSize_Letter: 2,
+        Game.GamePreferredFormatPaperSize_A4: 2,
+        Game.GamePreferredFormatPaperSize_B5: 2,
+        Game.GamePreferredFormatPaperSize_A5: 1,            
+    }
+    return paperSizeToMaxColumnsMap[paperSize]
+# ---------------------------------------------------------------------------
+

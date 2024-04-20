@@ -4,39 +4,89 @@ from django.urls import reverse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.utils import timezone
 
 # user modules
 from .validators import validateGameFile
 
 # storybook modules
-from lib.hl.hlstory import HlStory
 from lib.jr import jrfuncs
+from lib.jr.jrfuncs import jrprint
+from lib.hl.hlparser import fastExtractSettingsDictionary
+from lib.hl.hltasks import queueTaskBuildStoryPdf
 
 # python modules
 import hashlib
 
+#
+TGameFileTypes = {0: "imageUpload", 1: "builtFile"}
 
-# defines
-DefMaxUploadGameFileSize = 10000000
+
+
 
 
 class Game(models.Model):
     """Game object manages individual games/chapters/storybooks"""
 
+    # enum for game queue status
+    GameQueueStatusEnum_None = "NON"
+    GameQueueStatusEnum_Running = "RUN"
+    GameQueueStatusEnum_Queued = "QUE"
+    GameQueueStatusEnum_Errored = "ERR"
+    GameQueueStatusEnum_Completed = "COM"
+    GameQueueStatusEnum = [
+        (GameQueueStatusEnum_None, "None"),
+        (GameQueueStatusEnum_Running, "Running"),
+        (GameQueueStatusEnum_Queued, "Queued"),
+        (GameQueueStatusEnum_Errored, "Errored"),
+        (GameQueueStatusEnum_Completed, "Completed"),
+    ]
+
+
+    # enum for storybook formats
+    GamePreferredFormatPaperSize_Letter = "LETTER"
+    GamePreferredFormatPaperSize_A4 = "A4"
+    GamePreferredFormatPaperSize_B5 = "B5"
+    GamePreferredFormatPaperSize_A5 = "A5"
+    GamePreferredFormatPaperSize = [
+        (GamePreferredFormatPaperSize_Letter, "Letter (8.5 x 11 inches)"),
+        (GamePreferredFormatPaperSize_A4, "A4 (210 x 297 mm)"),
+        (GamePreferredFormatPaperSize_B5, "B5 (176 × 250 mm)"),
+        (GamePreferredFormatPaperSize_A5, "A5 (148 x 210 mm)"),
+    ]
+    GameFormatPaperSizeCompleteList = [GamePreferredFormatPaperSize_Letter, GamePreferredFormatPaperSize_A4, GamePreferredFormatPaperSize_B5, GamePreferredFormatPaperSize_A5]
+    #
+    GamePreferredFormatLayout_Solo = "SOLOSCR"
+    GamePreferredFormatLayout_SoloPrint = "SOLOPRN"
+    GamePreferredFormatLayout_OneCol = "ONECOL"
+    GamePreferredFormatLayout_TwoCol = "TWOCOL"
+    GamePreferredFormatLayout = [
+        (GamePreferredFormatLayout_Solo, "Solo for screen (one lead per page; single-sided)"),
+        (GamePreferredFormatLayout_SoloPrint, "Solo for print (one lead per page; double-sided)"),
+        (GamePreferredFormatLayout_OneCol, "One column per page (double-sided)"),
+        (GamePreferredFormatLayout_TwoCol, "Two columns per page (double-sided)"),
+    ]
+    GameFormatLayoutCompleteList = [GamePreferredFormatLayout_Solo, GamePreferredFormatLayout_SoloPrint, GamePreferredFormatLayout_OneCol, GamePreferredFormatLayout_TwoCol]
+
+
     # owner provides this info
-    name = models.CharField(max_length=50, help_text="Internal name of the game")
-    text = models.TextField(help_text="Game text", default="", blank=True)
+    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game")
+    text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True)
     textHash = models.CharField(
         max_length=80, help_text="Hash of text", default="", blank=True
     )
 
     # is the game public
-    isPublic = models.BooleanField(help_text="Is game publicly visible?")
+    isPublic = models.BooleanField(verbose_name="Is game public?", help_text="Is game publicly visible?")
 
     # foreign keys
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
+
+
+
+
 
     # these properties should be extracted from the text
     title = models.CharField(
@@ -74,15 +124,29 @@ class Game(models.Model):
     # result of building
     buildLog = models.TextField(help_text="Build Log", default="", blank=True)
     needsBuild = models.BooleanField(help_text="Game was updated and needs rebuild")
-    queueStatus = models.CharField(
-        max_length=32, help_text="Internal build queue stage", default="", blank=True
-    )
+    # game filetype
+    queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
     isBuildErrored = models.BooleanField(
         help_text="Was there an error on the last build?"
     )
     buildDate = models.DateTimeField(
         help_text="When was story last built?", null=True, blank=True
     )
+    queueDate = models.DateTimeField(
+        help_text="When was build queued?", null=True, blank=True
+    )
+
+
+    # format
+    preferredFormatPaperSize =  models.CharField(max_length=8, verbose_name="Preferred paper size", choices=GamePreferredFormatPaperSize, default=GamePreferredFormatPaperSize_Letter)
+    preferredFormatLayout =  models.CharField(max_length=8, verbose_name="Preferred Layout", choices=GamePreferredFormatLayout, default=GamePreferredFormatLayout_Solo)
+
+
+
+
+
+
+
 
     # helpers
     def __str__(self):
@@ -95,12 +159,14 @@ class Game(models.Model):
         # called automatically on edit
         # update text hash
         flagForceRebuild = True
+        #
         h = hashlib.new("sha256")
         h.update(self.text.encode())
-        textHashNew = h.hexdigest()
+        textHashNew = h.hexdigest() + "_" + settings.JR_STORYBUILDVERSION
         if (textHashNew == self.textHash) and (not flagForceRebuild):
             # text hash does not change, nothing needs updating
             return
+        #
         # update settings and schedule rebuild?
         self.textHash = textHashNew
         self.parseSettingsFromTextAndSetFields()
@@ -108,10 +174,9 @@ class Game(models.Model):
 
     # storybook helpers
     def parseSettingsFromTextAndSetFields(self):
-        hlstory = HlStory()
         niceDateStr = jrfuncs.getNiceCurrentDateTime()
         try:
-            settings = hlstory.extractSettingsDictionary(self.text)
+            settings = fastExtractSettingsDictionary(self.text)
             # set settings
             errorList = []
             if ("info" in settings):
@@ -162,27 +227,97 @@ class Game(models.Model):
 
 
 
+
+
+
+    def deleteExistingFileIfFound(self, fileName, flagDeleteModel, editingGameFile):
+        # this is called during uploading so that author can reupload a new version of an image and it will just overwrite existing
+        gameFileImageDirectoryRelative = calculateGameFilePathRuntime(self, "uploads", True)
+        filePath = gameFileImageDirectoryRelative + "/" + fileName
+        # we do NOT want to just delete the file on the disk
+        # instead we want to delete the file model which should chain delete the actual file
+        if (flagDeleteModel):
+            try:
+                gameFile = GameFile.objects.get(filefield=filePath)
+                # delete existing file; but only if its not editingGameFile (in other words this is going to catch the case where we might be editing one gameFILE and matching the image file name to another, which will then be deleted to make way)
+                if (editingGameFile is None) or (editingGameFile.pk != gameFile.pk):
+                    gameFile.delete()
+            except Exception as e:
+                # existing file not found -- not an error
+                #jrprint("deleteExistingFileIfFound exception: {}.".format(str(e)))
+                pass
+
+        if (True):
+            # delete existing pure file if it exists, because it is going to be replaced
+            gameFileImageDirectoryAbsolute = calculateGameFilePathRuntime(self, "uploads", False)
+            filePath = gameFileImageDirectoryAbsolute + "/" + fileName
+            try:
+                jrfuncs.deleteFilePathIfExists(filePath)
+            except Exception as e:
+                # existing file not found
+                jrprint("deleteFilePathIfExists exception: {}.".format(str(e)))
+                pass                
+
+        return True
+
+
+
+    def deleteExistingMediaPathedFileIfFound(self, relativeFileName):
+        # this is called during uploading so that author can reupload a new version of an image and it will just overwrite existing
+        filePath = calculateAbsoluteMediaPathForRelativePath(relativeFileName)
+        try:
+            jrfuncs.deleteFilePathIfExists(filePath)
+        except Exception as e:
+            # existing file not found
+            jrprint("deleteExistingMediaPathedFileIfFound for '{}' exception: {}.".format(filePath, str(e)))
+            pass
+
+        return True
+
+
+
+
+
+
+
+
     def buildGame(self, request):
-        gameFileBuildDirectoryAbsolute = calculateGameFilePathRuntime(self, "build", False)
-        gameFileImageDirectoryAbsolute = calculateGameFilePathRuntime(self, "uploads", False)
-        buildOptions = {
-            "buildDir": gameFileBuildDirectoryAbsolute,
-            "imageDir": gameFileImageDirectoryAbsolute,
-        }
 
         # update model to show it needs building
-        self.queueStatus = "Queued"
+        self.queueStatus = Game.GameQueueStatusEnum_Queued
         self.needsBuild = True
         self.isBuildErrored = False
         self.buildLog = ""
+        self.queueDate = timezone.now()
         self.save()
 
-        # hlstory object manages our story
-        hlstory = HlStory()
-        retv = hlstory.buildGame(self.pk, buildOptions, self.text)
+        # what type of build
+        if ("buildPreferred" in request.POST):
+            buildMode = "buildPreferred"
+        elif ("buildDebug" in request.POST):
+            buildMode = "buildDebug"
+        elif ("buildComplete" in request.POST):
+            buildMode = "buildComplete"
+        elif ("buildPublish" in request.POST):
+            buildMode = "buildPublish"
+        else:
+            raise Exception("Unspecified build mode.")
+
+        # build options
+        requestOptions = {"buildMode": buildMode}
+
+        # this will QUEUE the game build if neeed
+        # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
+        # ATTN: eventually move all this to the function that actually builds
+        retv = queueTaskBuildStoryPdf(self.pk, requestOptions)
+        result = retv.get()
 
         # send to detail view with flash message
-        message = retv["message"]
+        if (isinstance(result, str)):
+            message = "Result of storybook pdf build for game '{}': {}.".format(self.name, result)
+        else:
+            message = "Generations of storybook pdf for game '{}' has been queued for delayed build.".format(self.name)
+
         messages.add_message(request, messages.INFO, message)
 
 
@@ -190,6 +325,37 @@ class Game(models.Model):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# GAME FILE STUFF
 
 
 
@@ -210,16 +376,34 @@ def calculateGameFileUploadPathRuntimeRelative(instance, filename):
     basePath = calculateGameFilePathRuntime(instance.game, "uploads", True)
     return "/".join([basePath, filename])
 
+def calculateAbsoluteMediaPathForRelativePath(relativePath):
+    path = "/".join([str(settings.MEDIA_ROOT), relativePath])
+    return path
+
 
 class GameFile(models.Model):
     """File object manages files attached to games"""
 
+    # enum for game file type
+    GameFileType_Up = "UP"
+    GameFileType_Built = "BT"
+    GameFileTypeEnum = [
+        (GameFileType_Up, "User Upload"),
+        (GameFileType_Built, "Built"),
+    ]
+
+
     # ATTN: TODO: see https://file-validator.github.io/docs/intro for more involved validation library
 
-    # optinal label
-    label = models.CharField(
-        max_length=80, help_text="File label", default="", blank=True
+
+    # foreign keys
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+    # game filetype
+    gameFileType = models.CharField(max_length=3, choices=GameFileTypeEnum, default=GameFileType_Up)
 
     # django file field helper
     # note we use a validator, but we ALSO do a separate validation for file size after the file is uploaded
@@ -227,11 +411,13 @@ class GameFile(models.Model):
         upload_to = calculateGameFileUploadPathRuntimeRelative, validators=[validateGameFile]
     )
 
-    # foreign keys
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
+
+    # optinal label
+    note = models.CharField(
+        max_length=80, help_text="Internal comments (optional)", default="", blank=True
     )
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+
 
     def __str__(self):
         return self.filefield.name
@@ -250,10 +436,11 @@ class GameFile(models.Model):
         # custom file validators that must be run here when the file is available; separate from file extension tests
 
         # file size
+        maxFilesize = settings.JR_MAXUPLOADGAMEFILESIZE
         fileSize = self.filefield.file.size
-        if fileSize > DefMaxUploadGameFileSize:
+        if fileSize > maxFilesize:
             raise ValidationError(
                 "Uploaded file is too large ({:.2f}mb > {:.2f}mb)".format(
-                    fileSize / 1000000, DefMaxUploadGameFileSize / 1000000
+                    fileSize / 1000000, maxFilesize / 1000000
                 )
             )
