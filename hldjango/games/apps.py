@@ -1,9 +1,12 @@
 # django modules
 from django.apps import AppConfig
 from django.conf import settings
+from django.db import migrations
+
 
 # user modules
 from lib.jr import jrfuncs
+
 
 
 
@@ -16,5 +19,15 @@ class GamesConfig(AppConfig):
         # run at startup
         logDirPath = settings.BASE_DIR / "jrlogs/"
         jrfuncs.setLogFileDir(str(logDirPath))
+
+
+
+
+
+
+
+
+
+
 
 

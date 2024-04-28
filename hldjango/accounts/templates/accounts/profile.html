@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "allauth/layouts/base.html" %}
 
 {% load crispy_forms_tags %}
 {% load gametemplatetags %}
@@ -28,5 +28,8 @@
 
 
 <a href="{% url 'accountEditProfile' customuser.pk %}" class="btn btn-primary" role="button">Edit Profile</a>
+<hr/>
+OR:
+{% include "allauth/layouts/accountChangeLinks.html" %} 
 
 {% endblock content %}

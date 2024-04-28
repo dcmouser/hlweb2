@@ -1,0 +1,148 @@
+{% load i18n %}
+{% load active_link_tags %}
+{% load jrtemplatetags %}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
+
+		    <!-- bootstrap css -->
+		    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+		    <!-- custom css -->
+		    <link href="{% static 'css/core.css' %}" rel="stylesheet">
+		    <!-- favicon -->
+		    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}"/>
+
+        <title>
+            {% block head_title %}HIGH & LOW WEB SERVICES{% endblock head_title %}
+        </title>
+        {% block extra_head %}
+        {% endblock extra_head %}
+    </head>
+
+
+
+    <body>
+	    <header class="p-3 mb-3 border-bottom">
+
+	        <nav class="navbar navbar-expand-lg navbar-dark bg-primary" id="hlnavbar">
+	        <div class="container-fluid ">
+
+	            <a class="navbar-brand" href="{% url 'coreHome' %}">HIGH & LOW</a>
+	            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+	              <span class="navbar-toggler-icon"></span>
+	            </button>
+	          
+	            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+	                <ul class="navbar-nav">
+	                    <!-- left aligned nav bar items -->
+	                    <li class="nav-item">
+	                        <a class="nav-link {% jrActiveLink 'gameHome' %}" href="{% url 'gameHome' %}">Games</a>
+	                    </li>
+
+	                    {% if user.is_authenticated %}
+	                        <!-- only shown for logged in user - part 1-->
+	                    {% else %}
+	                        <li class="nav-item">
+	                            <a class="nav-link {% jrActiveLink 'account_login' %}" href="{% url 'account_login' %}">Log In</a>
+	                        </li>
+	                        <li class="nav-item">
+	                            <a class="nav-link {% jrActiveLink 'account_signup' %}" href="{% url 'account_signup' %}">Sign Up</a>
+	                        </li>
+	                    {% endif %}
+
+	                    <!-- nav links only shown when you are on them -->
+	                    <li class="nav-item">
+	                        <a class="nav-link jrnavhide {% jrActiveLink 'account_change_password' 'jrnavshow active' %}" href="{% url 'account_change_password' %}">Password Change</a>
+	                    </li>
+	                    <li class="nav-item">
+	                        <a class="nav-link jrnavhide {% jrActiveLink 'account_reset_password' 'jrnavshow active' %}" href="{% url 'account_reset_password' %}">Password Reset</a>
+	                    </li>
+	                    <li class="nav-item">
+	                        <a class="nav-link jrnavhide {% jrActiveLink 'account_email' 'jrnavshow active' %}" href="{% url 'account_email' %}">Manage Emails</a>
+	                    </li>
+	                    <li class="nav-item">
+	                        <a class="nav-link jrnavhide {% jrActiveLink 'socialaccount_connections' 'jrnavshow active' %}" href="{% url 'socialaccount_connections' %}">Social Logins</a>
+	                    </li>
+						<li class="nav-item">
+	                        <a class="nav-link jrnavhide {% jrActiveUrl 'accounts/profile' 'jrnavshow active' %}" href="{% url 'accountProfile' %}">Profile</a>
+	                    </li>
+					</ul>
+
+
+	            {% if user.is_authenticated %}
+	                <!-- only shown for logged in user: part 2 right-align drop down-->
+	                <!-- EVIL right align kludge see https://stackoverflow.com/questions/75635680/move-only-single-nav-items-to-the-right-in-bootstrap-5 and https://stackoverflow.com/questions/17904862/bootstrap-position-of-dropdown-menu-relative-to-navbar-item -->
+	                <ul class="navbar-nav ms-auto">
+	                    <!-- right aligned nav bar items -->
+	                    <li class="nav-item dropdown">
+	                        <a class="nav-link dropdown-toggle" href="#" id="navbarAccountDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	                            {{ user.username }}
+	                        </a>
+	                        <div class="dropdown-menu" aria-labelledby="navbarAccountDropdown" style="right: 0; left: auto;">
+	                            <a class="dropdown-item" href="{% url 'accountProfile' %}">Profile</a>
+	                            <div class="dropdown-divider"></div>
+	                            <form action="{% url 'account_logout' %}" method="post">{% csrf_token %}<button type="submit" class="dropdown-item">Log Out</button></form>
+	                        </div>
+	                    </li>
+	                </ul>
+	            {% endif %}
+
+	            </div>
+
+	        </div>
+	        </nav>
+
+	      </header>
+
+
+
+
+
+        {% block body %}
+
+			    <div class="container-fluid ">
+			    <main>
+			        {% if messages %}
+			        <div class="card bg-light mb-3">
+			            <div class="card-header">
+			              Messages
+			            </div>
+			            <ul class="messages list-group list-group-flush">
+			                {% for message in messages %}
+			                    <li{% if message.tags %} class="{{ message.tags }} list-group-item"{% endif %}>{{ message }}</li>
+			                {% endfor %}
+			            </ul>
+			        </div>
+			        <hr/>
+			        {% endif %}
+
+
+			        {% block header %}
+			        {% endblock header %}
+
+			        {% block content %}
+			        {% endblock content %}
+			    </main>
+			    </div>
+
+        {% endblock body %}
+
+
+        {% block extra_body %}
+        {% endblock extra_body %}
+
+
+	    <!-- bootstrap js bundle -->
+	    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	    <!-- bootstrap addon lightbox -->
+	    <script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.3/dist/index.bundle.min.js"></script>
+
+
+    </body>
+</html>

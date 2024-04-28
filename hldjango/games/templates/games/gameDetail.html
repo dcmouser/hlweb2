@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "allauth/layouts/base.html" %}
 
 
 {% load crispy_forms_tags %}
@@ -15,6 +15,7 @@
     <a href="{% url 'gameEdit' game.pk %}" class="btn btn-info" role="button">Edit</a>
     <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
     <a href="{% url 'gameBuild' game.pk %}" class="btn btn-info" role="button">Build</a>
+    <a href="{% url 'gamePublish' game.pk %}" class="btn btn-info" role="button">Publish</a>
     <a href="{% url 'gamePlay' game.pk %}" class="btn btn-info" role="button">Play</a>
     <a href="{% url 'gameDelete' game.pk %}" class="btn btn-info" role="button">Delete</a>
     {% endif %}

@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "allauth/layouts/base.html" %}
 
 
 {% load crispy_forms_tags %}
@@ -10,5 +10,7 @@
     <p><b>Owner:</b> {{ game.owner }}</p>
     <p>{{ game.summary }}</p>
 </div>
+
+<b>Online play not yet implemented.</b>
 
 {% endblock content %}

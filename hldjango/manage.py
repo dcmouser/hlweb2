@@ -16,8 +16,10 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    execute_from_command_line(sys.argv)
-
+    # ATTN: this line was sometimes getting indented when debugger breaks on editing file in visual studio, so im adding an "if (True)" here to trigger syntax error if a line gets indented by mistake; otherwise if thinks execute_from_command is part of exectption
+    if (True):
+        execute_from_command_line(sys.argv)
+    print("Finished executing manage.py from commandline.")
 
 if __name__ == "__main__":
     main()

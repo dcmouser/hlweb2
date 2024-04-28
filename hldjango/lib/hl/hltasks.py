@@ -20,7 +20,6 @@ from hueyconfig import huey
 from lib.hl import hlparser
 from lib.jr import jrfuncs
 
-from lib.hl.hlparser import calcColumnsFromLayout, calcMaxColumnsFromPaperSize
 
 
 
@@ -39,7 +38,7 @@ from lib.hl.hlparser import calcColumnsFromLayout, calcMaxColumnsFromPaperSize
 
 # module global funcs
 @db_task()
-def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
+def queueTaskBuildStoryPdf(game, requestOptions):
     # starting time
     timeStart = time.time()
 
@@ -54,12 +53,6 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
     # imports needing in function to avoid circular?
     from games.models import Game, calculateGameFilePathRuntime
 
-    # before we start get properties and update queue status
-    game = Game.objects.get(pk=gameModelPk)
-    if (game is None):
-        raise Exception("Failed to find game pk={} for building - stage 1.".format(gameModelPk))
-        # can't continue below
-
     # update model queue status before we start
     game.queueStatus = Game.GameQueueStatusEnum_Running
     # save
@@ -67,7 +60,9 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
 
 
     # properties
-    gameName = game.name
+    gameModelPk = game.pk
+    gameInternalName = game.name
+    gameName = game.gameName
     gameText = game.text
     preferredFormatPaperSize = game.preferredFormatPaperSize
     preferredFormatLayout = game.preferredFormatLayout
@@ -79,15 +74,19 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
     buildList = []
     if (buildMode == "buildPreferred"):
         # build preferred format
-        buildList.append({"label": "preferred format build", "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "normal", })
+        build = {"label": "preferred format build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "normal", }
+        addCalculatedFieldsToBuild(build)
+        buildList.append(build)
         optionZipSuffix = '_preferred'
     elif (buildMode == "buildDebug"):
         # build debug format
-        buildList.append({"label": "debug build", "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", })
+        build = {"label": "debug build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", }
+        addCalculatedFieldsToBuild(build)
+        buildList.append(build)
         optionZipSuffix = '_debug'
     elif (buildMode == "buildComplete"):
         # build complete list; all combinations of page size and layout
-        buildList = generateCompleteBuildList(game)
+        buildList = generateCompleteBuildList(game, True)
         optionBuildZip = True
         optionZipSuffix = '_complete'
         #
@@ -215,6 +214,8 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
     else:
         game.queueStatus = Game.GameQueueStatusEnum_Completed
         game.needsBuild = False
+    #
+    game.buildStats = hlParser.getLeadStats()["summaryString"]
 
     # save
     game.save()
@@ -224,16 +225,16 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions):
 
     # result for instant run
     if (game.isBuildErrored):
-        retv = "Errors during build."
+        retv = "Errors during build"
     else:
-        retv = "Build was successful."
+        retv = "Build was successful"
     #
     return retv
 
 
 
 
-def generateCompleteBuildList(game):
+def generateCompleteBuildList(game, flagDebugIncluded):
     # loop twice, the first time just calculate buildCount
     # imports needing in function to avoid circular?
     from games.models import Game, calculateGameFilePathRuntime
@@ -242,17 +243,24 @@ def generateCompleteBuildList(game):
     index = 0
     buildCount = 0
     # summary and debug
-    buildCount += 2
+    buildCount += 1
+    if (flagDebugIncluded):
+        buildCount += 1
     # customs
     buildCount += 1
     #
     preferredFormatPaperSize = game.preferredFormatPaperSize
     preferredFormatLayout = game.preferredFormatLayout
+    # properties
+    gameInternalName = game.name
+    gameName = game.gameName
     #
     if (True):
         # customs
         index += 1
-        buildList.append({"label": "_SOLOPRN_LETTER_LargeFont", "suffix": "SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "16pt",})
+        build = {"label": "SOLOPRN_LETTER_LargeFont", "gameName": gameName, "suffix": "_SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "16pt",}
+        addCalculatedFieldsToBuild(build)
+        buildList.append(build)
 
     if (True):
         # programmatic
@@ -271,17 +279,251 @@ def generateCompleteBuildList(game):
                     # add the build
                     index += 1
                     label = "complete build {} of {} ({} x {})".format(index, buildCount, layout, paperSize)
-                    buildList.append({"label": label, "format": "pdf", "paperSize": paperSize, "layout": layout, "variant": "normal", })
+                    #
+                    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": layout, "variant": "normal", }
+                    addCalculatedFieldsToBuild(build)
+                    buildList.append(build)
 
     # also debug, in preferred format
-    index += 1
-    label = "complete build {} of {} (debug)".format(index, buildCount)
-    buildList.append({"label": label, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", })
+    if (flagDebugIncluded):
+        index += 1
+        label = "complete build {} of {} (debug)".format(index, buildCount)
+        build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", }
+        addCalculatedFieldsToBuild(build)
+        buildList.append(build)
     #
     # summary in letter format
     index += 1
     label = "complete build {} of {} (summary)".format(index, buildCount)
     paperSize = Game.GamePreferredFormatPaperSize_Letter
-    buildList.append({"label": label, "format": "pdf", "paperSize": paperSize, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "summary", })
+    #
+    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "summary"}
+    addCalculatedFieldsToBuild(build)
+    buildList.append(build)
 
     return buildList
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+def publishGameFiles(game):
+    # imports needing in function to avoid circular?
+    from games.models import Game, calculateGameFilePathRuntime
+
+    buildList = generateCompleteBuildList(game, False)
+    optionBuildZip = False
+    optionZipSuffix = '_complete'
+
+    buildDir = calculateGameFilePathRuntime(game, "build", False)
+    publishDir = calculateGameFilePathRuntime(game, "publish", False)
+    # create publish directory if it doesn't exist yet
+    jrfuncs.createDirIfMissing(publishDir)
+
+    # now make sure the build dir files exist
+    buildCheckMessage = checkBuildFiles(buildDir, buildList)
+
+    if (buildCheckMessage is not None):
+        raise Exception("ERROR: Could not publish files: {}.".format(buildCheckMessage))
+
+    # and now COPY from build dir to publish dir
+    publishRunMessage = publishBuildFiles(buildDir, buildList, publishDir)
+
+    if (publishRunMessage is None):
+        if (optionBuildZip):
+            filePathBuild = buildDir + "/" + game.gameName + optionZipSuffix + ".zip"
+            filePathPublish = publishDir + "/" + game.gameName + optionZipSuffix + ".zip"
+            jrfuncs.copyFilePath(filePathBuild, filePathPublish)
+
+    if (publishRunMessage is not None):
+        raise Exception("ERROR: Could not publish files: {}.".format(publishRunMessage))
+    #
+    msg = "{} game files published.".format(len(buildList))
+    return msg
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+def checkBuildFiles(buildDir, buildList):
+    errorMessage = ""
+    for build in buildList:
+        filePathBuild = buildDir + "/" + build["gameName"] + build["suffix"] + ".pdf"
+        if (not jrfuncs.pathExists(filePathBuild)):
+            errorMessage += "Missing file '{}'.\n".format(filePathBuild)
+    if (errorMessage!=""):
+        return errorMessage
+    return None
+
+
+def publishBuildFiles(buildDir, buildList, publishDir):
+    errorMessage = ""
+    for build in buildList:
+        filePathBuild = buildDir + "/" + build["gameName"] + build["suffix"] + ".pdf"
+        if (not jrfuncs.pathExists(filePathBuild)):
+            errorMessage += "Missing file '{}'.\n".format(filePathBuild)
+        else:
+            filePathPublish = publishDir + "/" + build["gameName"] + build["suffix"] + ".pdf"
+            jrfuncs.copyFilePath(filePathBuild, filePathPublish)
+    if (errorMessage!=""):
+        return errorMessage
+    return None
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# helpers
+
+
+def addCalculatedFieldsToBuild(build):
+    paperSize = build["paperSize"]
+    layout = build["layout"]
+    #
+    fontSize = build['fontSize'] if ('fontSize' in build) else calcFontSizeFromPaperSize(paperSize)
+    paperSizeLatex = build['paperSizeLatex'] if ('paperSizeLatex' in build) else calcPaperSizeLatexFromPaperSize(paperSize)
+    doubleSided = build['doubleSided'] if ('doubleSided' in build) else calcDoubledSidednessFromLayout(layout)
+    columns = build['columns'] if ('columns' in build) else calcColumnsFromLayout(layout)
+    solo = build['solo'] if ('solo' in build) else calcSoloFromLayout(layout)
+    #
+    if ("suffix" not in build):
+        suffix = calcBuildNameSuffixForVariant(build)
+        build["suffix"] = suffix
+    build["fontSize"] = fontSize
+    build["paperSizeLatex"] = paperSizeLatex
+    build["doubleSided"] = doubleSided
+    build["columns"] = columns
+    build["solo"] = solo
+
+
+
+def calcBuildNameSuffixForVariant(build):
+    label = build["label"]
+    format = build["format"]
+    paperSize = build["paperSize"]
+    layout = build["layout"]
+    buildVariant = build["variant"]    
+    #
+    if (buildVariant=="normal"):
+        suffix = "_{}_{}".format(layout, paperSize)
+    elif (buildVariant=="debug"):
+        suffix = "_{}_{}_{}".format("debug", layout, paperSize)
+    elif (buildVariant=="summary"):
+        suffix = "_summary"
+    else:
+        raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
+    #
+    return suffix
+
+
+
+def calcFontSizeFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToFontMap = {
+        Game.GamePreferredFormatPaperSize_Letter: "10pt",
+        Game.GamePreferredFormatPaperSize_A4: "10pt",
+        Game.GamePreferredFormatPaperSize_B5: "8pt",
+        Game.GamePreferredFormatPaperSize_A5: "8pt",            
+    }
+    return paperSizeToFontMap[paperSize]
+
+
+def calcPaperSizeLatexFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToLatexPaperSizeMap = {
+        Game.GamePreferredFormatPaperSize_Letter: "letter",
+        Game.GamePreferredFormatPaperSize_A4: "a4",
+        Game.GamePreferredFormatPaperSize_B5: "b5",
+        Game.GamePreferredFormatPaperSize_A5: "a5",            
+    }
+    return paperSizeToLatexPaperSizeMap[paperSize]
+
+
+def calcDoubledSidednessFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToDoubleSidednessMap = {
+        Game.GamePreferredFormatLayout_Solo: False,
+        Game.GamePreferredFormatLayout_SoloPrint: True,
+        Game.GamePreferredFormatLayout_OneCol: True,
+        Game.GamePreferredFormatLayout_TwoCol: True,            
+    }
+    return layoutToDoubleSidednessMap[layout]
+
+
+def calcColumnsFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToColumnsMap = {
+        Game.GamePreferredFormatLayout_Solo: 1,
+        Game.GamePreferredFormatLayout_SoloPrint: 1,
+        Game.GamePreferredFormatLayout_OneCol: 1,
+        Game.GamePreferredFormatLayout_TwoCol: 2,            
+    }
+    return layoutToColumnsMap[layout]
+
+
+def calcSoloFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToSoloMap = {
+        Game.GamePreferredFormatLayout_Solo: True,
+        Game.GamePreferredFormatLayout_SoloPrint: True,
+        Game.GamePreferredFormatLayout_OneCol: False,
+        Game.GamePreferredFormatLayout_TwoCol: False,
+    }
+    return layoutToSoloMap[layout]
+
+
+def calcMaxColumnsFromPaperSize(paperSize):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    paperSizeToMaxColumnsMap = {
+        Game.GamePreferredFormatPaperSize_Letter: 2,
+        Game.GamePreferredFormatPaperSize_A4: 2,
+        Game.GamePreferredFormatPaperSize_B5: 2,
+        Game.GamePreferredFormatPaperSize_A5: 1,            
+    }
+    return paperSizeToMaxColumnsMap[paperSize]
+# ---------------------------------------------------------------------------

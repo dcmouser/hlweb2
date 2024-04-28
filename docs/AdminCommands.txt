@@ -1,0 +1,2 @@
+to run management/commands/initGames.py from games app to create groups and permissions:
+> python manage.py initGames

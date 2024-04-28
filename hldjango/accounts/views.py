@@ -7,12 +7,6 @@ from .models import CustomUser
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
-class SignupView(CreateView):
-    model = CustomUser
-    form_class = CustomUserCreationForm
-    success_url = reverse_lazy("login")
-    template_name = "accounts/signup.html"
-
 
 class ProfileEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = CustomUser
@@ -24,7 +18,30 @@ class ProfileEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         obj = self.get_object()
         return (obj == self.request.user)
 
+    def get_object(self):
+        return getExplicitOrDefaultToLoggedInUser(self)
+
 
 class ProfileView(DetailView):
     model = CustomUser
     template_name = "accounts/profile.html"
+
+    def get_object(self):
+        return getExplicitOrDefaultToLoggedInUser(self)
+
+
+
+# helpers
+def getExplicitOrDefaultToLoggedInUser(view):
+        # Here w'll retrieve the correct object to update
+        
+        explicitPk = view.kwargs.get("pk", None)
+        if (explicitPk is None):
+             # defualt logged in user
+            user = view.request.user
+            return user
+        
+        # try to lookup user explicitly
+        studiedUserPk = int(explicitPk)
+        studiedUser = CustomUser.objects.get(pk=studiedUserPk)
+        return studiedUser

@@ -5,7 +5,7 @@ from .views import GameCreateFileView, GameListFilesView
 #
 from .views import GameFileDetailView, GameFileEditView, GameFileDeleteView
 #
-from .views import GameBuildView, GamePlayView
+from .views import GameBuildView, GamePlayView, GamePublishView
 
 
 
@@ -28,6 +28,8 @@ urlpatterns = [
 
     # Game building
     path("game/<int:pk>/build/", GameBuildView.as_view(), name="gameBuild"),
+    # Game publishing
+    path("game/<int:pk>/publish/", GamePublishView.as_view(), name="gamePublish"),
 
     # Game playing
     path("game/<int:pk>/play/", GamePlayView.as_view(), name="gamePlay"),

@@ -22,8 +22,12 @@ urlpatterns = [
     # django admin
     path("admin/", admin.site.urls),
 
-    # django account routes for login/logout
-    path("accounts/", include("django.contrib.auth.urls")),
+    # django original account routes for login/logout
+    # ATTN: This is the evil part that prevented allauth from getting login
+    #path("accounts/", include("django.contrib.auth.urls")),
+    #
+    # allauth
+    path("accounts/", include("allauth.urls")),
 
     # custom account app
     path("accounts/", include("accounts.urls")),

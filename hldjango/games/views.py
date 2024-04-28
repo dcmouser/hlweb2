@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 
 
@@ -51,10 +51,11 @@ class GameDetailView(DetailView):
         return context
 
 
-class GameCreateView(LoginRequiredMixin, CreateView):
+class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Game
+    permission_required = "games.add_game"
     template_name = "games/gameCreate.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "buildStats", "textHash", ]
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -65,7 +66,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "buildStats", "textHash", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -304,10 +305,6 @@ class GameBuildView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         obj = self.get_object()
         return (obj.owner == self.request.user)
 
-    #def get_success_url(self):
-    #    success_url = reverse_lazy("gameBuild", args = (self.pk,))
-    #    return success_url
-
     def post(self, request, *args, **kwargs):
         # handle BUILD request
         obj = self.get_object()
@@ -317,6 +314,32 @@ class GameBuildView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
         # redirect to detail view; the buildGame() function should set flash messages to tell user what is happening
         return redirect("gameDetail", pk=obj.pk)
+
+
+
+
+
+class GamePublishView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Game
+    permission_required = "games.canPublishGames"
+    template_name = "games/gamePublish.html"
+
+    def test_func(self):
+        # ensure access to this view only if it is owner accessing it
+        obj = self.get_object()
+        return (obj.owner == self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        # handle request
+        obj = self.get_object()
+
+        # get the game file directory
+        retv = obj.publishGame(request)
+
+        # redirect to detail view; the buildGame() function should set flash messages to tell user what is happening
+        return redirect("gameDetail", pk=obj.pk)
+    
+
 
 
 

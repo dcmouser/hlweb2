@@ -32,19 +32,26 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    # django-allauth
+    "django.contrib.sites",
+    #
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # 3rd party addons
-    "huey.contrib.djhuey", # huey task manager
-    "active_link", # for active link highlighting
-    "crispy_forms", # better forms
-    "crispy_bootstrap5", # better forms
-    "debug_toolbar", # debug toolbar on each view
-
+    "huey.contrib.djhuey",  # huey task manager
+    "active_link",  # for active link highlighting
+    "crispy_forms",  # better forms
+    "crispy_bootstrap5",  # better forms
+    "debug_toolbar",  # debug toolbar on each view
+    # allauth contd.
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.google",
     # our apps
     "accounts",
     "core",
@@ -60,7 +67,18 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # allauth
+    "allauth.account.middleware.AccountMiddleware",
 ]
+
+
+# new for allauth.. needed?
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    # allauth
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 
 ROOT_URLCONF = "hldjango.urls"
 
@@ -72,9 +90,10 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
-                "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # allauth
+                "django.template.context_processors.request",
             ],
         },
     },
@@ -136,56 +155,27 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # see https://huey.readthedocs.io/en/latest/django.html
 HUEY = {
-    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
-    'name': 'HlHueyDb',
-    'filename': 'HlHueyDb.sqlite3',
-    'results': True,  # Store return values of tasks.
-    'store_none': False,  # If a task returns None, do not save to results.
-
-    'immediate': True,
-
-    'utc': True,  # Use UTC for all times internally.
-    'connection': {
+    "huey_class": "huey.SqliteHuey",  # Huey implementation to use.
+    "name": "HlHueyDb",
+    "filename": "HlHueyDb.sqlite3",
+    "results": True,  # Store return values of tasks.
+    "store_none": False,  # If a task returns None, do not save to results.
+    "immediate": True,
+    "utc": True,  # Use UTC for all times internally.
+    "connection": {},
+    "consumer": {
+        "workers": 1,
+        "worker_type": "thread",
+        "initial_delay": 0.1,  # Smallest polling interval, same as -d.
+        "backoff": 1.15,  # Exponential backoff using this rate, -b.
+        "max_delay": 10.0,  # Max possible polling interval, -m.
+        "scheduler_interval": 1,  # Check schedule every second, -s.
+        "periodic": True,  # Enable crontab feature.
+        "check_worker_health": True,  # Enable worker health checks.
+        "health_check_interval": 1,  # Check worker health every second.
     },
-    'consumer': {
-        'workers': 1,
-        'worker_type': 'thread',
-        'initial_delay': 0.1,  # Smallest polling interval, same as -d.
-        'backoff': 1.15,  # Exponential backoff using this rate, -b.
-        'max_delay': 10.0,  # Max possible polling interval, -m.
-        'scheduler_interval': 1,  # Check schedule every second, -s.
-        'periodic': True,  # Enable crontab feature.
-        'check_worker_health': True,  # Enable worker health checks.
-        'health_check_interval': 1,  # Check worker health every second.
-    },
-
     # To run Huey in "immediate" mode with a live storage API, specify
     # immediate_use_memory=False.
     #'immediate_use_memory': False,
@@ -205,6 +195,35 @@ HUEY = {
 
 
 
+# all-auth social account addon
+# there is a weird thing where this value has to be increased in certain cases or you get a DoesNotExist error
+# see https://stackoverflow.com/questions/76995338/resolving-doesnotexist-exception-with-djangos-allauth-provider-login-url
+# for allauth tutorial see: https://learndjango.com/tutorials/django-allauth-tutorial
+SITE_ID = 1
+
+
+# can be configured in the admin/ area dynamically AND/OR here (though both for same provider is problematic)
+# see https://docs.allauth.org/en/latest/socialaccount/provider_configuration.html
+# set in settings_secret
+#SOCIALACCOUNT_PROVIDERS = {}
+
+
+# allauth settings
+# see https://docs.allauth.org/en/latest/account/configuration.html
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_NOTIFICATIONS = True
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+DEFAULT_FROM_EMAIL = "highlow@dcmembers.com"
+
+
+# backend tools
+# send emails to console for testing
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
+# set in settings_secret
+# EMAIL_HOST, etc.
 
 
 
@@ -221,19 +240,17 @@ LOGOUT_REDIRECT_URL = "coreHome"
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # crispy forms 3rd party addon
-CRISPY_TEMPLATE_PACK = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# backend tools
-# send emails to console for testing
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # media
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
 # for django-debug-toolbar
-INTERNAL_IPS = ["127.0.0.1",]
-
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 
 
@@ -243,3 +260,8 @@ INTERNAL_IPS = ["127.0.0.1",]
 # cachebuildversion, if changed, will invalidate game story build text cache calculations, which makes a story look like it needs rebuilding; so change this to force a rebuild when author changes game
 JR_STORYBUILDVERSION = "v1"
 JR_MAXUPLOADGAMEFILESIZE = 10000000
+
+
+
+# now override with any secret settings
+from .settings_secret import *

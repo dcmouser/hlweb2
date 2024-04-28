@@ -67,6 +67,7 @@ def fastExtractSettingsDictionary(text):
     else:
         raise Exception("No options block found in text.")
     #
+
     return settings
 # ---------------------------------------------------------------------------
 
@@ -358,7 +359,7 @@ class HlParser:
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
         outFilePath = saveDir + '/' + chapterName + baseFileName
         return outFilePath
 # ---------------------------------------------------------------------------
@@ -476,7 +477,7 @@ class HlParser:
 # ---------------------------------------------------------------------------
     def makeChapterSaveDirFileName(self, subdir, suffix):
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
         baseOutputFileName = chapterName + suffix
         defaultSaveDir = self.getOptionValThrowException('savedir')
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
@@ -1469,6 +1470,10 @@ class HlParser:
         self.leadStats['wordCount'] = wordCount
         self.leadStats['summaryString'] = '{} Leads / {:.2f}k of text / {:,} words.'.format(self.leadStats['count'], self.leadStats['textLength'] / 1000, self.leadStats['wordCount'])
         return self.leadStats
+    
+    
+    def getLeadStats(self):
+        return self.leadStats
 
 
 
@@ -1610,6 +1615,11 @@ class HlParser:
         #
         # Change api version
         self.updateHlApiDirs()
+
+        # store chapter name
+        info = self.getOptionValThrowException('info')
+        self.chapterName = jrfuncs.getDictValueOrDefault(info, 'name', 'UNNAMED')
+
 # ---------------------------------------------------------------------------
 
 
@@ -1919,7 +1929,7 @@ class HlParser:
         dataSaveDir = saveDir + '/dataout'
         jrfuncs.createDirIfMissing(dataSaveDir)
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
         outFilePath = dataSaveDir + '/' + chapterName + '_leadsout.json'
         #
         # sort
@@ -3512,7 +3522,6 @@ class HlParser:
 
 
 
-
 # ---------------------------------------------------------------------------
     # user setable variables
     def getUserVariableTuple(self, varName):
@@ -3669,7 +3678,7 @@ class HlParser:
         jrfuncs.createDirIfMissing(saveDir)
 
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
 
         # delete previous
         dataSaveDir = saveDir + '/dataout'
@@ -4438,7 +4447,13 @@ class HlParser:
 
 
 
+# ---------------------------------------------------------------------------
+    def getChapterName(self):
+        return self.chapterName
 
+    def setChapterName(self, chapterName):
+        self.chapterName = chapterName
+# ---------------------------------------------------------------------------
 
 
 
@@ -4463,7 +4478,7 @@ class HlParser:
         renderFormat = leadOutputOptions['format'] if ('format' in leadOutputOptions) else renderOptions['format']
         #
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
         chapterTitle = jrfuncs.getDictValueOrDefault(info, 'title', chapterName)
         #
         optionCompileLatex = jrfuncs.getDictValueOrDefault(renderOptions, 'compileLatex', True)
@@ -4476,6 +4491,7 @@ class HlParser:
 
         # where to save
         baseOutputFileName = chapterName + leadOutputOptions['suffix']
+
         defaultSaveDir = self.getOptionValThrowException('savedir')
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
         saveDir = self.resolveTemplateVars(saveDir)
@@ -4592,7 +4608,7 @@ class HlParser:
                     deleteFileExtensions = ['aux', 'latex', 'log', 'out', 'toc']
                 elif (renderFormat=='html'):
                     deleteFileExtensions = []
-                self.deleteExtensionFilesIfExists(saveDir,baseOutputFileName, ['aux', 'latex', 'html', 'log', 'out', 'toc'])
+                self.deleteExtensionFilesIfExists(saveDir,baseOutputFileName, deleteFileExtensions)
                 self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
             #
             outFilePathPdf = outFilePath
@@ -4611,6 +4627,7 @@ class HlParser:
     def deleteSaveDirFileIfExists(self, baseDir, fileName):
             filePath = '{}/{}'.format(baseDir, fileName)
             jrfuncs.deleteFilePathIfExists(filePath)
+
 
     def renderSection(self, parentSection, section, parentLayoutOptions, renderFormat, skipSectionList, leadOutputOptions, context):
         text = ''
@@ -6993,22 +7010,17 @@ class HlParser:
     def cleanBuild(self, build):
         label = build["label"]
         #jrprint("Cleaning build: {}".format(label))
-        format = build["format"]
-        paperSize = build["paperSize"]
-        layout = build["layout"]
-        buildVariant = build["variant"]    
         # BUILD
-        suffix = calcBuildNameSuffixForVariant(build)
+        suffix = build["suffix"]
         #
         info = self.getOptionValThrowException('info')
-        chapterName = jrfuncs.getDictValueOrDefault(info, 'name', '')
+        chapterName = self.getChapterName()
         baseOutputFileName = chapterName + suffix
         defaultSaveDir = self.getOptionValThrowException('savedir')
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
         renderFormat = build['format']
-        outFilePath = '{}/{}.{}'.format(saveDir, baseOutputFileName, renderFormat)
         #
         deleteFileExtensions = []
         if (renderFormat=='latex') or (renderFormat=='pdf'):
@@ -7017,7 +7029,8 @@ class HlParser:
             deleteFileExtensions = ['html', 'pdf']
         else:
             raise Exception('Unknown build form: "{}".'.format(renderFormat))
-        self.deleteExtensionFilesIfExists(saveDir, baseOutputFileName, ['aux', 'latex', 'pdf', 'html', 'log', 'out', 'toc'])
+        #
+        self.deleteExtensionFilesIfExists(saveDir, baseOutputFileName, deleteFileExtensions)
         self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
 
 
@@ -7025,8 +7038,8 @@ class HlParser:
         errorCounterPreRun = self.getBuildErrorCount()
         label = build["label"]
         jrprint("Building: {}".format(label))
-        format = build["format"]
-        paperSize = build["paperSize"]
+        #format = build["format"]
+        #paperSize = build["paperSize"]
         layout = build["layout"]
         buildVariant = build["variant"]
 
@@ -7034,13 +7047,13 @@ class HlParser:
         if (buildVariant not in ['normal', 'debug', 'summary']):
             raise Exception("Unknown build variant in runbuild: '{}'.".format(buildVariant))
 
-
         #
-        fontSize = build['fontSize'] if ('fontSize' in build) else calcFontSizeFromPaperSize(paperSize)
-        paperSizeLatex = build['paperSizeLatex'] if ('paperSizeLatex' in build) else calcPaperSizeLatexFromPaperSize(paperSize)
-        doubleSided = build['doubleSided'] if ('doubleSided' in build) else calcDoubledSidednessFromLayout(layout)
-        columns = build['columns'] if ('columns' in build) else calcColumnsFromLayout(layout)
-        solo = build['solo'] if ('solo' in build) else calcSoloFromLayout(layout)
+        fontSize = build['fontSize']
+        paperSizeLatex = build['paperSizeLatex']
+        doubleSided = build['doubleSided']
+        columns = build['columns']
+        solo = build['solo']
+        suffix = build['suffix']
         #
         #
         buildVariantToMode = {'normal': 'normal', 'debug':'report', 'summary': 'normal'}
@@ -7057,8 +7070,12 @@ class HlParser:
             raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
 
 
+        # set chapter name which is used for saving files
+        gameName = build["gameName"]
+        self.setChapterName(gameName)
+
         # BUILD
-        suffix = build['suffix'] if ('suffix' in build) else calcBuildNameSuffixForVariant(build)
+
         options = {'suffix':suffix, 'layout': layout, 'paperSize': paperSizeLatex, 'fontSize': fontSize, 'doubleSided': doubleSided, 'columns': columns, 'solo': solo, 'mode': buildVariantToMode[buildVariant], 'leadList': buildVariantToLeadList[buildVariant]}
         self.renderLeads(options, flagCleanAfter)
 
@@ -7133,107 +7150,4 @@ class HlParser:
 
 
 
-
-# ---------------------------------------------------------------------------
-# helpers
-
-def calcBuildNameSuffixForVariant(build):
-    label = build["label"]
-    format = build["format"]
-    paperSize = build["paperSize"]
-    layout = build["layout"]
-    buildVariant = build["variant"]    
-    #
-    if (buildVariant=="normal"):
-        suffix = "_{}_{}".format(layout, paperSize)
-    elif (buildVariant=="debug"):
-        suffix = "_{}_{}_{}".format("debug", layout, paperSize)
-    elif (buildVariant=="summary"):
-        suffix = "_summary"
-    else:
-        raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
-    #
-    return suffix
-
-
-
-
-
-def calcFontSizeFromPaperSize(paperSize):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    paperSizeToFontMap = {
-        Game.GamePreferredFormatPaperSize_Letter: "10pt",
-        Game.GamePreferredFormatPaperSize_A4: "10pt",
-        Game.GamePreferredFormatPaperSize_B5: "8pt",
-        Game.GamePreferredFormatPaperSize_A5: "8pt",            
-    }
-    return paperSizeToFontMap[paperSize]
-
-
-def calcPaperSizeLatexFromPaperSize(paperSize):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    paperSizeToLatexPaperSizeMap = {
-        Game.GamePreferredFormatPaperSize_Letter: "letter",
-        Game.GamePreferredFormatPaperSize_A4: "a4",
-        Game.GamePreferredFormatPaperSize_B5: "b5",
-        Game.GamePreferredFormatPaperSize_A5: "a5",            
-    }
-    return paperSizeToLatexPaperSizeMap[paperSize]
-
-
-def calcDoubledSidednessFromLayout(layout):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    layoutToDoubleSidednessMap = {
-        Game.GamePreferredFormatLayout_Solo: False,
-        Game.GamePreferredFormatLayout_SoloPrint: True,
-        Game.GamePreferredFormatLayout_OneCol: True,
-        Game.GamePreferredFormatLayout_TwoCol: True,            
-    }
-    return layoutToDoubleSidednessMap[layout]
-
-
-def calcColumnsFromLayout(layout):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    layoutToColumnsMap = {
-        Game.GamePreferredFormatLayout_Solo: 1,
-        Game.GamePreferredFormatLayout_SoloPrint: 1,
-        Game.GamePreferredFormatLayout_OneCol: 1,
-        Game.GamePreferredFormatLayout_TwoCol: 2,            
-    }
-    return layoutToColumnsMap[layout]
-
-
-def calcSoloFromLayout(layout):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    layoutToSoloMap = {
-        Game.GamePreferredFormatLayout_Solo: True,
-        Game.GamePreferredFormatLayout_SoloPrint: True,
-        Game.GamePreferredFormatLayout_OneCol: False,
-        Game.GamePreferredFormatLayout_TwoCol: False,
-    }
-    return layoutToSoloMap[layout]
-
-
-def calcMaxColumnsFromPaperSize(paperSize):
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    #
-    paperSizeToMaxColumnsMap = {
-        Game.GamePreferredFormatPaperSize_Letter: 2,
-        Game.GamePreferredFormatPaperSize_A4: 2,
-        Game.GamePreferredFormatPaperSize_B5: 2,
-        Game.GamePreferredFormatPaperSize_A5: 1,            
-    }
-    return paperSizeToMaxColumnsMap[paperSize]
-# ---------------------------------------------------------------------------
 

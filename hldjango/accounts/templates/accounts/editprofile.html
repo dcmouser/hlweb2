@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "allauth/layouts/base.html" %}
 
 {% load crispy_forms_tags %}
 {% block title %}Edit Profile for {{customuser.username}}{% endblock title %}
@@ -7,7 +7,10 @@
 <h2>Edit Profile for {{customuser.username}}</h2>
 <form method="post"> {% csrf_token %}
   {{ form|crispy }}
-  <a href="{% url 'accountProfile' customuser.pk %}" class="btn btn-primary" role="button">Cancel</a>
+  <a href="{% url 'accountProfile' %}" class="btn btn-primary" role="button">Cancel</a>
   <input class="btn btn-success" type="submit" value="Update">
 </form>
+<hr/>
+OR:
+{% include "allauth/layouts/accountChangeLinks.html" %} 
 {% endblock content %}

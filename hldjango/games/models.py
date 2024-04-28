@@ -13,7 +13,7 @@ from .validators import validateGameFile
 from lib.jr import jrfuncs
 from lib.jr.jrfuncs import jrprint
 from lib.hl.hlparser import fastExtractSettingsDictionary
-from lib.hl.hltasks import queueTaskBuildStoryPdf
+from lib.hl.hltasks import queueTaskBuildStoryPdf, publishGameFiles
 
 # python modules
 import hashlib
@@ -84,11 +84,17 @@ class Game(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-
+    # computed stats from last build
+    buildStats = models.CharField(max_length=255, verbose_name="Build statistics", help_text="Computed build statistics", default="", blank=True)
+    
 
 
 
     # these properties should be extracted from the text
+    gameName = models.CharField(
+        max_length=80, help_text="Public name of game", default="", blank=True
+    )
+
     title = models.CharField(
         max_length=80, help_text="Title of game", default="", blank=True
     )
@@ -120,6 +126,8 @@ class Game(models.Model):
     extraInfo = models.TextField(
         help_text="Extra information (credits, links, etc.)", default="", blank=True
     )
+
+
 
     # result of building
     buildLog = models.TextField(help_text="Build Log", default="", blank=True)
@@ -186,17 +194,18 @@ class Game(models.Model):
                 errorList.append("No value set for required property group 'info'.")
 
             # set info properties
-            self.setPropertyByName("title", info, errorList)
-            self.setPropertyByName("subtitle", info, errorList, False)
-            self.setPropertyByName("authors", info, errorList)
-            self.setPropertyByName("version", info, errorList)
-            self.setPropertyByName("versionDate", info, errorList)
-            self.setPropertyByName("difficulty", info, errorList)
-            self.setPropertyByName("duration", info, errorList)
-            self.setPropertyByName("cautions", info, errorList, False)
-            self.setPropertyByName("summary", info, errorList)
-            self.setPropertyByName("extraInfo", info, errorList, False)
-            self.setPropertyByName("url", info, errorList, False)
+            self.setPropertyByName("name", "gameName", info, errorList)
+            self.setPropertyByName("title", None, info, errorList)
+            self.setPropertyByName("subtitle", None, info, errorList, False)
+            self.setPropertyByName("authors", None, info, errorList)
+            self.setPropertyByName("version", None, info, errorList)
+            self.setPropertyByName("versionDate", None, info, errorList)
+            self.setPropertyByName("difficulty", None, info, errorList)
+            self.setPropertyByName("duration", None, info, errorList)
+            self.setPropertyByName("cautions", None, info, errorList, False)
+            self.setPropertyByName("summary", None, info, errorList)
+            self.setPropertyByName("extraInfo, None", info, errorList, False)
+            self.setPropertyByName("url", None, info, errorList, False)
 
             #
             if (len(errorList)==0):
@@ -212,18 +221,20 @@ class Game(models.Model):
         self.needsBuild = True
 
 
-    def setPropertyByName(self, propName, propDict, errorList, flagErrorIfMissing = True, defaultVal = None):
+    def setPropertyByName(self, propName, storeName, propDict, errorList, flagErrorIfMissing = True, defaultVal = None):
+        if (storeName is None):
+            storeName = propName
         if (propName in propDict):
             value = propDict[propName]
-            setattr(self, propName, value)
+            setattr(self, storeName, value)
         else:
             if (flagErrorIfMissing):
                 errorList.append("No value set for required setting property '{}'".format(propName))
             else:
                 if (defaultVal is not None):
-                    setattr(self, propName, defaultVal)
+                    setattr(self, storeName, defaultVal)
                 else:
-                    setattr(self, propName, "")
+                    setattr(self, storeName, "")
 
 
 
@@ -298,19 +309,22 @@ class Game(models.Model):
             buildMode = "buildDebug"
         elif ("buildComplete" in request.POST):
             buildMode = "buildComplete"
-        elif ("buildPublish" in request.POST):
-            buildMode = "buildPublish"
         else:
             raise Exception("Unspecified build mode.")
 
         # build options
         requestOptions = {"buildMode": buildMode}
 
-        # this will QUEUE the game build if neeed
-        # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
-        # ATTN: eventually move all this to the function that actually builds
-        retv = queueTaskBuildStoryPdf(self.pk, requestOptions)
-        result = retv.get()
+
+        # do the build (queued or immediate)
+        result = None
+        if (True):
+            # this will QUEUE or run immediately the game build if neeed
+            # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
+            # ATTN: eventually move all this to the function that actually builds
+            retv = queueTaskBuildStoryPdf(self, requestOptions)
+            result = retv.get()
+
 
         # send to detail view with flash message
         if (isinstance(result, str)):
@@ -322,6 +336,54 @@ class Game(models.Model):
 
 
 
+
+
+
+
+
+    def publishGame(self, request):
+        result = None
+        if (True):
+            # non queued publish
+            try:
+                result = publishGameFiles(self)
+            except Exception as e:
+                result = "Error Publishing: {}.".format (str(e))
+            if (result is None):
+                result = "Successfully published."
+
+        messages.add_message(request, messages.INFO, result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # ---------------------------------------------------------------------------
+    def deletePublishedFiles(self):
+        # delete the files for this game in the 
+        pass
+    # ---------------------------------------------------------------------------
 
 
 
@@ -418,12 +480,12 @@ class GameFile(models.Model):
     )
 
 
-
     def __str__(self):
         return self.filefield.name
 
     def get_absolute_url(self):
         return reverse("gameFileDetail", kwargs={"pk": self.pk})
+
 
     # override delete func
     # when we delete a GameFile, we want to delete the actual file on disk
