@@ -19,7 +19,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "./manage.py",
-            "args": ["runserver"],
+            "args": ["runserver","--noreload"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

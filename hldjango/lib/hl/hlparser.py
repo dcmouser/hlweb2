@@ -99,12 +99,6 @@ class HlParser:
         self.tagConditionLabelStage = 0
         self.tagDocumentIndex = 0
         #
-        # image helper
-        imageFileFinderOptions = {"stripExtensions": False}
-        self.imageFileFinder = JrFileFinder(imageFileFinderOptions)
-        self.imageFileFinder.clearExtensionList()
-        self.imageFileFinder.addExtensionListImages()
-        #
         self.notes = []
         #
         self.userVars = {}
@@ -219,6 +213,10 @@ class HlParser:
         self.storegGameText = ''
         #
         self.generatedFiles = []
+        self.getGeneratedFilesForZip = []
+        #
+        # game file manager
+        self.gameFileManager = self.getOptionValThrowException('gameFileManager')
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
@@ -240,10 +238,18 @@ class HlParser:
     def getStoredGameText(self):
         return self.storegGameText
 
-    def addGeneratedFile(self, filePath):
+    def addGeneratedFile(self, filePath, flagAddZipList = True):
         self.generatedFiles.append(filePath)
+        if (flagAddZipList):
+            self.getGeneratedFilesForZip.append(filePath)
+
     def getGeneratedFileList(self):
         return self.generatedFiles
+    def getGeneratedFileListForZip(self):
+        return self.getGeneratedFilesForZip
+
+    def clearGeneratedFileListForZip(self):
+        self.getGeneratedFilesForZip = []
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
@@ -354,16 +360,27 @@ class HlParser:
 
 
 # ---------------------------------------------------------------------------
-    def calcOutFileDerivedName(self, baseFileName):
+    def getSaveDir(self):
         saveDir = self.getOptionValThrowException('savedir')
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
+        return saveDir
+
+    def calcOutFileDerivedName(self, baseFileName):
+        saveDir = self.getSaveDir()
         info = self.getOptionValThrowException('info')
         chapterName = self.getChapterName()
         outFilePath = saveDir + '/' + chapterName + baseFileName
         return outFilePath
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+    def getChapterName(self):
+        return self.chapterName
+
+    def setChapterName(self, chapterName):
+        self.chapterName = chapterName
+# ---------------------------------------------------------------------------
 
 
 
@@ -422,6 +439,11 @@ class HlParser:
         if (val==None):
             val = defaultVal
         return val
+
+    def setOption(self, keyName, val):
+        self.jroptionsWorkingDir.setKeyVal('options',keyName, val)
+
+
     #
     def getBaseOptionValThrowException(self, keyName):
         return self.jroptions.getKeyValThrowException('options', keyName)
@@ -479,9 +501,7 @@ class HlParser:
         info = self.getOptionValThrowException('info')
         chapterName = self.getChapterName()
         baseOutputFileName = chapterName + suffix
-        defaultSaveDir = self.getOptionValThrowException('savedir')
-        saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
-        saveDir = self.resolveTemplateVars(saveDir)
+        saveDir = self.getSaveDir()
         if (subdir!=''):
             saveDir = saveDir + '/' + subdir
         jrfuncs.createDirIfMissing(saveDir)
@@ -490,7 +510,8 @@ class HlParser:
 
     def saveTextLeads(self):
         fileText = self.getStoredGameText()
-        outFilePath = self.makeChapterSaveDirFileName('dataout','_leads.txt')
+        #outFilePath = self.makeChapterSaveDirFileName('dataout','_leads.txt')
+        outFilePath = self.makeChapterSaveDirFileName('','_leads.txt')
         encoding = 'utf-8'
         jrfuncs.saveTxtToFile(outFilePath, fileText, encoding)
         self.addGeneratedFile(outFilePath)
@@ -498,7 +519,8 @@ class HlParser:
     def saveAltStoryTextDefault(self):
         fileText = self.getStoredGameText()
         #
-        outFilePath = self.makeChapterSaveDirFileName('dataout','_labeledLeads.txt')
+        #outFilePath = self.makeChapterSaveDirFileName('dataout','_labeledLeads.txt')
+        outFilePath = self.makeChapterSaveDirFileName('','_labeledLeads.txt')
         encoding = 'utf-8'
         self.saveAltStoryText(fileText, outFilePath, encoding)
         #
@@ -1924,9 +1946,9 @@ class HlParser:
 
 # ---------------------------------------------------------------------------
     def saveLeads(self):
-        saveDir = self.getOptionValThrowException('savedir')
-        saveDir = self.resolveTemplateVars(saveDir)
-        dataSaveDir = saveDir + '/dataout'
+        saveDir = self.getSaveDir()
+        #dataSaveDir = saveDir + '/dataout'
+        dataSaveDir = saveDir
         jrfuncs.createDirIfMissing(dataSaveDir)
         info = self.getOptionValThrowException('info')
         chapterName = self.getChapterName()
@@ -3346,7 +3368,11 @@ class HlParser:
 
         elif (funcName == 'remind'):
             reminderType = args['type']
-            if (reminderType=='turnPageSolo'):
+            if (reminderType=='turnpage'):
+                msg = "SYNTAX ERROR IN STORYBOOK; WARNING: remind(turnpage) is no longer supported because of different layout formats; ignored."
+                self.addWarning(msg)
+                text = ""
+            elif (reminderType=='turnPageSolo'):
                 if False and (self.isLeadContextSectionStyleSolo(behalfLead, context)):
                     text = '*Turn the page...*\n'
                     text += '%pagebreak%\n'
@@ -3369,7 +3395,7 @@ class HlParser:
                 else:
                     text = 'Subtract **1** point for every 10 overtime you accumulated (rounded down)'
             else:
-                self.raiseBlockException(block, 0, 'Unknown reminder type in $remind(type=?)')
+                self.raiseBlockException(block, 0, 'Unknown reminder type in $remind({})'.format(reminderType))
             resultText = text
 
         elif (funcName == 'autohint'):
@@ -3673,15 +3699,15 @@ class HlParser:
             leadFeatures[fname].append(featureRow)            
 
         # save
-        saveDir = self.getOptionValThrowException('savedir')
-        saveDir = self.resolveTemplateVars(saveDir)
+        saveDir = self.getSaveDir()
         jrfuncs.createDirIfMissing(saveDir)
 
         info = self.getOptionValThrowException('info')
         chapterName = self.getChapterName()
 
         # delete previous
-        dataSaveDir = saveDir + '/dataout'
+        #dataSaveDir = saveDir + '/dataout'
+        dataSaveDir = saveDir
         jrfuncs.createDirIfMissing(dataSaveDir)
         for ptype in fictionalSourceList:
             outFilePath = dataSaveDir + '/{}_manualAdd_{}.json'.format(chapterName, ptype)
@@ -4447,13 +4473,7 @@ class HlParser:
 
 
 
-# ---------------------------------------------------------------------------
-    def getChapterName(self):
-        return self.chapterName
 
-    def setChapterName(self, chapterName):
-        self.chapterName = chapterName
-# ---------------------------------------------------------------------------
 
 
 
@@ -4492,7 +4512,7 @@ class HlParser:
         # where to save
         baseOutputFileName = chapterName + leadOutputOptions['suffix']
 
-        defaultSaveDir = self.getOptionValThrowException('savedir')
+        defaultSaveDir = self.getSaveDir()
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
@@ -6869,7 +6889,8 @@ class HlParser:
         else:
             imageFilePath = filePath
         #
-        filePathResolvedList = self.imageFileFinder.findImagesForName(imageFilePath, True, True)
+        filePathResolvedList = self.gameFileManager.findImagesForName(imageFilePath, True, True)
+        #filePathResolvedList = self.imageFileFinder.findImagesForName(imageFilePath, True, True)
         #
         if (filePathResolvedList is None):
             if (flagThrowException):
@@ -6886,6 +6907,8 @@ class HlParser:
 # ---------------------------------------------------------------------------
     def scanImages(self):
         # dirs for scanning for images
+        raise Exception("Scan images no longer used.")
+    
         defaultSaveDir = self.getOptionValThrowException('savedir')
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
         saveDir = self.resolveTemplateVars(saveDir)
@@ -6937,7 +6960,7 @@ class HlParser:
         self.runDebugExtraStepsIfNeeded()
         #
         self.saveLeads()
-        self.scanImages()
+        #self.scanImages()
         self.renderLeadsDual(flagCleanAfter)
         #
         self.saveAllManualLeads()
@@ -6971,7 +6994,7 @@ class HlParser:
         self.addZeroLeadWarning()
         self.createCommonMindMapNodes()
         self.processLeads()
-        self.scanImages()
+        #self.scanImages()
 
 
     def runBuildList(self, flagCleanAfter):
@@ -6980,8 +7003,9 @@ class HlParser:
         #
         self.clearBuildLog()
         #
-        # clean all files in prep for running
-        self.cleanBuildList()
+        # clean all files in prep for running (we no longer do this, we hope our caller does)
+        if (False):
+            self.cleanBuildList()
         #
         #
         buildList = self.getOptionValThrowException('buildList')
@@ -7016,7 +7040,7 @@ class HlParser:
         info = self.getOptionValThrowException('info')
         chapterName = self.getChapterName()
         baseOutputFileName = chapterName + suffix
-        defaultSaveDir = self.getOptionValThrowException('savedir')
+        defaultSaveDir = self.getSaveDir()
         saveDir = self.getOptionVal('chapterSaveDir', defaultSaveDir)
         saveDir = self.resolveTemplateVars(saveDir)
         jrfuncs.createDirIfMissing(saveDir)
@@ -7034,6 +7058,14 @@ class HlParser:
         self.deleteSaveDirFileIfExists(saveDir, 'texput.log')
 
 
+
+
+
+
+
+
+
+
     def runBuild(self, build, flagCleanAfter):
         errorCounterPreRun = self.getBuildErrorCount()
         label = build["label"]
@@ -7042,6 +7074,23 @@ class HlParser:
         #paperSize = build["paperSize"]
         layout = build["layout"]
         buildVariant = build["variant"]
+        gamefileType = build["gameFileType"]
+        gameName = build["gameName"]
+
+        # set save dir from gamefilemanager and gamefiletype
+        self.setSaveDirFromGameFileType(gamefileType)
+
+        if (buildVariant=="zip"):
+            # special zip instruction
+            generatedFileList = self.getGeneratedFileListForZip()
+            optionZipOutDir = self.getSaveDir()
+            optionZipSuffix = '_' + gamefileType
+            if (len(generatedFileList)>0):
+                zipFilePath = jrfuncs.makeZipFile(generatedFileList, optionZipOutDir, gameName + optionZipSuffix)
+                jrprint("Zipped {} files to '{}'.".format(len(generatedFileList), zipFilePath))
+                self.addGeneratedFile(zipFilePath, False)
+            self.clearGeneratedFileListForZip()
+            return True
 
         # sanity check
         if (buildVariant not in ['normal', 'debug', 'summary']):
@@ -7071,7 +7120,7 @@ class HlParser:
 
 
         # set chapter name which is used for saving files
-        gameName = build["gameName"]
+
         self.setChapterName(gameName)
 
         # BUILD
@@ -7107,6 +7156,11 @@ class HlParser:
 
 
 
+# ---------------------------------------------------------------------------
+    def setSaveDirFromGameFileType(self, gamefileType):
+        saveDir = self.gameFileManager.getDirectoryPathForGameType(gamefileType)
+        self.setOption("savedir", saveDir)
+# ---------------------------------------------------------------------------
 
 
 

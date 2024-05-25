@@ -11,7 +11,7 @@ import os
 # user modules
 from .models import Game, GameFile
 from .forms import BuildGameForm, GameFileMultipleUploadForm
-from .models import calculateGameFilePathRuntime
+from . import gamefilemanager
 
 
 
@@ -55,7 +55,7 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Game
     permission_required = "games.add_game"
     template_name = "games/gameCreate.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "buildStats", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -66,7 +66,7 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "queueDate", "buildDate", "buildLog", "isBuildErrored", "needsBuild", "queueStatus", "buildStats", "textHash", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -92,6 +92,15 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return (obj.owner == self.request.user)
 
 
+
+class GameAllFileListView(DetailView):
+    model = Game
+    template_name = "games/gameAllFileList.html"
+
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        return context
 
 
 
@@ -190,7 +199,7 @@ class GameCreateFileView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         game.deleteExistingFileIfFound(formFileName, True, None)
 
         # create new GameFile instance and save it
-        instance = GameFile(filefield=fileup, game=game, gameFileType=GameFile.GameFileType_Up, owner=owner, note = note)
+        instance = GameFile(filefield=fileup, game=game, gameFileType=gamefilemanager.EnumGameFileTypeName_StoryUpload, owner=owner, note = note)
         instance.save()
 
 
@@ -242,6 +251,7 @@ class GameFileEditView(UserPassesTestMixin, UpdateView):
             if (formFileRelativePath != initialFileRelativePath):
                 # they are changing the file
                 formFileName = form.cleaned_data['filefield'].name
+                # delete old file
                 game.deleteExistingFileIfFound(formFileName, True, form.instance)
 
         # this call creates the new file and will give it a unique name if needed to avoid overwriting which we need to fix
@@ -255,7 +265,6 @@ class GameFileEditView(UserPassesTestMixin, UpdateView):
                 # problem is django claims the file is in use
                 form.instance.filefield.close()
                 game.deleteExistingMediaPathedFileIfFound(initialFileRelativePath)
-
 
         # return validity
         return formValidRetv

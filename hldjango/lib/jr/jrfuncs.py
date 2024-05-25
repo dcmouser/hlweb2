@@ -97,6 +97,14 @@ def pathExists(path):
     return pathExists
 
 
+def directoryExists(path):
+    pathExists = os.path.exists(path)
+    if (not pathExists):
+        return False
+    return (not os.path.isfile(path))
+
+
+
 def copyFile(sourcePath, destPath, fname):
     jrprint('Asked to copy "{}" from "{}" to "{}".'.format(fname, sourcePath, destPath))
     srcFile = sourcePath + '/' + fname
@@ -1211,7 +1219,14 @@ def escapedCharacterConvert(charc):
 
 # ---------------------------------------------------------------------------   
 def getNiceCurrentDateTime():
-    return datetime.datetime.now().strftime('%A, %B %d at %I:%M %p')
+    return getNiceDateTime(datetime.datetime.now())
+
+def getNiceDateTime(dt):
+    return dt.strftime('%A, %B %d at %I:%M %p')
+
+def getNiceDateTimeCompact(dt):
+    #return dt.strftime('%a, %b %d at %#I:%M %p')
+    return dt.strftime('%a, %b %d at %I:%M %p')
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
@@ -1293,8 +1308,19 @@ def makeZipFile(generatedFileList, saveDir, fileBaseName):
             else:
                 filePathRelative = os.path.baseName(filePath)
             zip.write(filePath, compress_type=zipfile.ZIP_DEFLATED, arcname=filePathRelative)
-    return 
+    return  outFilePath
 # ---------------------------------------------------------------------------
 
 
+
+# ---------------------------------------------------------------------------
+# see https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
+def niceFileSizeStr(byteCount):
+    size = byteCount
+    for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024.0:
+            return "%3.1f %s" % (size, x)
+        size /= 1024.0
+    return byteCount
+# ---------------------------------------------------------------------------
 

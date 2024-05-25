@@ -1,0 +1,40 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+
+{% block title %}Generated game files{% endblock title %}
+
+
+{% block content %}
+
+
+<form action="{% url 'gameBuild' object.pk %}" method="post"> {% csrf_token %}
+
+    {{ form|crispy }}
+
+    <h1>Generated game files for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
+
+    <h3>Preferred Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildPreferred" value="Quick build single storybook PDF in preferred format"> - {{game.get_preferredFormatPaperSize_display}} / {{game.get_preferredFormatLayout_display}}</div>
+    {% fileUrlList user game.pk "buildPreferred" %}
+
+    <h3>Debug Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildDebug" value="Build debug report to check for problems"></div>
+    {% fileUrlList user game.pk "buildDebug" %}
+
+    <h3>Draft Publication Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildDraft" value="Build complete set of *draft* Storybook PDFs in all formats (slow)"></div>
+    {% fileUrlList user game.pk "buildDraft" %}
+
+</form>
+<form action="{% url 'gamePublish' object.pk %}" method="post"> {% csrf_token %}
+
+    <h3>Published Files</h3>
+    <div><input class="btn btn-success" type="submit" name="published" value="Publish the current draft PDF Set as the new Official Release"></div>
+    {% fileUrlList user game.pk "published" %}
+
+</form>
+
+{% endblock content %}

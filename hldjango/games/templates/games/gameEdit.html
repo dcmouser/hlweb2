@@ -7,8 +7,9 @@
 {% block content %}
 <h1>Edit Game</h1>
 <form action=""" method="post"> {% csrf_token %}
-    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
     {{ form|crispy }}
+    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
+    <br/>
     <a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Cancel</a>
     <input class="btn btn-success" type="submit" value="Update">
 </form>

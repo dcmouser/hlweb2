@@ -256,11 +256,12 @@ INTERNAL_IPS = [
 
 
 
+
 # jr custom stuff
 # cachebuildversion, if changed, will invalidate game story build text cache calculations, which makes a story look like it needs rebuilding; so change this to force a rebuild when author changes game
 JR_STORYBUILDVERSION = "v1"
 JR_MAXUPLOADGAMEFILESIZE = 10000000
-
+JR_DIR_SHAREDIMAGES = MEDIA_ROOT / "shared/images"
 
 
 # now override with any secret settings

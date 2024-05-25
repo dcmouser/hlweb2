@@ -16,6 +16,7 @@ import traceback
 
 # user modules
 from lib.jr.jrfuncs import jrprint
+from lib.jr import jrdfuncs
 from hueyconfig import huey
 from lib.hl import hlparser
 from lib.jr import jrfuncs
@@ -35,12 +36,14 @@ from lib.jr import jrfuncs
 
 
 
-
 # module global funcs
 @db_task()
 def queueTaskBuildStoryPdf(game, requestOptions):
-    # starting time
+
+    # starting time of run
     timeStart = time.time()
+    # start time of build
+    buildDateStart = timezone.now()
 
     # reset
     buildLog = ""
@@ -51,58 +54,77 @@ def queueTaskBuildStoryPdf(game, requestOptions):
     buildMode = requestOptions["buildMode"]
 
     # imports needing in function to avoid circular?
-    from games.models import Game, calculateGameFilePathRuntime
+    from games.models import Game
+    from games import gamefilemanager
+    from games.gamefilemanager import GameFileManager
 
     # update model queue status before we start
-    game.queueStatus = Game.GameQueueStatusEnum_Running
-    # save
-    game.save()
+    #game.queueStatus = Game.GameQueueStatusEnum_Running
 
+    # save queu start status; we will update when we finish
+    buildResultsPrevious = game.getBuildResults(buildMode)
+    buildDateQueuedTimestamp = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "buildDateQueued", None)
+    buildDateQueued = jrdfuncs.convertTimeStampToDateTimeDefaultNow(buildDateQueuedTimestamp)
+    #
+    buildResults = {
+        "queueStatus": Game.GameQueueStatusEnum_Running,
+        "buildDateQueued": buildDateQueued.timestamp(),
+        }
+    game.setBuildResults(buildMode, buildResults)
+
+    # save NOW early (and again later) since it will take some time and something else might run in meantime
+    game.save()
 
     # properties
     gameModelPk = game.pk
     gameInternalName = game.name
     gameName = game.gameName
     gameText = game.text
+    gameTextHash = game.textHash
     preferredFormatPaperSize = game.preferredFormatPaperSize
     preferredFormatLayout = game.preferredFormatLayout
+    #
+    # parsed values
+    gameBuildVersion = game.version
+    gameBuildVersionDate = game.versionDate
+
+    # create new gamefilemanager; which will be intermediary for accessing game data
+    gameFileManager = GameFileManager(game)
 
 
     # what outputs do we want parser to build/generate
-    optionBuildZip = True
-    optionZipSuffix = ''
     buildList = []
-    if (buildMode == "buildPreferred"):
+    if (buildMode in ["buildPreferred"]):
         # build preferred format
-        build = {"label": "preferred format build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "normal", }
+        build = {"label": "preferred format build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "normal", "gameFileType": gamefilemanager.EnumGameFileTypeName_PreferredBuild, }
         addCalculatedFieldsToBuild(build)
         buildList.append(build)
-        optionZipSuffix = '_preferred'
-    elif (buildMode == "buildDebug"):
+        if (True):
+            # build zip
+            zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_PreferredBuild}
+            buildList.append(zipBuild)
+    if (buildMode in ["buildDebug"]):
         # build debug format
-        build = {"label": "debug build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", }
+        build = {"label": "debug build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug, }
         addCalculatedFieldsToBuild(build)
         buildList.append(build)
-        optionZipSuffix = '_debug'
-    elif (buildMode == "buildComplete"):
+        if (True):
+            # build zip
+            zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug}
+            buildList.append(zipBuild)
+    if (buildMode in ["buildDraft"]):
         # build complete list; all combinations of page size and layout
-        buildList = generateCompleteBuildList(game, True)
-        optionBuildZip = True
-        optionZipSuffix = '_complete'
+        buildList += generateCompleteBuildList(game, False)
+        if (True):
+            # build zip
+            zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_DraftBuild}
+            buildList.append(zipBuild)
         #
-    elif (buildMode == "buildPublish") and (False):
-        # this is trickier; first we would like to build anything that needs building and THEN publish
-        # ATTN: TODO; for now we want caller to handle this differently
-        pass
-    else:
+    if (buildMode not in ["buildPreferred", "buildDebug", "buildDraft"]):
         raise Exception("Build mode not understood: '{}'.".format(buildMode))
-
-
-    # directories
-    buildDir = calculateGameFilePathRuntime(game, "build", False)
-    imageDir = calculateGameFilePathRuntime(game, "uploads", False)
-    # create build directory if it doesn't exist yet
-    jrfuncs.createDirIfMissing(buildDir)
+    
+    # initialize the directory of files, deleting any that exist previously
+    gameFileManager.deleteFilesInBuildListDirectories(buildList)
 
     # create options
     hlDirPath = os.path.abspath(os.path.dirname(__file__))
@@ -110,14 +132,10 @@ def queueTaskBuildStoryPdf(game, requestOptions):
     dataDirPath = hlDirPath + "/hldata"
     templateDirPath = hlDirPath + "/templates"
     overrideOptions = {
-        "workingdir": buildDir,
-        "storyDirectories": ["$workingdir"],
         "hlDataDir": dataDirPath,
         "templatedir": templateDirPath,
-        "savedir": buildDir,
-        "imagedir": imageDir,
         "buildList": buildList,
-        "optionBuildZip": optionBuildZip,
+        "gameFileManager": gameFileManager,
         }
         
 
@@ -136,12 +154,8 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         hlParser.parseStoryTextIntoBlocks(gameText, 'hlweb2')
 
         # run pdf generation
-        if (False):
-            # OLD:
-            hlParser.runAllSteps()
-        else:
-            # NEW
-            retv = hlParser.runBuildList(flagCleanAfter)
+        retv = hlParser.runBuildList(flagCleanAfter)
+    
     except Exception as e:
         #msg = "ERROR: Exception while building storybook. Exception = " + str(e)
         #msg = "ERROR: Exception while building storybook. Exception = " + traceback.format_exc(e)
@@ -170,26 +184,14 @@ def queueTaskBuildStoryPdf(game, requestOptions):
 
 
 
-
-    # ATTN: a nice sanity check here would be to see if game text has changed
-    if (game.text != gameText):
-        # ERROR
-        buildErrorStatus = True
-        buildLog = "ERROR: Game model text modified by author during build; needs rebuild."
-
-
-    if (not buildErrorStatus):
-        # success, should we zip?
-        if (optionBuildZip) and (len(generatedFileList)>0):
-            zipFilePath = jrfuncs.makeZipFile(generatedFileList, buildDir, gameName + optionZipSuffix)
-
-
     # elapsed time
+    # ATTN: this needs rewriting
     timeEnd = time.time()
     timeSecs = timeEnd - timeStart
     timeStr = jrfuncs.niceElapsedTimeStrMinsSecs(timeSecs)
     # wait time
-    waitSecs = (timezone.now() - game.queueDate).total_seconds()
+    waitSecs = (timezone.now().timestamp() - buildDateQueued.timestamp())
+    #waitSecs = (timezone.now() - buildDateQueued).total_seconds()
     waitStr = jrfuncs.niceElapsedTimeStrMinsSecs(waitSecs)
     #
     buildLog += "\nActual build time: {}.".format(timeStr)
@@ -204,32 +206,50 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         # can't continue below
 
 
-    # update
-    game.buildLog = buildLog
-    game.buildDate = timezone.now()
-    game.isBuildErrored = buildErrorStatus
-    if (game.isBuildErrored):
-        game.queueStatus = Game.GameQueueStatusEnum_Errored
-        game.needsBuild = True
-    else:
-        game.queueStatus = Game.GameQueueStatusEnum_Completed
-        game.needsBuild = False
-    #
-    game.buildStats = hlParser.getLeadStats()["summaryString"]
+    # ATTN: a nice sanity check here would be to see if game text has changed
+    # ATTN: we may not need to do this anymore, as long as we report when displaying that text hash has changed so its out of date
+    if (False) and (game.textHash != gameTextHash):
+        # ERROR
+        buildErrorStatus = True
+        buildLog = "ERROR: Game model text modified by author during build; needs rebuild."
 
-    # save
-    game.save()
+
+    # update build status with results of build, AND with the version we actually built (which may go out of date later)
+    buildDateEnd = timezone.now()
+    buildResults = {
+        "queueStatus": Game.GameQueueStatusEnum_Errored if (buildErrorStatus) else Game.GameQueueStatusEnum_Completed,
+        "buildDateQueued": buildDateQueued.timestamp(),
+        "buildDateStart": buildDateStart.timestamp(),
+        "buildDateEnd": buildDateEnd.timestamp(),
+        "buildVersion": gameBuildVersion,
+        "buildVersionDate": gameBuildVersionDate,
+        "buildTextHash": gameTextHash,
+        "buildError": buildErrorStatus,
+        "buildLog": buildLog,
+    }
+
+    # set build results buildlog
+    game.setBuildResults(buildMode, buildResults)
 
     # log
-    jrprint("Updated model game {} after completion of queueTaskBuildStoryPdf with queuestats = {}.".format(gameModelPk, game.queueStatus))
+    # jrprint("Updated model game {} after completion of queueTaskBuildStoryPdf with queuestats = {}.".format(gameModelPk, game.queueStatus))
 
     # result for instant run
-    if (game.isBuildErrored):
+    if (buildErrorStatus):
         retv = "Errors during build"
     else:
         retv = "Build was successful"
+        # update lead stats on successful build
+        game.leadStats = hlParser.getLeadStats()["summaryString"]
     #
+
+    # save game
+    game.save()
+
     return retv
+
+
+
 
 
 
@@ -237,7 +257,8 @@ def queueTaskBuildStoryPdf(game, requestOptions):
 def generateCompleteBuildList(game, flagDebugIncluded):
     # loop twice, the first time just calculate buildCount
     # imports needing in function to avoid circular?
-    from games.models import Game, calculateGameFilePathRuntime
+    from games.models import Game
+    from games import gamefilemanager
 
     buildList = []
     index = 0
@@ -254,11 +275,12 @@ def generateCompleteBuildList(game, flagDebugIncluded):
     # properties
     gameInternalName = game.name
     gameName = game.gameName
+    gameFileType = gamefilemanager.EnumGameFileTypeName_DraftBuild
     #
     if (True):
         # customs
         index += 1
-        build = {"label": "SOLOPRN_LETTER_LargeFont", "gameName": gameName, "suffix": "_SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "16pt",}
+        build = {"label": "SOLOPRN_LETTER_LargeFont", "gameName": gameName, "suffix": "_SOLOPRN_LETTER_LargeFont", "format": "pdf", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "normal", "fontSize": "16pt", "gameFileType": gameFileType, }
         addCalculatedFieldsToBuild(build)
         buildList.append(build)
 
@@ -280,7 +302,7 @@ def generateCompleteBuildList(game, flagDebugIncluded):
                     index += 1
                     label = "complete build {} of {} ({} x {})".format(index, buildCount, layout, paperSize)
                     #
-                    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": layout, "variant": "normal", }
+                    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": layout, "variant": "normal", "gameFileType": gameFileType, }
                     addCalculatedFieldsToBuild(build)
                     buildList.append(build)
 
@@ -288,7 +310,7 @@ def generateCompleteBuildList(game, flagDebugIncluded):
     if (flagDebugIncluded):
         index += 1
         label = "complete build {} of {} (debug)".format(index, buildCount)
-        build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", }
+        build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", "gameFileType": gameFileType, }
         addCalculatedFieldsToBuild(build)
         buildList.append(build)
     #
@@ -297,7 +319,7 @@ def generateCompleteBuildList(game, flagDebugIncluded):
     label = "complete build {} of {} (summary)".format(index, buildCount)
     paperSize = Game.GamePreferredFormatPaperSize_Letter
     #
-    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "summary"}
+    build = {"label": label, "gameName": gameName, "format": "pdf", "paperSize": paperSize, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "summary", "gameFileType": gameFileType, }
     addCalculatedFieldsToBuild(build)
     buildList.append(build)
 
@@ -322,37 +344,46 @@ def generateCompleteBuildList(game, flagDebugIncluded):
 def publishGameFiles(game):
     # imports needing in function to avoid circular?
     from games.models import Game, calculateGameFilePathRuntime
+    from games import gamefilemanager
+    from games.gamefilemanager import GameFileManager
 
-    buildList = generateCompleteBuildList(game, False)
-    optionBuildZip = False
-    optionZipSuffix = '_complete'
+    # create new gamefilemanager; which will be intermediary for accessing game data
+    gameFileManager = GameFileManager(game)
+    
+    # publish files
+    publishErrored = False
+    currentDate = timezone.now()
+    try:
+        publishResult = gameFileManager.copyPublishFiles(gamefilemanager.EnumGameFileTypeName_DraftBuild, gamefilemanager.EnumGameFileTypeName_Published)
+    except Exception as e:
+        msg = "ERROR: Exception while trying to copy publish files. Exception = " + repr(e)
+        msg += "; " + traceback.format_exc()
+        jrprint(msg)
+        publishResult = msg
+        publishErrored = True
 
-    buildDir = calculateGameFilePathRuntime(game, "build", False)
-    publishDir = calculateGameFilePathRuntime(game, "publish", False)
-    # create publish directory if it doesn't exist yet
-    jrfuncs.createDirIfMissing(publishDir)
+    if (not publishErrored):
+        # update states and save
+        publishResult = "Successfully published"
+        game.publishDate = currentDate
 
-    # now make sure the build dir files exist
-    buildCheckMessage = checkBuildFiles(buildDir, buildList)
+    # update
+    # this is different from build, we are essentially copying from draft
+    overrideResults = {
+        "publishResult": publishResult,
+        "publishErrored": publishErrored,
+        "publishDate": currentDate.timestamp(),
+        }
+    game.copyBuildResults("published", "buildDraft", overrideResults)
 
-    if (buildCheckMessage is not None):
-        raise Exception("ERROR: Could not publish files: {}.".format(buildCheckMessage))
+    # save
+    game.save()
 
-    # and now COPY from build dir to publish dir
-    publishRunMessage = publishBuildFiles(buildDir, buildList, publishDir)
-
-    if (publishRunMessage is None):
-        if (optionBuildZip):
-            filePathBuild = buildDir + "/" + game.gameName + optionZipSuffix + ".zip"
-            filePathPublish = publishDir + "/" + game.gameName + optionZipSuffix + ".zip"
-            jrfuncs.copyFilePath(filePathBuild, filePathPublish)
-
-    if (publishRunMessage is not None):
-        raise Exception("ERROR: Could not publish files: {}.".format(publishRunMessage))
-    #
-    msg = "{} game files published.".format(len(buildList))
-    return msg
+    return publishResult
 # ---------------------------------------------------------------------------
+
+
+
 
 
 

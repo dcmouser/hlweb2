@@ -8,3 +8,5 @@ __pycache__/
 .env
 
 logs
+settings_secret.py
+*.log

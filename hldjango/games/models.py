@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils import timezone
+from django.core.serializers.json import DjangoJSONEncoder
 
 # user modules
 from .validators import validateGameFile
@@ -15,11 +16,17 @@ from lib.jr.jrfuncs import jrprint
 from lib.hl.hlparser import fastExtractSettingsDictionary
 from lib.hl.hltasks import queueTaskBuildStoryPdf, publishGameFiles
 
+# helpers
+from . import gamefilemanager
+from .gamefilemanager import calculateGameFilePathRuntime, calculateAbsoluteMediaPathForRelativePath, calculateGameFileUploadPathRuntimeRelative
+
 # python modules
 import hashlib
+import traceback
+import json
 
-#
-TGameFileTypes = {0: "imageUpload", 1: "builtFile"}
+
+
 
 
 
@@ -72,9 +79,8 @@ class Game(models.Model):
     # owner provides this info
     name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game")
     text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True)
-    textHash = models.CharField(
-        max_length=80, help_text="Hash of text", default="", blank=True
-    )
+    textHash = models.CharField(max_length=80, help_text="Hash of text", default="", blank=True)
+    textHashChangeDate = models.DateTimeField(help_text="Date game text last changed", null=True, blank=True)
 
     # is the game public
     isPublic = models.BooleanField(verbose_name="Is game public?", help_text="Is game publicly visible?")
@@ -84,74 +90,60 @@ class Game(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    # computed stats from last build
-    buildStats = models.CharField(max_length=255, verbose_name="Build statistics", help_text="Computed build statistics", default="", blank=True)
-    
 
 
 
     # these properties should be extracted from the text
-    gameName = models.CharField(
-        max_length=80, help_text="Public name of game", default="", blank=True
-    )
+    gameName = models.CharField(max_length=80, help_text="Public name of game", default="", blank=True)
 
-    title = models.CharField(
-        max_length=80, help_text="Title of game", default="", blank=True
-    )
-    subtitle = models.CharField(
-        max_length=80, help_text="Subtitle of game", default="", blank=True
-    )
-    authors = models.CharField(
-        max_length=255, help_text="Author(s) of game (w/emails)", default="", blank=True
-    )
+    title = models.CharField(max_length=80, help_text="Title of game", default="", blank=True)
+    subtitle = models.CharField(max_length=80, help_text="Subtitle of game", default="", blank=True)
+    authors = models.CharField(max_length=255, help_text="Author(s) of game (w/emails)", default="", blank=True)
     summary = models.TextField(help_text="Short description", default="", blank=True)
-    version = models.CharField(
-        max_length=32, help_text="Version information", default="", blank=True
-    )
-    versionDate = models.CharField(
-        max_length=64, help_text="Version date", default="", blank=True
-    )
-    difficulty = models.CharField(
-        max_length=32, help_text="Difficulty", default="", blank=True
-    )
-    cautions = models.CharField(
-        max_length=32, help_text="Age rage, etc.", default="", blank=True
-    )
-    duration = models.CharField(
-        max_length=32, help_text="Expected playtime", default="", blank=True
-    )
-    url = models.CharField(
-        max_length=255, help_text="Homepage url", default="", blank=True
-    )
-    extraInfo = models.TextField(
-        help_text="Extra information (credits, links, etc.)", default="", blank=True
-    )
+    version = models.CharField(max_length=32, help_text="Version information", default="", blank=True)
+    versionDate = models.CharField(max_length=64, help_text="Version date", default="", blank=True)
+    difficulty = models.CharField(max_length=32, help_text="Difficulty", default="", blank=True)
+    cautions = models.CharField(max_length=32, help_text="Age rage, etc.", default="", blank=True)
+    duration = models.CharField(max_length=32, help_text="Expected playtime", default="", blank=True)
+    url = models.CharField(max_length=255, help_text="Homepage url", default="", blank=True)
+    extraInfo = models.TextField(help_text="Extra information (credits, links, etc.)", default="", blank=True)
 
-
-
-    # result of building
-    buildLog = models.TextField(help_text="Build Log", default="", blank=True)
-    needsBuild = models.BooleanField(help_text="Game was updated and needs rebuild")
-    # game filetype
-    queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
-    isBuildErrored = models.BooleanField(
-        help_text="Was there an error on the last build?"
-    )
-    buildDate = models.DateTimeField(
-        help_text="When was story last built?", null=True, blank=True
-    )
-    queueDate = models.DateTimeField(
-        help_text="When was build queued?", null=True, blank=True
-    )
-
-
-    # format
+    # preferred format details
     preferredFormatPaperSize =  models.CharField(max_length=8, verbose_name="Preferred paper size", choices=GamePreferredFormatPaperSize, default=GamePreferredFormatPaperSize_Letter)
     preferredFormatLayout =  models.CharField(max_length=8, verbose_name="Preferred Layout", choices=GamePreferredFormatLayout, default=GamePreferredFormatLayout_Solo)
 
 
+    # settings parsing
+    settingsStatus = models.TextField(help_text="Parsed dettings status", default="", blank=True)
+    isErrorInSettings = models.BooleanField(help_text="Was there an error parsing settings?")
+
+    # computed from last build
+    leadStats = models.CharField(max_length=255, verbose_name="Build statistics", help_text="Computed build statistics", default="", blank=True)
+
+    # date we published (different from date built)
+    publishDate = models.DateTimeField(help_text="When was story last published?", null=True, blank=True)
+
+    # tracking builds being out of date, etc
+    buildResultsJson = models.TextField(help_text="All build results as json string", default="", blank=True)
+    buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
+    #buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True, encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
 
 
+
+    # result of building
+    # OLD method, one value per model; now we store in buildResults
+    #buildLog = models.TextField(help_text="Last Build Log", default="", blank=True)
+    # status
+    #queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
+    #isBuildErrored = models.BooleanField(help_text="Was there an error on the last build?")
+    #buildDate = models.DateTimeField(help_text="When was story last built?", null=True, blank=True)
+    #queueDate = models.DateTimeField(help_text="When was build queued?", null=True, blank=True)
+    
+    #outOfDatePreferred = models.BooleanField(help_text="Preferred build is out of date")
+    #outOfDateDebug = models.BooleanField(help_text="Debug files are out of date")
+    #outOfDateDraft = models.BooleanField(help_text="Draft document set is out of date")
+    #outOfDatePublished = models.BooleanField(help_text="Published document set is out of date")
+    #
 
 
 
@@ -166,18 +158,18 @@ class Game(models.Model):
     def clean(self):
         # called automatically on edit
         # update text hash
-        flagForceRebuild = True
+        flagForceRebuild = False
         #
-        h = hashlib.new("sha256")
-        h.update(self.text.encode())
-        textHashNew = h.hexdigest() + "_" + settings.JR_STORYBUILDVERSION
+        textHashNew = calculateTextHashWithVersion(self.text)
         if (textHashNew == self.textHash) and (not flagForceRebuild):
             # text hash does not change, nothing needs updating
             return
         #
         # update settings and schedule rebuild?
         self.textHash = textHashNew
+        self.textHashChangeDate = timezone.now()
         self.parseSettingsFromTextAndSetFields()
+
 
 
     # storybook helpers
@@ -204,21 +196,44 @@ class Game(models.Model):
             self.setPropertyByName("duration", None, info, errorList)
             self.setPropertyByName("cautions", None, info, errorList, False)
             self.setPropertyByName("summary", None, info, errorList)
-            self.setPropertyByName("extraInfo, None", info, errorList, False)
+            self.setPropertyByName("extraInfo", None, info, errorList, False)
             self.setPropertyByName("url", None, info, errorList, False)
 
             #
             if (len(errorList)==0):
-                self.buildLog = "Successfully updated settings on {}; needs rebuild.".format(niceDateStr)
-                self.isBuildErrored = False
+                self.setSettingStatus(False, "Successfully updated settings on {}; needs rebuild.".format(niceDateStr))
             else:
-                self.buildLog = "Errors in settings from {}: {}.".format(niceDateStr, "; ".join(errorList))
-                self.isBuildErrored = True
+                self.setSettingStatus(True, "Errors in settings from {}: {}.".format(niceDateStr, "; ".join(errorList)))
         except Exception as e:
-            self.buildLog = "Error parsing settings on{}: Exception {}".format(niceDateStr, str(e))
-            self.isBuildErrored = True
-        # mark it needing rebuild
-        self.needsBuild = True
+            msg = "Error parsing settings on{}: Exception = " + repr(e)
+            msg += "; " + traceback.format_exc()
+            self.setSettingStatus(True, msg)
+
+
+        # mark builds as being out of date
+        #self.markOutOfDate()
+
+
+
+
+    #def markOutOfDate(self):
+    #    self.outOfDatePreferred = True
+    #    self.outOfDateDebug = True
+    #    self.outOfDateDraft = True
+    #    self.outOfDatePublished = True
+
+
+
+    #def updateOutOfDatesOnSuccessfulBuildOrPublish(self, buildMode):
+    #    if (buildMode in ["buildPreferred", "buildAll"]):
+    #        self.outOfDatePreferred = False
+    #    if (buildMode in ["buildDebug", "buildAll"]):
+    #        self.outOfDateDebug = False  
+    #    if (buildMode in ["buildDraft", "buildAll"]):
+    #        self.outOfDateDraft = False  
+    #    if (buildMode in ["published"]):
+    #        self.outOfDatePublished = False  
+
 
 
     def setPropertyByName(self, propName, storeName, propDict, errorList, flagErrorIfMissing = True, defaultVal = None):
@@ -240,11 +255,103 @@ class Game(models.Model):
 
 
 
+    def setSettingStatus(self, isError, msg):
+        self.settingsStatus = msg
+        self.isErrorInSettings = isError
 
+
+
+    # results helpers
+    def getBuildResultsAsObject(self):
+        if (True):
+            retv = self.buildResultsJsonField
+            if (retv==""):
+                print("WHAT THE FUCKING HELL")
+                retv = {}
+            return retv
+        #
+        if (self.buildResultsJson==""):
+            return {}
+        return json.loads(self.buildResultsJson, cls=DjangoJSONEncoder)
+
+    def setBuildResultsAsObject(self, allResultsObject):
+        if (True):
+            self.buildResultsJsonField = allResultsObject
+            return
+        # we need to use DjangoJSONEncoder to handle date objects
+        #self.buildResultsJson= json.dumps(allResultsObject)
+        self.buildResultsJson = json.dumps(allResultsObject, cls=DjangoJSONEncoder)
+
+
+    def setBuildResults(self, gameFileTypeStr, resultObject):
+        # update appropriate model field with data and hash of build
+        allResultsObj = self.getBuildResultsAsObject()
+        allResultsObj[gameFileTypeStr] = resultObject
+        self.setBuildResultsAsObject(allResultsObj)
+
+    def getBuildResults(self, gameFileTypeStr):
+        # update appropriate model field with data and hash of build
+        allResultsObj = self.getBuildResultsAsObject()
+        if (gameFileTypeStr in allResultsObj):
+            return allResultsObj[gameFileTypeStr]
+        else:
+            return {}
+
+
+    def getBuildResultsAnnotated(self, gameFileTypeStr):
+        resultsObj = self.getBuildResults(gameFileTypeStr)
+        # annotate it for easier display?
+        # ATTN: unfinished
+        return resultsObj
+
+
+    def copyBuildResults(self, destinationGameTypeStr, sourceGameTypeStr, overrideResults):
+        buildResults = jrfuncs.deepCopyListDict(self.getBuildResults(sourceGameTypeStr))
+        buildResults = jrfuncs.deepMergeOverwriteA(buildResults, overrideResults)
+        self.setBuildResults(destinationGameTypeStr, buildResults)
+
+    def modifyBuildResults(self, gameFileTypeStr, overrideResults):
+        buildResults = self.getBuildResults(gameFileTypeStr)
+        buildResults = jrfuncs.deepMergeOverwriteA(buildResults, overrideResults)
+        self.setBuildResults(gameFileTypeStr, buildResults)
+
+
+    def compareBuildHashWithCurrentText(self, buildHash):
+        # return tuple saying whether text content is different, and if not, whether the system update requires rebuild
+        # ATTN: version same not implemented yet
+        if (buildHash == self.textHash):
+            textSame = True
+            versionSame = True
+        else:
+            textSame = False
+            versionSame = False
+        return [textSame, versionSame]
+
+
+    def extractLastBuildResult(self):
+        # look at all build results and get the latest one; this can be useful for showing author a quick latest build log
+        latestBuildDateEnd = -1
+        latestBuildResult = None
+        allResultsObj = self.getBuildResultsAsObject()
+        for k,v in allResultsObj.items():
+            if ("buildDateEnd" in v):
+                buildDateEnd = v["buildDateEnd"]
+                if (buildDateEnd > latestBuildDateEnd):
+                    latestBuildResult = v
+        return latestBuildResult
+
+
+
+
+
+
+
+    # ATTN: TODO - i think these two functions need to be consolidated with the gamefilemanager functions
     def deleteExistingFileIfFound(self, fileName, flagDeleteModel, editingGameFile):
         # this is called during uploading so that author can reupload a new version of an image and it will just overwrite existing
-        gameFileImageDirectoryRelative = calculateGameFilePathRuntime(self, "uploads", True)
+        gameFileImageDirectoryRelative = calculateGameFilePathRuntime(self, gamefilemanager.EnumGameFileTypeName_StoryUpload, True)
         filePath = gameFileImageDirectoryRelative + "/" + fileName
+
         # we do NOT want to just delete the file on the disk
         # instead we want to delete the file model which should chain delete the actual file
         if (flagDeleteModel):
@@ -260,7 +367,7 @@ class Game(models.Model):
 
         if (True):
             # delete existing pure file if it exists, because it is going to be replaced
-            gameFileImageDirectoryAbsolute = calculateGameFilePathRuntime(self, "uploads", False)
+            gameFileImageDirectoryAbsolute = calculateGameFilePathRuntime(self, gamefilemanager.EnumGameFileTypeName_StoryUpload, False)
             filePath = gameFileImageDirectoryAbsolute + "/" + fileName
             try:
                 jrfuncs.deleteFilePathIfExists(filePath)
@@ -275,6 +382,7 @@ class Game(models.Model):
 
     def deleteExistingMediaPathedFileIfFound(self, relativeFileName):
         # this is called during uploading so that author can reupload a new version of an image and it will just overwrite existing
+        # note that this does NOT delete any associated GAMEFILE model
         filePath = calculateAbsoluteMediaPathForRelativePath(relativeFileName)
         try:
             jrfuncs.deleteFilePathIfExists(filePath)
@@ -292,45 +400,52 @@ class Game(models.Model):
 
 
 
-    def buildGame(self, request):
 
-        # update model to show it needs building
-        self.queueStatus = Game.GameQueueStatusEnum_Queued
-        self.needsBuild = True
-        self.isBuildErrored = False
-        self.buildLog = ""
-        self.queueDate = timezone.now()
-        self.save()
+
+
+
+    def buildGame(self, request):
 
         # what type of build
         if ("buildPreferred" in request.POST):
             buildMode = "buildPreferred"
         elif ("buildDebug" in request.POST):
             buildMode = "buildDebug"
-        elif ("buildComplete" in request.POST):
-            buildMode = "buildComplete"
+        elif ("buildDraft" in request.POST):
+            buildMode = "buildDraft"
+
         else:
             raise Exception("Unspecified build mode.")
 
         # build options
         requestOptions = {"buildMode": buildMode}
 
+        # set queue status -- note that this may be almost immediately overwritten if not using queue system
+        buildResults = {
+            "queueStatus": Game.GameQueueStatusEnum_Queued,
+            "buildDateQueued": timezone.now().timestamp(),
+            }
+        self.setBuildResults(buildMode, buildResults)
+
 
         # do the build (queued or immediate)
         result = None
-        if (True):
-            # this will QUEUE or run immediately the game build if neeed
-            # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
-            # ATTN: eventually move all this to the function that actually builds
-            retv = queueTaskBuildStoryPdf(self, requestOptions)
-            result = retv.get()
+
+        # this will QUEUE or run immediately the game build if neeed
+        # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
+        # ATTN: eventually move all this to the function that actually builds
+        retv = queueTaskBuildStoryPdf(self, requestOptions)
+        result = retv.get()
 
 
         # send to detail view with flash message
         if (isinstance(result, str)):
             message = "Result of storybook pdf build for game '{}': {}.".format(self.name, result)
+            # no need to save since the queutask will save
         else:
             message = "Generations of storybook pdf for game '{}' has been queued for delayed build.".format(self.name)
+            # we are queueing, so we need to set these values we set above while we wait
+            self.save()
 
         messages.add_message(request, messages.INFO, message)
 
@@ -379,11 +494,6 @@ class Game(models.Model):
 
 
 
-    # ---------------------------------------------------------------------------
-    def deletePublishedFiles(self):
-        # delete the files for this game in the 
-        pass
-    # ---------------------------------------------------------------------------
 
 
 
@@ -425,34 +535,32 @@ class Game(models.Model):
 
 
 
-# helper
-def calculateGameFilePathRuntime(game, subdir, flagRelative):
-    gamePk = game.pk
-    if (flagRelative):
-        path = "/".join(["games", str(gamePk), subdir])
-    else:
-        path = "/".join([str(settings.MEDIA_ROOT), "games", str(gamePk), subdir])
-    return path
 
-def calculateGameFileUploadPathRuntimeRelative(instance, filename):
-    basePath = calculateGameFilePathRuntime(instance.game, "uploads", True)
-    return "/".join([basePath, filename])
 
-def calculateAbsoluteMediaPathForRelativePath(relativePath):
-    path = "/".join([str(settings.MEDIA_ROOT), relativePath])
-    return path
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class GameFile(models.Model):
     """File object manages files attached to games"""
-
-    # enum for game file type
-    GameFileType_Up = "UP"
-    GameFileType_Built = "BT"
-    GameFileTypeEnum = [
-        (GameFileType_Up, "User Upload"),
-        (GameFileType_Built, "Built"),
-    ]
 
 
     # ATTN: TODO: see https://file-validator.github.io/docs/intro for more involved validation library
@@ -465,7 +573,7 @@ class GameFile(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
 
     # game filetype
-    gameFileType = models.CharField(max_length=3, choices=GameFileTypeEnum, default=GameFileType_Up)
+    gameFileType = models.CharField(max_length=32, choices=gamefilemanager.GameFileTypeDbFieldChoices, default=gamefilemanager.EnumGameFileTypeName_StoryUpload)
 
     # django file field helper
     # note we use a validator, but we ALSO do a separate validation for file size after the file is uploaded
@@ -506,3 +614,20 @@ class GameFile(models.Model):
                     fileSize / 1000000, maxFilesize / 1000000
                 )
             )
+
+
+
+
+
+
+
+
+
+
+# non-class helper functions
+
+def calculateTextHashWithVersion(text):
+    h = hashlib.new("sha256")
+    h.update(text.encode())
+    hashValue = h.hexdigest() + "_" + settings.JR_STORYBUILDVERSION
+    return hashValue

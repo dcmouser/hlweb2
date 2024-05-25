@@ -13,7 +13,7 @@
     {{ form|crispy }}
 
 <div>
-  <div><input class="btn btn-success" type="submit" name="publish" value="Publish the current Storybook PDF Set as the new Official Release"></div>
+  <div><input class="btn btn-success" type="submit" name="published" value="Publish the current Storybook PDF Set as the new Official Release"></div>
   <div><a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Return to Game Page</a> <a href="{% url 'gameEdit' game.pk %}" class="btn btn-primary" role="button">Edit game's preferred format</a></div>
 </div>
     

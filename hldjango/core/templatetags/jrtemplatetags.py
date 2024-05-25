@@ -105,3 +105,11 @@ def jrActiveUrl(context, urlPartials, css_class=None, inactive_class='', strict=
     if active:
         return css_class
     return inactive_class
+
+
+
+
+@register.filter
+def justfilename(value):
+    return os.path.basename(value)
+

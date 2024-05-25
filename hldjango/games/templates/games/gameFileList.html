@@ -7,16 +7,17 @@
 
 
 {% block content %}
-<h1>Game File List for Game "{{game.name}}"</h1>
+<h1>Game File List for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
 
-<ul>
+<ul class="gameFileList">
 {% for gamefile in gamefile_list %}
-<div class="gameFileEntry">
-    <li>
+    <li class="gameFileEntry">
+        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.filefield.name | justfilename }}</a>
+
         {% if gamefile.note %}
-            <p>{{ gamefile.note }}</p>
+         &nbsp;({{ gamefile.note }})
         {% endif %}
-        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.filefield.name }}</a>
+
         {% if gamefile.filefield.url|isImageFilePath %}
             <br/>
                 <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
@@ -24,7 +25,6 @@
                 </a>
         {% endif %}
     </li>
-</div>
 {% endfor %}
 </ul>
 

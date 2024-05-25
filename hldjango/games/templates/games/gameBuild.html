@@ -13,10 +13,10 @@
     {{ form|crispy }}
 
 <div>
-  <div><input class="btn btn-success" type="submit" name="buildPreferred" value="Quick Build Single Storybook PDF in preferred format"> - {{game.get_preferredFormatPaperSize_display}} / {{game.get_preferredFormatLayout_display}}</div>
-  <div><input class="btn btn-success" type="submit" name="buildDebug" value="Build Debug Report to check for problems"></div>
-  <div><input class="btn btn-success" type="submit" name="buildComplete" value="Build Complete Set of Storybook PDFs in all formats (slow)"></div>
-  <div><a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Return to Game Page</a> <a href="{% url 'gameEdit' game.pk %}" class="btn btn-primary" role="button">Edit game's preferred format</a></div>
+  <div><input class="btn btn-success" type="submit" name="buildPreferred" value="Quick build single storybook PDF in preferred format"> - {{game.get_preferredFormatPaperSize_display}} / {{game.get_preferredFormatLayout_display}}</div>
+  <div><input class="btn btn-success" type="submit" name="buildDebug" value="Build debug report to check for problems"></div>
+  <div><input class="btn btn-success" type="submit" name="buildDraft" value="Build complete set of *draft* Storybook PDFs in all formats (slow)"></div>
+  <div><a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Return to game page</a> <a href="{% url 'gameEdit' game.pk %}" class="btn btn-primary" role="button">Edit game's preferred format</a></div>
 </div>
     
     

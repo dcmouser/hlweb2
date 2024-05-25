@@ -33,3 +33,10 @@ img.imgThumbnailSized {
 }
 
 
+ul.gameFileList {
+    list-style: none;
+}
+
+li.gameFileEntry {
+    margin-bottom: 20px;
+}
