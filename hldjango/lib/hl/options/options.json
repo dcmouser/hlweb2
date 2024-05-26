@@ -18,6 +18,7 @@
 		"index": true,
 		"markdown": {"forceLinebreaks": true},
 		"compileLatex": true,
+		"pdfLatexRunViaExePath": false,
 		"pdfLatexExeFullPath": "C:/Users/jesse/AppData/Local/Programs/MiKTeX/miktex/bin/x64/pdflatex.exe",
 		"latexExtraRuns": 1,
 		"renderReport": false,

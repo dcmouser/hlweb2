@@ -29,6 +29,7 @@ from subprocess import PIPE
 import sys
 import errno
 import math
+import traceback
 
 
 
@@ -4502,7 +4503,7 @@ class HlParser:
         chapterTitle = jrfuncs.getDictValueOrDefault(info, 'title', chapterName)
         #
         optionCompileLatex = jrfuncs.getDictValueOrDefault(renderOptions, 'compileLatex', True)
-        optionPdflatexFullPath = jrfuncs.getDictValueOrDefault(renderOptions, 'pdfLatexExeFullPath', None)
+
         #
         leadList = jrfuncs.getDictValueOrDefault(leadOutputOptions, 'leadList', None)
 
@@ -4616,7 +4617,7 @@ class HlParser:
         if (renderFormat=='latex'):
             if (optionCompileLatex):
                 # we have to run it twice -- why?? some things fail the first time.. i dont really get it
-                self.generatePdflatex(optionPdflatexFullPath, outFilePath, True)
+                self.generatePdflatex(outFilePath, True)
 
         # cleanup delete files afterwards? but we would like to not do this if there were errors
         errorCounterPostRun = self.getBuildErrorCount()
@@ -5298,8 +5299,7 @@ class HlParser:
 
 
 # ---------------------------------------------------------------------------
-    def generatePdflatex(self, pdflatexFullPath, filepath, quietMode):
-        # THIS IS SO FUCKING EVIL BUT I AM GOING INSANE AND IN SO MUCH MENTAL TRAUMA
+    def generatePdflatex(self, filepath, quietMode):
         maxRuns = 5
         filePathAbs = os.path.abspath(filepath)
         outputDirName = os.path.dirname(filePathAbs)
@@ -5315,25 +5315,58 @@ class HlParser:
 
         renderOptions = self.getComputedRenderOptions()
         extraTimesToRun = jrfuncs.getDictValueOrDefault(renderOptions, 'latexExtraRuns', 0)
-        
+
+        # how to run latex compile
+        optionPdfLatexRunViaExePath = self.getWorkingOptionVal("pdfLatexRunViaExePath", False)
+        if (optionPdfLatexRunViaExePath):
+            # pdf latex executable manually specified
+            # THIS IS SO FUCKING EVIL BUT I AM GOING INSANE AND IN SO MUCH MENTAL TRAUMA
+            renderOptions = self.getComputedRenderOptions()
+            pdflatexFullPath = jrfuncs.getDictValueOrDefault(renderOptions, 'pdfLatexExeFullPath', None)
+        else:
+            # use pdflatex to invoke
+            # nothing to do up here
+            pass
+
+
         wantBreak = 0
         for i in range(0,maxRuns):
             runCount = i
-            jrprint('{}. Launching pdflatex ({}) on "{}".'.format(i+1, pdflatexFullPath, filePathAbs))
 
-            proc=subprocess.Popen([pdflatexFullPath, filePathAbs], stdin=PIPE, stdout=PIPE)
-            [stdout_data, stderr_data] = proc.communicate()
+            if (optionPdfLatexRunViaExePath):
+                jrprint('{}. Launching pdflatex ({}) on "{}".'.format(i+1, pdflatexFullPath, filePathAbs))
+                proc=subprocess.Popen([pdflatexFullPath, filePathAbs], stdin=PIPE, stdout=PIPE)
+                [stdout_data, stderr_data] = proc.communicate()
+                if (stdout_data is not None):
+                    stdOutText = stdout_data.decode(decodeCharSet)
+                else:
+                    stdOutText = ''
+                #
+                if (stderr_data is not None):
+                    stdErrText = stderr_data.decode(decodeCharSet)
+                else:
+                    stdErrText = ''
+            else:
+                # use pdflatex to invoke
+                # see https://pypi.org/project/pdflatex/
+                try:
+                    pdfl = PDFLaTeX.from_texfile(filePathAbs)
+                    # see https://stackoverflow.com/questions/71991645/python-3-7-pdflatex-filenotfounderror
+                    pdfl.set_interaction_mode()  # setting interaction mode to None.
+                    pdf, log, completed_process = pdfl.create_pdf(keep_pdf_file=True, keep_log_file=True)
+                    stdout_data = log
+                    stdOutText = log.decode(decodeCharSet)
+                    stdErrText = ''
+                    stderr_data = stdErrText.encode(decodeCharSet)
+                except Exception as e:
+                    msg = "Error using pdflatex on '{}'.".format(filePathAbs, repr(e))
+                    msg += "; " + traceback.format_exc()
+                    jrprint(msg)
+                    stdOutText = ''
+                    stdErrText = msg
+                    stdout_data = stdOutText.encode(decodeCharSet)
+                    stderr_data = stdErrText.encode(decodeCharSet)
 
-            if (stdout_data is not None):
-                #stdOutText = stdout_data.decode('ascii')
-                stdOutText = stdout_data.decode(decodeCharSet)
-            else:
-                stdOutText = ''
-            #
-            if (stderr_data is not None):
-                stdErrText = stderr_data.decode(decodeCharSet)
-            else:
-                stdErrText = ''
 
             # check for error
             if (b'error occurred' in stdout_data) or ((stderr_data is not None) and (b'error occurred' in stderr_data)):
@@ -5360,7 +5393,6 @@ class HlParser:
             jrprint('WARNING: MAX RUNS ENCOUNTERED ({}) -- PROBABLY AN ERROR RUNNING PDFLATEX.'.format(runCount))
 
   
-
         #jrprint('Pdflatex Result: {}'.format(retv))
         # change working directory back -- this is so fucking evil
         os.chdir(currentWorkingDir)
