@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 
+
 # user modules
 from .validators import validateGameFile
 
@@ -24,6 +25,8 @@ from .gamefilemanager import calculateGameFilePathRuntime, calculateAbsoluteMedi
 import hashlib
 import traceback
 import json
+import os
+import datetime
 
 
 
@@ -132,7 +135,7 @@ class Game(models.Model):
 
     # result of building
     # OLD method, one value per model; now we store in buildResults
-    #buildLog = models.TextField(help_text="Last Build Log", default="", blank=True)
+    lastBuildLog = models.TextField(help_text="Last Build Log", default="", blank=True)
     # status
     #queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
     #isBuildErrored = models.BooleanField(help_text="Was there an error on the last build?")
@@ -149,6 +152,13 @@ class Game(models.Model):
 
 
     # helpers
+    @staticmethod
+    def get_or_none(**kwargs):
+        try:
+            return Game.objects.get(**kwargs)
+        except Game.DoesNotExist:
+            return None
+
     def __str__(self):
         return "{} ({})".format(self.title, self.name)
 
@@ -158,10 +168,9 @@ class Game(models.Model):
     def clean(self):
         # called automatically on edit
         # update text hash
-        flagForceRebuild = False
         #
         textHashNew = calculateTextHashWithVersion(self.text)
-        if (textHashNew == self.textHash) and (not flagForceRebuild):
+        if (textHashNew == self.textHash):
             # text hash does not change, nothing needs updating
             return
         #
@@ -169,6 +178,8 @@ class Game(models.Model):
         self.textHash = textHashNew
         self.textHashChangeDate = timezone.now()
         self.parseSettingsFromTextAndSetFields()
+        # save versioned game text
+        self.safeVersionedGameText()
 
 
 
@@ -201,7 +212,7 @@ class Game(models.Model):
 
             #
             if (len(errorList)==0):
-                self.setSettingStatus(False, "Successfully updated settings on {}; needs rebuild.".format(niceDateStr))
+                self.setSettingStatus(False, "Successfully updated settings on {}.".format(niceDateStr))
             else:
                 self.setSettingStatus(True, "Errors in settings from {}: {}.".format(niceDateStr, "; ".join(errorList)))
         except Exception as e:
@@ -409,11 +420,13 @@ class Game(models.Model):
         # what type of build
         if ("buildPreferred" in request.POST):
             buildMode = "buildPreferred"
+            buildModeNice = "preferred pdf build"
         elif ("buildDebug" in request.POST):
             buildMode = "buildDebug"
+            buildModeNice = "debug build"
         elif ("buildDraft" in request.POST):
             buildMode = "buildDraft"
-
+            buildModeNice = "draft pdf set build"
         else:
             raise Exception("Unspecified build mode.")
 
@@ -440,10 +453,10 @@ class Game(models.Model):
 
         # send to detail view with flash message
         if (isinstance(result, str)):
-            message = "Result of storybook pdf build for game '{}': {}.".format(self.name, result)
+            message = "Result of {} for game '{}': {}.".format(buildModeNice, self.name, result)
             # no need to save since the queutask will save
         else:
-            message = "Generations of storybook pdf for game '{}' has been queued for delayed build.".format(self.name)
+            message = "Generation of {} for game '{}' has been queued for delayed build.".format(buildModeNice, self.name)
             # we are queueing, so we need to set these values we set above while we wait
             self.save()
 
@@ -475,6 +488,90 @@ class Game(models.Model):
 
 
 
+    def reconcileFiles(self, request):
+        # walk through upload directory, add all files that don't already exist as if they were uploaded; remove all file models that do NOT exist
+        # set flash messages
+        msgList = []
+
+        # get upload directory
+        gameFileType = gamefilemanager.EnumGameFileTypeName_StoryUpload
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        directoryPath = gameFileManager.getDirectoryPathForGameType(gameFileType)
+        relativeRoot = gameFileManager.getMediaSubDirectoryPathForGameType(gameFileType)
+
+        # now walk list of files
+        filePathList = []
+        obj = os.scandir(directoryPath)
+        for entry in obj:
+            if not entry.is_file():
+                continue
+            filePath = entry.path
+            filePath = jrfuncs.canonicalFilePath(filePath)
+            filePathList.append(filePath)
+
+        # ok now for each one, see if its already listed
+        msgList.append("Found {} files in game upload directory.".format(len(filePathList)))
+        removedFileCount = 0
+        addedFileCount = 0
+
+
+        # step 1, DELETE all model files that do not exist FOR THIS GAME
+        # get all gameFile models
+        gameFileQuerySet = GameFile.objects.filter(game=self)
+        for gameFileEntry in gameFileQuerySet:
+            mediaFilePath = gameFileEntry.filefield.name
+            absoluteFilePath = "/".join([str(settings.MEDIA_ROOT), mediaFilePath])
+            absoluteFilePath = jrfuncs.canonicalFilePath(absoluteFilePath)
+            jrprint("Checking '{}' at '{}'".format(mediaFilePath, absoluteFilePath))
+            if (not jrfuncs.pathExists(absoluteFilePath)):
+                gameFileEntry.delete()
+                msgList.append("Removed file model for missing upload file '{}' ({}).".format(mediaFilePath,absoluteFilePath))
+                removedFileCount += 1
+
+        # step 2, ADD new files
+        for filePath in filePathList:
+            try:
+                relativePath = filePath.replace(directoryPath,relativeRoot)
+                gameFile = GameFile.get_or_none(filefield=relativePath)
+                # delete existing file; but only if its not editingGameFile (in other words this is going to catch the case where we might be editing one gameFILE and matching the image file name to another, which will then be deleted to make way)
+                if (gameFile is None):
+                    # doesnt exist, add it
+                    gameFile = GameFile(owner=request.user, game=self, gameFileType = gameFileType, note="")
+                    # remove absolute part of path
+                    relativePath = filePath.replace(directoryPath,relativeRoot)
+                    gameFile.filefield.name = relativePath
+                    gameFile.save()
+                    msgList.append("Added file model for found file '{}'.".format(filePath))
+                    addedFileCount += 1
+            except Exception as e:
+                # existing file not found -- not an error
+                msgList.append("Exception trying to add file '{}': {}.".format(filePath), repr(e))
+                pass
+
+        # combine messages
+        msgList.append("Added {} found files, and removed {} missing files.".format(addedFileCount, removedFileCount))
+        retv = "\n".join(msgList)
+        return retv
+
+
+
+
+    def safeVersionedGameText(self):
+        # base directory for game
+        gameFileType = gamefilemanager.EnumGameFileTypeName_VersionedGame
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        directoryPath = gameFileManager.getDirectoryPathForGameType(gameFileType)
+        # add to filename
+        versionStr = self.version
+        nowTime = datetime.datetime.now()
+        currentDateStr = nowTime.strftime('_%Y%m%d_%H%M%S')
+        fileNameSuffix = "_gameText_v{}_{}".format(versionStr, currentDateStr)
+        gameName = self.name
+        fileName = jrfuncs.safeCharsForFilename(gameName+fileNameSuffix)
+        fullFilePath = "{}/{}.txt".format(directoryPath, fileName)
+        encoding = "utf-8"
+        jrfuncs.createDirIfMissing(directoryPath)
+        jrfuncs.saveTxtToFile(fullFilePath, self.text)
 
 
 
@@ -558,7 +655,6 @@ class Game(models.Model):
 
 
 
-
 class GameFile(models.Model):
     """File object manages files attached to games"""
 
@@ -587,6 +683,15 @@ class GameFile(models.Model):
         max_length=80, help_text="Internal comments (optional)", default="", blank=True
     )
 
+
+
+    # helpers
+    @staticmethod
+    def get_or_none(**kwargs):
+        try:
+            return GameFile.objects.get(**kwargs)
+        except GameFile.DoesNotExist:
+            return None
 
     def __str__(self):
         return self.filefield.name

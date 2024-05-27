@@ -1,0 +1,28 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Build Game{% endblock title %}
+
+{% block content %}
+<div class="gameEntry">
+    <h2>Build Game "{{ game.title }} ({{ game.name }})"</h2>
+    <p>{{ game.summary }}</p>
+</div>
+
+<form method="post"> {% csrf_token %}
+    {{ form|crispy }}
+
+<div>
+  <div><input class="btn btn-success" type="submit" name="buildPreferred" value="Quick build single storybook PDF in preferred format"> - {{game.get_preferredFormatPaperSize_display}} / {{game.get_preferredFormatLayout_display}}</div>
+  <div><input class="btn btn-success" type="submit" name="buildDebug" value="Build debug report to check for problems"></div>
+  <div><input class="btn btn-success" type="submit" name="buildDraft" value="Build complete set of *draft* Storybook PDFs in all formats (slow)"></div>
+  <div><a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Return to game page</a> <a href="{% url 'gameEdit' game.pk %}" class="btn btn-primary" role="button">Edit game's preferred format</a></div>
+</div>
+    
+    
+    
+  </form>
+
+
+
+{% endblock content %}

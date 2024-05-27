@@ -51,13 +51,19 @@ def userGameList(userPk, requestingUser):
 
 
 @register.inclusion_tag('games/templateInclusionFileUrlList.html')
-def fileUrlList(requestingUser, gamePk, gameFileTypeName):
+def fileUrlList(requestingUser, gamePk, gameFileTypeName, optionStr):
   """Build a list of files for a specific game of a specific type, with urls
   :param: requestingUser - user making the request; currently ignores
   :param: gamePk - the game pk
   :param: gameFileTypeName - the name of the game type  
   :return: list of gfiles with their urls
   """
+
+  # options
+  options = {}
+  optionStrList = optionStr.split(",")
+  if ("date" in optionStrList):
+    options["showDate"] = True
 
   # get game
   game = Game.objects.get(pk=gamePk)
@@ -74,17 +80,18 @@ def fileUrlList(requestingUser, gamePk, gameFileTypeName):
   # game file manager helper
   gameFileManager = GameFileManager(game)
   fileList = gameFileManager.buildFileList(gameFileTypeName)
+  fileList.sort(key = lambda x: sortBuiltFileListNicelyKeyFunc(x))
 
   # build results
   buildResults = game.getBuildResultsAnnotated(gameFileTypeName)
-  buildResultsHtml = formatBuildResultsForHtmlList(buildResults)
+  buildResultsHtml = formatBuildResultsForHtmlList(game, buildResults)
 
-  return {"fileList": fileList, "buildResultsHtml": buildResultsHtml}
-
-
+  return {"fileList": fileList, "buildResultsHtml": buildResultsHtml, "options": options}
 
 
-def formatBuildResultsForHtmlList(buildResults):
+
+
+def formatBuildResultsForHtmlList(game, buildResults):
   listItems = list()
   queueStatus = jrfuncs.getDictValueOrDefault(buildResults, "queueStatus", None)
   if (queueStatus is None):
@@ -127,6 +134,20 @@ def formatBuildResultsForHtmlList(buildResults):
     #listItems.append({"key": "Published on", "label": publishDateNiceStr})
     publishErrored = jrfuncs.getDictValueOrDefault(buildResults, "publishErrored", False)
     listItems.append({"key": publishResult, "label": "on " + publishDateNiceStr, "errorLevel": 2 if publishErrored else 0})
+  
+  # is it out of date
+  buildTextHash = jrfuncs.getDictValueOrDefault(buildResults, "buildTextHash", "")
+  if (buildTextHash != game.textHash):
+    # out of date
+    lastEditDateTimestamp = game.textHashChangeDate.timestamp()
+    buildDateTimestamp = jrfuncs.getDictValueOrDefault(buildResults, "buildDateStart", None)
+    if (buildDateTimestamp is not None):
+      buildDate = datetime.datetime.fromtimestamp(buildDateTimestamp)
+      difSecs = lastEditDateTimestamp-buildDateTimestamp
+      durationStr = jrfuncs.niceElapsedTimeStr(difSecs)
+      listItems.append({"key": "OUT OF DATE", "label": "Game text was modified {} after this build.".format(durationStr), "errorLevel": 2})
+  else:
+    listItems.append({"key": "Up to date", "label": "Yes; built with latest game text edits."})
 
   retHtml = formatDictListAsHtmlList(listItems)
   return retHtml
@@ -164,11 +185,22 @@ def calcNiceDurationStringForBuildResult(buildResults, startKeyName, endKeyName)
 
 
 def convertTimeStampForBuildResult(buildResults, timestampKeyName):
-    timestamp = jrfuncs.getDictValueOrDefault(buildResults, timestampKeyName, None)
-    if (timestamp is None):
-      return "n/a"
-    resultDateTime = datetime.datetime.fromtimestamp(timestamp)
-    dateNiceStr = jrfuncs.getNiceDateTimeCompact(resultDateTime)
-    return dateNiceStr
+  timestamp = jrfuncs.getDictValueOrDefault(buildResults, timestampKeyName, None)
+  if (timestamp is None):
+    return "n/a"
+  resultDateTime = datetime.datetime.fromtimestamp(timestamp)
+  dateNiceStr = jrfuncs.getNiceDateTimeCompact(resultDateTime)
+  return dateNiceStr
 
 
+
+def sortBuiltFileListNicelyKeyFunc(fileEntry):
+  # helper function for sorting thie file list nicely (zip at top, followed by summary, followed by filename alpha)
+  fileName = fileEntry["name"]
+  if (fileName.endswith(".zip")):
+    prefix = "0"
+  elif ("summary" in fileName):
+    prefix = "1"
+  else:
+    prefix = "2"
+  return prefix + "_" + fileName.lower()

@@ -37,10 +37,10 @@ class JrFileFinder:
         addList = [".pdf"]
         self.addExtensionList(addList)
 
-    def setDirectoryList(self, inList):
-        self.directoryList = inList
-    def addDirectoryList(self, inList):
-        for i in inList:
+    def setDirectoryList(self, inDirList):
+        self.directoryList = inDirList
+    def addDirectoryList(self, inDirList):
+        for i in inDirList:
             if (not i in self.directoryList):
                 self.directoryList.append(i)
     def clearDirectoryList(self):
@@ -128,14 +128,22 @@ class JrFileFinder:
         self.fileDict = {}
         self.useCount = {}
         for i in self.directoryList:
+            prefix = i['prefix']
+            path = i['path']
             if (flagRemoveParentDir):
-                self.scanDir(i, i)
+                self.scanDir(path, path, prefix)
             else:
-                self.scanDir(i, "")
+                self.scanDir(path, "", prefix)
 
 
-    def scanDir(self, directoryPath, parentPathToRemove):
+    def scanDir(self, directoryPath, parentPathToRemove, prefix):
         # scan directory and add any names found
+
+        if (prefix!=''):
+            prefixAdd = prefix + '/'
+        else:
+            prefixAdd = ''
+
         flagStripExtensions = self.options["stripExtensions"]
         jrprint('JrFileFinder (recursively) scanning directory "{}" for files ({})..'.format(directoryPath, self.extensionList))
         for (dirPath, dirNames, fileNames) in walk(directoryPath):
@@ -158,6 +166,10 @@ class JrFileFinder:
                     filePath = dirPath + '/' + fileName
                 #
                 baseName = self.canonicalName(baseName)
+                fullDirPath = os.path.join(dirPath, baseName)
+                relPath = jrfuncs.replaceInitialDirectoryPath(fullDirPath, directoryPath)
+                relPath = jrfuncs.canonicalFilePath(relPath)
+                baseName = prefixAdd + relPath
 
                 if (baseName in self.fileDict):
                     # base name already found, so ADD this target image as a second option
@@ -172,6 +184,8 @@ class JrFileFinder:
                     self.fileDict[baseName] = [filePath]
                 #
                 #jrprint('Adding entry for {} pointing to "{}".'.format(baseName, filePath))
+
+
 
 
     def reportUnusedImages(self):

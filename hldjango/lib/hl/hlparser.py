@@ -30,6 +30,7 @@ import sys
 import errno
 import math
 import traceback
+import datetime
 
 
 
@@ -4616,17 +4617,18 @@ class HlParser:
         # compile latex?
         if (renderFormat=='latex'):
             if (optionCompileLatex):
-                # we have to run it twice -- why?? some things fail the first time.. i dont really get it
                 self.generatePdflatex(outFilePath, True)
 
         # cleanup delete files afterwards? but we would like to not do this if there were errors
         errorCounterPostRun = self.getBuildErrorCount()
         erroredRendering = (errorCounterPostRun > errorCounterPreRun)
         if (not erroredRendering):
-            if (flagCleanAfter):
+            if (flagCleanAfter != "none"):
                 deleteFileExtensions = []
                 if (renderFormat=='latex'):
-                    deleteFileExtensions = ['aux', 'latex', 'log', 'out', 'toc']
+                    deleteFileExtensions = ['aux', 'log', 'out', 'toc']
+                    if (flagCleanAfter=="extra"):
+                        deleteFileExtensions.append('latex')
                 elif (renderFormat=='html'):
                     deleteFileExtensions = []
                 self.deleteExtensionFilesIfExists(saveDir,baseOutputFileName, deleteFileExtensions)
@@ -5312,17 +5314,21 @@ class HlParser:
         flagSwitchToNonQuietOnError = False
         #
         errored = False
+        pdfl = None
 
         renderOptions = self.getComputedRenderOptions()
         extraTimesToRun = jrfuncs.getDictValueOrDefault(renderOptions, 'latexExtraRuns', 0)
 
         # how to run latex compile
         optionPdfLatexRunViaExePath = self.getWorkingOptionVal("pdfLatexRunViaExePath", False)
+        optionPdfLatexRunViaExePath = True
         if (optionPdfLatexRunViaExePath):
             # pdf latex executable manually specified
             # THIS IS SO FUCKING EVIL BUT I AM GOING INSANE AND IN SO MUCH MENTAL TRAUMA
             renderOptions = self.getComputedRenderOptions()
             pdflatexFullPath = jrfuncs.getDictValueOrDefault(renderOptions, 'pdfLatexExeFullPath', None)
+            # try this
+            pdflatexFullPath = "pdflatex.exe"
         else:
             # use pdflatex to invoke
             # nothing to do up here
@@ -5349,10 +5355,17 @@ class HlParser:
             else:
                 # use pdflatex to invoke
                 # see https://pypi.org/project/pdflatex/
+                # works BUT seems to fail on re-running because it uses different temp file each time? FUCKED
                 try:
-                    pdfl = PDFLaTeX.from_texfile(filePathAbs)
-                    # see https://stackoverflow.com/questions/71991645/python-3-7-pdflatex-filenotfounderror
-                    pdfl.set_interaction_mode()  # setting interaction mode to None.
+                    if (pdfl is None):
+                        pdfl = PDFLaTeX.from_texfile(filePathAbs)
+                        # see https://stackoverflow.com/questions/71991645/python-3-7-pdflatex-filenotfounderror
+                        pdfl.set_interaction_mode()  # setting interaction mode to None.
+                    else:
+                        # multiple runs
+                        pass
+                    pdflArgs = {"-output-directory": outputDirName}
+                    pdfl.add_args(pdflArgs)
                     pdf, log, completed_process = pdfl.create_pdf(keep_pdf_file=True, keep_log_file=True)
                     stdout_data = log
                     stdOutText = log.decode(decodeCharSet)
@@ -6948,7 +6961,7 @@ class HlParser:
         # image file helper
         imageDir = self.getOptionVal('imagedir', saveDir + '/images')
         imageDir = self.resolveTemplateVars(imageDir)
-        self.imageFileFinder.setDirectoryList([imageDir,])
+        self.imageFileFinder.setDirectoryList([{'prefix':'', 'path': imageDir,},])
         self.imageFileFinder.scanDirs(False)
 # ---------------------------------------------------------------------------
 
@@ -6982,7 +6995,7 @@ class HlParser:
         self.runAllSteps()
     
     def runAllSteps(self):
-        flagCleanAfter = False
+        flagCleanAfter = "none"
         #
         self.processHeadBlocks()
         self.addZeroLeadWarning()
@@ -7108,6 +7121,9 @@ class HlParser:
         buildVariant = build["variant"]
         gamefileType = build["gameFileType"]
         gameName = build["gameName"]
+        #
+        optionAddVersionToZipFileName = True
+        optionAddDateToZipFileName = True
 
         # set save dir from gamefilemanager and gamefiletype
         self.setSaveDirFromGameFileType(gamefileType)
@@ -7117,6 +7133,15 @@ class HlParser:
             generatedFileList = self.getGeneratedFileListForZip()
             optionZipOutDir = self.getSaveDir()
             optionZipSuffix = '_' + gamefileType
+            if (optionAddVersionToZipFileName):
+                info = self.getOptionValThrowException('info')
+                versionstr = jrfuncs.getDictValueOrDefault(info, 'version', '')
+                if (versionstr!=''):
+                    versionStrSafe = "_v"+jrfuncs.safeCharsForFilename(versionstr)
+                    optionZipSuffix += versionStrSafe
+            if (optionAddDateToZipFileName):
+                nowTime = datetime.datetime.now()
+                optionZipSuffix += nowTime.strftime('_%Y%m%d')
             if (len(generatedFileList)>0):
                 zipFilePath = jrfuncs.makeZipFile(generatedFileList, optionZipOutDir, gameName + optionZipSuffix)
                 jrprint("Zipped {} files to '{}'.".format(len(generatedFileList), zipFilePath))

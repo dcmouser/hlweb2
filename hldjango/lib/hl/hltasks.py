@@ -48,7 +48,7 @@ def queueTaskBuildStoryPdf(game, requestOptions):
     # reset
     buildLog = ""
     buildErrorStatus = False
-    flagCleanAfter = True
+    flagCleanAfter = "minimal"
 
     # options
     buildMode = requestOptions["buildMode"]
@@ -103,6 +103,7 @@ def queueTaskBuildStoryPdf(game, requestOptions):
             # build zip
             zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_PreferredBuild}
             buildList.append(zipBuild)
+        flagCleanAfter = "minimal"
     if (buildMode in ["buildDebug"]):
         # build debug format
         build = {"label": "debug build", "gameName": gameName, "format": "pdf", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug, }
@@ -112,6 +113,7 @@ def queueTaskBuildStoryPdf(game, requestOptions):
             # build zip
             zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug}
             buildList.append(zipBuild)
+        flagCleanAfter = "none"
     if (buildMode in ["buildDraft"]):
         # build complete list; all combinations of page size and layout
         buildList += generateCompleteBuildList(game, False)
@@ -119,6 +121,7 @@ def queueTaskBuildStoryPdf(game, requestOptions):
             # build zip
             zipBuild = {"label": "zipping built files", "gameName": gameName, "variant": "zip", "layout": None, "gameFileType": gamefilemanager.EnumGameFileTypeName_DraftBuild}
             buildList.append(zipBuild)
+        flagCleanAfter = "extra"
         #
     if (buildMode not in ["buildPreferred", "buildDebug", "buildDraft"]):
         raise Exception("Build mode not understood: '{}'.".format(buildMode))
@@ -200,7 +203,7 @@ def queueTaskBuildStoryPdf(game, requestOptions):
 
     # REload game instance AGAIN to save state, in case it has changed
     from games.models import Game
-    game = Game.objects.get(pk=gameModelPk)
+    game = Game.get_or_none(pk=gameModelPk)
     if (game is None):
         raise Exception("Failed to find game pk={} for updating build results - stage 2.".format(gameModelPk))
         # can't continue below
@@ -242,6 +245,12 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         # update lead stats on successful build
         game.leadStats = hlParser.getLeadStats()["summaryString"]
     #
+
+    # store last build log into main game buildLog
+    niceDateStr = jrfuncs.getNiceDateTime(buildDateStart)
+    game.lastBuildLog = retv + " on {}.\n".format(niceDateStr) + buildLog
+    if (not buildErrorStatus):
+        game.lastBuildLog += "\n" + game.leadStats
 
     # save game
     game.save()

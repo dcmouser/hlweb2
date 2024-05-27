@@ -1,5 +1,7 @@
 {% extends "allauth/layouts/base.html" %}
 
+
+
 {% load crispy_forms_tags %}
 {% load jrtemplatetags %}
 
@@ -29,9 +31,12 @@
 </ul>
 
 <hr/>
-<div>
-    <a href="{% url 'gameFileCreate' game.pk %}">Add new file to game</a>
-</div>
-
+    <div>
+        <a href="{% url 'gameFileCreate' game.pk %}" class="btn btn-info" role="button">Add new file to game</a>
+        <form method="post" action="{% url 'gameFileReconcile' game.pk %}"> {% csrf_token %}
+            {{ form|crispy }}
+            <div><input class="btn btn-success" type="submit" name="reconcile" value="Reconcile file directory (auto add/delete)" onclick="return confirm('Are you sure?');"></div>
+        </form>
+    </div>
 
 {% endblock content %}

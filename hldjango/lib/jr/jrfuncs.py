@@ -11,11 +11,10 @@ import html
 import io
 import datetime
 import zipfile
-
 from functools import reduce
-
 import random
 import json
+import math
 
 
 
@@ -1193,10 +1192,29 @@ def movePrefixesLikeTheToFront(text):
 
 
 # ---------------------------------------------------------------------------
-def niceElapsedTimeStr(elapsedSecs):
-    if (elapsedSecs<60):
-        return '{:.1f} seconds'.format(elapsedSecs)
-    return '{:.1f} minutes'.format(elapsedSecs/60)
+# see https://stackoverflow.com/questions/57503080/how-to-convert-elapsed-time-string-to-seconds-in-python
+def niceElapsedTimeStr(tf):
+    if tf < 60:
+        return('{:.1f} seconds'.format(tf))
+    elif 60 < tf < 3600:
+        mm = math.floor(tf/60)
+        ss = tf - (60*mm)
+        #return("{} minute(s), and {} seconds".format(mm, ss))
+        return("{} minutes".format(mm))
+    elif 3600 < tf < 86400:
+        hh = math.floor(tf/3600)
+        mm = math.floor((tf-(hh*3600))/60)
+        ss = tf - (hh*3600) - (60*mm)
+        #return("{} hours, {} minute(s), and {} seconds".format(hh, mm, ss))
+        return("{} hours, {} minutes".format(hh, mm))
+    elif tf > 86400:
+        dd = math.floor(tf/86400)
+        hh = math.floor((tf-(dd*86400))/3600)
+        mm = math.floor((tf-(dd*86400)-(hh*3600))/60)
+        ss = tf - (86400*dd) - (hh*3600) - (60*mm)
+        #return("{} days, {} hours, {} minute(s), and {} seconds".format(dd, hh, mm, ss))
+        return("{} days, and {} hours".format(dd, hh))
+
 
 
 def niceElapsedTimeStrMinsSecs(elapsedSecs):
@@ -1324,3 +1342,32 @@ def niceFileSizeStr(byteCount):
     return byteCount
 # ---------------------------------------------------------------------------
 
+
+
+# ---------------------------------------------------------------------------
+def replaceInitialDirectoryPath(fullPath, initialPath):
+    relPath = fullPath.replace(initialPath,'')
+    startpos = 0
+    while (len(relPath)>startpos) and (relPath[startpos] in ['/', '\\']):
+        startpos += 1
+    if (startpos>0):
+        relPath = relPath[startpos:]
+    return relPath
+
+
+def canonicalFilePath(filePath):
+    filePath = filePath.replace('\\','/')
+    filePath = filePath.replace('\\\\','/')
+    return filePath
+
+
+def safeCharsForFilename(str):
+    def safe_char(c):
+        if c.isalnum():
+            return c
+        elif c in '.':
+            return 'p'
+        else:
+            return "_"
+    return "".join(safe_char(c) for c in str).rstrip("_")
+# ---------------------------------------------------------------------------

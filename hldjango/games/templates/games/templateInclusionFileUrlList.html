@@ -5,7 +5,10 @@
 <ul>
     {% for fileEntry in fileList %}
         <li class="fileEntry">
-            <a href="{{ fileEntry.url }}" target="_blank">{{ fileEntry.name }}</a> ({{ fileEntry.fileSizeNiceStr }})<!-- -  {{ fileEntry.fileDateString }}-->
+            <a href="{{ fileEntry.url }}" target="_blank">{{ fileEntry.name }}</a> ({{ fileEntry.fileSizeNiceStr }})
+            {% if "showDate" in options %}
+                - {{ fileEntry.fileDateString }}
+            {% endif %}
         </li>
     {% endfor %}
 </ul>

@@ -27,6 +27,8 @@ EnumGameFileTypeName_PreferredBuild = "buildPreferred"
 EnumGameFileTypeName_Debug = "buildDebug"
 #
 EnumGameFileTypeName_Published = "published"
+#
+EnumGameFileTypeName_VersionedGame = "versionedGameText"
 
 
 # enum for game file type
@@ -35,6 +37,7 @@ GameFileTypeDbFieldChoices = [
     (EnumGameFileTypeName_DraftBuild, "Build draft file"),
     (EnumGameFileTypeName_PreferredBuild, "Preferred built file"),
     (EnumGameFileTypeName_Published, "Published file"),
+    (EnumGameFileTypeName_VersionedGame, "Versioned game text file"),
     (EnumGameFileTypeName_Debug, "Debug file"),
 ]
 # ---------------------------------------------------------------------------
@@ -55,14 +58,18 @@ def calculateGameFilePathRuntime(game, subdir, flagRelative):
         path = "/".join(["games", str(gamePk), subdir])
     else:
         path = "/".join([str(settings.MEDIA_ROOT), "games", str(gamePk), subdir])
+    path = jrfuncs.canonicalFilePath(path)
     return path
 
 def calculateGameFileUploadPathRuntimeRelative(instance, filename):
     basePath = calculateGameFilePathRuntime(instance.game, EnumGameFileTypeName_StoryUpload, True)
-    return "/".join([basePath, filename])
+    path = "/".join([basePath, filename])
+    path = jrfuncs.canonicalFilePath(path)
+    return path
 
 def calculateAbsoluteMediaPathForRelativePath(relativePath):
     path = "/".join([str(settings.MEDIA_ROOT), relativePath])
+    path = jrfuncs.canonicalFilePath(path)
     return path
 
 
@@ -95,9 +102,9 @@ class GameFileManager:
             # now scan
             imageDirectoryList = []
             # add uploads directory for this game
-            imageDirectoryList.append(self.getDirectoryPathForGameType(EnumGameFileTypeName_StoryUpload))
+            imageDirectoryList.append({'prefix':'', 'path':self.getDirectoryPathForGameType(EnumGameFileTypeName_StoryUpload)})
             # add shared media file directory
-            imageDirectoryList.append(self.getSharedImageDirectory())
+            imageDirectoryList.append({'prefix':'shared/images', 'path': self.getSharedImageDirectory()})
             self.imageFileFinder.setDirectoryList(imageDirectoryList)
             self.imageFileFinder.scanDirs(False)
 
@@ -168,7 +175,7 @@ class GameFileManager:
         # now walk and delete
         for fileEntry in fileList:
             filePath = fileEntry["path"]
-            jrprint("ATTN: deleteAllFilesForGameTypeOnLocalDrive deleting file '{}'.".format(filePath))
+            #jrprint("ATTN: deleteAllFilesForGameTypeOnLocalDrive deleting file '{}'.".format(filePath))
             jrfuncs.deleteFilePathIfExists(filePath)
 
     def deleteAllFilesForGameTypeInDb(self, gameFileTypeName):
@@ -192,10 +199,20 @@ class GameFileManager:
         gamePk = self.game.pk
         subdir = gameFileTypeName
         filePath = "/".join([str(settings.MEDIA_ROOT), "games", str(gamePk), subdir])
+        filePath = jrfuncs.canonicalFilePath(filePath)
+        return filePath
+
+    def getMediaSubDirectoryPathForGameType(self, gameFileTypeName):
+        # return the relative media directory file path where game files of this type are stored
+        gamePk = self.game.pk
+        subdir = gameFileTypeName
+        filePath = "/".join(["games", str(gamePk), subdir])
+        filePath = jrfuncs.canonicalFilePath(filePath)
         return filePath
 
     def getSharedImageDirectory(self):
         filePath = str(settings.JR_DIR_SHAREDIMAGES)
+        filePath = jrfuncs.canonicalFilePath(filePath)
         return filePath
 
 

@@ -85,6 +85,9 @@ class HlMarkdown:
             # quoting
             #renderer.addPackage('quoting', ['font=itshape'])
 
+            # embedded pdf
+            renderer.addPackage('pdfpages')
+
             # fonts
             # script https://ctan.org/pkg/aurical
             renderer.addPackage('aurical')

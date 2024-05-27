@@ -3,6 +3,7 @@ from django.views.generic import View, ListView, DetailView, CreateView, UpdateV
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
+from django.contrib import messages
 
 
 # python modules
@@ -55,7 +56,7 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Game
     permission_required = "games.add_game"
     template_name = "games/gameCreate.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text"]
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -63,10 +64,11 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
+
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     template_name = "games/gameEdit.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -79,6 +81,18 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
         return (obj.owner == self.request.user)
+
+    def get_form(self, form_class=None):
+        # make fields read-only
+        form = super().get_form(form_class)
+        myReadOnlyFieldList = ["lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
+        for fieldName in myReadOnlyFieldList:
+            form.fields[fieldName].disabled = True
+
+        return form
+
+
+
 
 
 class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -93,9 +107,20 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 
-class GameAllFileListView(DetailView):
+class GameGeneratedFileListView(DetailView):
     model = Game
-    template_name = "games/gameAllFileList.html"
+    template_name = "games/gameGeneratedFileList.html"
+
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+
+class GameVersionFileListView(DetailView):
+    model = Game
+    template_name = "games/gameVersionFileList.html"
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -128,7 +153,7 @@ def gameSetFileExtraGameContextAndCheckGameOwner(gameFileViewInstance):
     return (game.owner == gameFileViewInstance.request.user)
 
 
-class GameListFilesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class GameFilesListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = GameFile
     template_name = "games/gameFileList.html"
 
@@ -145,6 +170,31 @@ class GameListFilesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         return gameSetFileExtraGameContextAndCheckGameOwner(self)
+
+
+
+
+
+class GameFilesReconcileView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    # helper view to reconcile all uploaded files for a game
+    model = GameFile
+    template_name = "games/gameFileReconcile.html"
+
+    def post(self, request, *args, **kwargs):
+        game = self.extra_context['game']
+        # do reconciliation; function should set flash messages to tell user what is happening
+        retv = game.reconcileFiles(request)
+        # set flash messages
+        messages.add_message(request, messages.INFO, retv)
+        # redirect to file list
+        return redirect("gameFileList", pk=game.pk)
+
+
+    # is user allowed to look at the file list for this game?
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameSetFileExtraGameContextAndCheckGameOwner(self)
+
 
 
 

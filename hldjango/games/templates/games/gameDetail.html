@@ -13,13 +13,12 @@
 
 {% if game.owner.pk == request.user.pk %}
     <a href="{% url 'gameEdit' game.pk %}" class="btn btn-info" role="button">Edit</a>
-    <a href="{% url 'GameAllFileList' game.pk %}" class="btn btn-info" role="button">Generated files</a>
+    <a href="{% url 'gameGeneratedFileList' game.pk %}" class="btn btn-info" role="button">Generated files</a>
     <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameVersionFileList' game.pk %}" class="btn btn-info" role="button">Previous versions</a>
     <!--
-    <a href="{% url 'gameBuild' game.pk %}" class="btn btn-info" role="button">Build</a>
-    <a href="{% url 'gamePublish' game.pk %}" class="btn btn-info" role="button">Publish</a>
-    -->
     <a href="{% url 'gamePlay' game.pk %}" class="btn btn-info" role="button">Play</a>
+    -->
     <a href="{% url 'gameDelete' game.pk %}" class="btn btn-info" role="button">Delete</a>
     {% endif %}
 

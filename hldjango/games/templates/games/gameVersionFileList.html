@@ -1,0 +1,24 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+
+{% block title %}Older versions of game text for game file{% endblock title %}
+
+
+{% block content %}
+
+
+<form action="{% url 'gameBuild' object.pk %}" method="post"> {% csrf_token %}
+
+    {{ form|crispy }}
+
+    <h1>Older versions of game text for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
+
+    {% fileUrlList user game.pk "versionedGameText" "date," %}
+
+
+</form>
+
+{% endblock content %}
