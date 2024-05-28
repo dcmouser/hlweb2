@@ -35,10 +35,14 @@ from lib.jr import jrfuncs
 
 
 
-
 # module global funcs
-@db_task()
-def queueTaskBuildStoryPdf(game, requestOptions):
+# see https://huey.readthedocs.io/en/latest/api.html#Huey.task
+@db_task(context=True)
+def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    from games import gamefilemanager
+    from games.gamefilemanager import GameFileManager
 
     # starting time of run
     timeStart = time.time()
@@ -53,30 +57,22 @@ def queueTaskBuildStoryPdf(game, requestOptions):
     # options
     buildMode = requestOptions["buildMode"]
 
-    # imports needing in function to avoid circular?
-    from games.models import Game
-    from games import gamefilemanager
-    from games.gamefilemanager import GameFileManager
 
-    # update model queue status before we start
-    #game.queueStatus = Game.GameQueueStatusEnum_Running
+    # REload game instance AGAIN to save state, in case it has changed
+    game = Game.get_or_none(pk=gameModelPk)
+    if (game is None):
+        raise Exception("Failed to find game pk={} for updating build results - stage 2.".format(gameModelPk))
+        # can't continue below
 
-    # save queu start status; we will update when we finish
+
+    # previous settings -- NOTE that this REQUIRES caller to set these prior to initial run
     buildResultsPrevious = game.getBuildResults(buildMode)
     buildDateQueuedTimestamp = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "buildDateQueued", None)
     buildDateQueued = jrdfuncs.convertTimeStampToDateTimeDefaultNow(buildDateQueuedTimestamp)
+    isCanceled = jrfuncs.getDictValueOrDefault(buildResultsPrevious,"canceled", False)
+
     #
-    buildResults = {
-        "queueStatus": Game.GameQueueStatusEnum_Running,
-        "buildDateQueued": buildDateQueued.timestamp(),
-        }
-    game.setBuildResults(buildMode, buildResults)
-
-    # save NOW early (and again later) since it will take some time and something else might run in meantime
-    game.save()
-
     # properties
-    gameModelPk = game.pk
     gameInternalName = game.name
     gameName = game.gameName
     gameText = game.text
@@ -87,6 +83,41 @@ def queueTaskBuildStoryPdf(game, requestOptions):
     # parsed values
     gameBuildVersion = game.version
     gameBuildVersionDate = game.versionDate
+
+
+    # update build status and save
+    buildResults = {
+        "queueStatus": Game.GameQueueStatusEnum_Running,
+        "buildDateQueued": buildDateQueued.timestamp(),
+        "buildVersion": gameBuildVersion,
+        "buildVersionDate": gameBuildVersionDate,
+        "buildTextHash": gameTextHash,
+        }
+    # add task info
+    if (task is not None):
+        buildResults["taskType"] = "huey"
+        buildResults["taskId"] = task.id
+    # copy over last build results that are important
+    game.copyLastBuildResultsTo(buildResultsPrevious, buildResults)
+
+    # sanity check -- this is not working?
+    if (isCanceled):
+        buildResults["queueStatus"] = Game.GameQueueStatusEnum_Aborted
+        buildResults["canceled"] = True
+
+    # set
+    game.setBuildResults(buildMode, buildResults)
+    #
+    # save NOW early (and again later) since it will take some time and something else might run in meantime
+    game.save()
+    jrprint("!!!! saving new huey job ({}) starting.".format(buildMode))
+
+    # normally this wouildnt happen because a cancel would stop the task from even running
+    # but its potentially possible for it to start running and then get canceled before it makes progress beyond here?
+    if (False):
+        if (isCanceled):
+            return "Build aborted because task was canceled."
+
 
     # create new gamefilemanager; which will be intermediary for accessing game data
     gameFileManager = GameFileManager(game)
@@ -140,8 +171,6 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         "buildList": buildList,
         "gameFileManager": gameFileManager,
         }
-        
-
 
     # DO THE ACTUAL BUILD
     # this may take a long time to run (minutes)
@@ -202,12 +231,13 @@ def queueTaskBuildStoryPdf(game, requestOptions):
 
 
     # REload game instance AGAIN to save state, in case it has changed
-    from games.models import Game
     game = Game.get_or_none(pk=gameModelPk)
     if (game is None):
         raise Exception("Failed to find game pk={} for updating build results - stage 2.".format(gameModelPk))
         # can't continue below
 
+    buildResultsPrevious = game.getBuildResults(buildMode)
+    isCanceled = jrfuncs.getDictValueOrDefault(buildResultsPrevious,"canceled", False)
 
     # ATTN: a nice sanity check here would be to see if game text has changed
     # ATTN: we may not need to do this anymore, as long as we report when displaying that text hash has changed so its out of date
@@ -216,11 +246,18 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         buildErrorStatus = True
         buildLog = "ERROR: Game model text modified by author during build; needs rebuild."
 
+    # queue status
+    if (buildErrorStatus):
+        queueStatus = Game.GameQueueStatusEnum_Errored
+    elif (isCanceled):
+        queueStatus = Game.GameQueueStatusEnum_Aborted
+    else:
+        queueStatus = Game.GameQueueStatusEnum_Completed
 
     # update build status with results of build, AND with the version we actually built (which may go out of date later)
     buildDateEnd = timezone.now()
     buildResults = {
-        "queueStatus": Game.GameQueueStatusEnum_Errored if (buildErrorStatus) else Game.GameQueueStatusEnum_Completed,
+        "queueStatus": queueStatus,
         "buildDateQueued": buildDateQueued.timestamp(),
         "buildDateStart": buildDateStart.timestamp(),
         "buildDateEnd": buildDateEnd.timestamp(),
@@ -229,7 +266,15 @@ def queueTaskBuildStoryPdf(game, requestOptions):
         "buildTextHash": gameTextHash,
         "buildError": buildErrorStatus,
         "buildLog": buildLog,
+        "canceled": isCanceled,
+        "lastBuildDateStart": buildDateStart.timestamp(),
+        "lastBuildVersion": gameBuildVersion,
+        "lastBuildVersionDate": gameBuildVersionDate,
     }
+    # add task info
+    if (task is not None):
+        buildResults["taskType"] = "huey"
+        buildResults["taskId"] = task.id
 
     # set build results buildlog
     game.setBuildResults(buildMode, buildResults)
@@ -254,6 +299,8 @@ def queueTaskBuildStoryPdf(game, requestOptions):
 
     # save game
     game.save()
+
+    jrprint("!!!! FINISHED with a huey job ({}) status = '{}' !!!!".format(buildMode, queueStatus))
 
     return retv
 
@@ -566,4 +613,41 @@ def calcMaxColumnsFromPaperSize(paperSize):
         Game.GamePreferredFormatPaperSize_A5: 1,            
     }
     return paperSizeToMaxColumnsMap[paperSize]
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+def isTaskCanceled(taskType, taskId):
+    if (taskType is None) or (taskId is None):
+        return False
+    return huey.is_revoked(taskId)
+
+def cancelPreviousQueuedTask(taskType, taskId):
+    if (taskType=="huey"):
+        isRevoked = huey.is_revoked(taskId)
+        if (isRevoked):
+            return False
+        retv = huey.revoke_by_id(taskId)
+        return True
 # ---------------------------------------------------------------------------

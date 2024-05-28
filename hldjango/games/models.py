@@ -12,10 +12,11 @@ from django.core.serializers.json import DjangoJSONEncoder
 from .validators import validateGameFile
 
 # storybook modules
+from lib.jr import jrdfuncs
 from lib.jr import jrfuncs
 from lib.jr.jrfuncs import jrprint
 from lib.hl.hlparser import fastExtractSettingsDictionary
-from lib.hl.hltasks import queueTaskBuildStoryPdf, publishGameFiles
+from lib.hl.hltasks import queueTaskBuildStoryPdf, publishGameFiles, isTaskCanceled, cancelPreviousQueuedTask
 
 # helpers
 from . import gamefilemanager
@@ -44,12 +45,14 @@ class Game(models.Model):
     GameQueueStatusEnum_Queued = "QUE"
     GameQueueStatusEnum_Errored = "ERR"
     GameQueueStatusEnum_Completed = "COM"
+    GameQueueStatusEnum_Aborted = "ABO"
     GameQueueStatusEnum = [
         (GameQueueStatusEnum_None, "None"),
         (GameQueueStatusEnum_Running, "Running"),
         (GameQueueStatusEnum_Queued, "Queued"),
         (GameQueueStatusEnum_Errored, "Errored"),
         (GameQueueStatusEnum_Completed, "Completed"),
+        (GameQueueStatusEnum_Aborted, "Aborted"),
     ]
 
 
@@ -277,7 +280,6 @@ class Game(models.Model):
         if (True):
             retv = self.buildResultsJsonField
             if (retv==""):
-                print("WHAT THE FUCKING HELL")
                 retv = {}
             return retv
         #
@@ -427,40 +429,65 @@ class Game(models.Model):
         elif ("buildDraft" in request.POST):
             buildMode = "buildDraft"
             buildModeNice = "draft pdf set build"
+        elif ("cancelBuildTasks" in request.POST):
+            # cancel all queued builds
+            retv = self.cancelAllPendingBuilds(request)
+            self.save()
+            return
         else:
             raise Exception("Unspecified build mode.")
 
         # build options
         requestOptions = {"buildMode": buildMode}
 
-        # set queue status -- note that this may be almost immediately overwritten if not using queue system
-        buildResults = {
-            "queueStatus": Game.GameQueueStatusEnum_Queued,
-            "buildDateQueued": timezone.now().timestamp(),
-            }
-        self.setBuildResults(buildMode, buildResults)
-
-
         # do the build (queued or immediate)
         result = None
+
+        # delete any PREVIOUSLY QUEUED job for THIS build
+        self.cancelPendingBuildIfPresent(request, buildMode)
+
+        # i think we need to set this before we queue task so it doesnt see old build reesults if it runs immediately
+        buildResultsPrevious = self.getBuildResults(buildMode)
+        #
+        buildResults = {
+                "queueStatus": Game.GameQueueStatusEnum_Queued,
+                "buildDateQueued": timezone.now().timestamp(),
+            }
+        self.copyLastBuildResultsTo(buildResultsPrevious, buildResults)
+        self.setBuildResults(buildMode, buildResults)
+        # we better save to db so that task queue db sees this is if it checks right away
+        self.save()
 
         # this will QUEUE or run immediately the game build if neeed
         # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
         # ATTN: eventually move all this to the function that actually builds
-        retv = queueTaskBuildStoryPdf(self, requestOptions)
-        result = retv.get()
-
+        taskRetv = queueTaskBuildStoryPdf(self.pk, requestOptions)
+        result = taskRetv.get()
 
         # send to detail view with flash message
         if (isinstance(result, str)):
+            # immediate run
             message = "Result of {} for game '{}': {}.".format(buildModeNice, self.name, result)
             # no need to save since the queutask will save
         else:
+            # queued
             message = "Generation of {} for game '{}' has been queued for delayed build.".format(buildModeNice, self.name)
-            # we are queueing, so we need to set these values we set above while we wait
+            # we are queueing, so update status.. should we reload in case it changed?
+            buildResults = {
+                "queueStatus": Game.GameQueueStatusEnum_Queued,
+                "buildDateQueued": timezone.now().timestamp(),
+                "taskType": "huey",
+                "taskId": taskRetv.id,
+                }
+            # copy over last build results that are important
+            self.copyLastBuildResultsTo(buildResultsPrevious, buildResults)
+            self.setBuildResults(buildMode, buildResults)
+            #
             self.save()
 
-        messages.add_message(request, messages.INFO, message)
+        jrdfuncs.addFlashMessage(request, message, False)
+
+
 
 
 
@@ -480,7 +507,7 @@ class Game(models.Model):
             if (result is None):
                 result = "Successfully published."
 
-        messages.add_message(request, messages.INFO, result)
+        jrdfuncs.addFlashMessage(request, result)
 
 
 
@@ -578,10 +605,48 @@ class Game(models.Model):
 
 
 
+    def cancelPendingBuildIfPresent(self, request, gameFileType):
+        buildResults = self.getBuildResults(gameFileType)
+        queueStatus = jrfuncs.getDictValueOrDefault(buildResults, "queueStatus", None)
+        isCanceled = jrfuncs.getDictValueOrDefault(buildResults,"canceled", False)
+        if (queueStatus is None) or (isCanceled) or (queueStatus == Game.GameQueueStatusEnum_Completed) or (queueStatus == Game.GameQueueStatusEnum_Errored) or (queueStatus == Game.GameQueueStatusEnum_Aborted):
+            return False
+        taskType = jrfuncs.getDictValueOrDefault(buildResults, "taskType", None)
+        taskId = jrfuncs.getDictValueOrDefault(buildResults, "taskId", None)
+        if (isTaskCanceled(taskType, taskId)):
+            buildResults["canceled"] = True
+            return False
+        retv = cancelPreviousQueuedTask(taskType, taskId)
+        if (retv):
+            jrdfuncs.addFlashMessage(request, "Canceling previously queued {} task #{}.".format(taskType, taskId), True)
+            # update build state (caller will have to save())
+            buildResults["canceled"] = True
+            # change queue status, (unless it is running in which case it completed)
+            if (queueStatus != Game.GameQueueStatusEnum_Running):
+                buildResults["queueStatus"] = Game.GameQueueStatusEnum_Aborted
+            self.setBuildResults(gameFileType, buildResults)
+        return retv
+
+
+    def cancelAllPendingBuilds(self, request):
+        canceledTaskCount = 0
+        allResultsObj = self.getBuildResultsAsObject()
+        for gameFileType, buildResults in allResultsObj.items():
+            retv = self.cancelPendingBuildIfPresent(request, gameFileType)
+            if (retv):
+                canceledTaskCount += 1
+        if (canceledTaskCount==0):
+            jrdfuncs.addFlashMessage(request, "No queued tasks to cancel.", True)
 
 
 
-
+    def copyLastBuildResultsTo(self, buildResultsPrevious, buildResults):
+        lastBuildDateStart = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildDateStart", 0)
+        lastBuildVersion = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildVersion", "")
+        lastBuildVersionDate = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildVersionDate", "")
+        buildResults["lastBuildDateStart"] = lastBuildDateStart
+        buildResults["lastBuildVersion"] = lastBuildVersion
+        buildResults["lastBuildVersionDate"] = lastBuildVersionDate
 
 
 

@@ -13,6 +13,7 @@ import os
 from .models import Game, GameFile
 from .forms import BuildGameForm, GameFileMultipleUploadForm
 from . import gamefilemanager
+from lib.jr import jrdfuncs
 
 
 
@@ -185,7 +186,7 @@ class GameFilesReconcileView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         # do reconciliation; function should set flash messages to tell user what is happening
         retv = game.reconcileFiles(request)
         # set flash messages
-        messages.add_message(request, messages.INFO, retv)
+        jrdfuncs.addFlashMessage(request, retv)
         # redirect to file list
         return redirect("gameFileList", pk=game.pk)
 

@@ -98,29 +98,48 @@ def formatBuildResultsForHtmlList(game, buildResults):
     return ""
   #
   queuedDateNiceStr = convertTimeStampForBuildResult(buildResults, "buildDateQueued")
-
-  if (queueStatus == Game.GameQueueStatusEnum_Completed) or (queueStatus == Game.GameQueueStatusEnum_Errored):
+  durationQueued = calcNiceDurationStringForBuildResult(buildResults, "buildDateQueued", "buildDateEnd")
+  isCanceled = jrfuncs.getDictValueOrDefault(buildResults,"canceled", False)
+  lastBuildDateStartTimestamp = jrfuncs.getDictValueOrDefault(buildResults, "lastBuildDateStart", 0)
+  lastBuildVersion = jrfuncs.getDictValueOrDefault(buildResults, "lastBuildVersion", "")
+  lastBuildVersionDate = jrfuncs.getDictValueOrDefault(buildResults, "lastBuildVersionDate", "")
+  buildDateTimestamp = jrfuncs.getDictValueOrDefault(buildResults, "buildDateStart", None)
+    
+  if (queueStatus == Game.GameQueueStatusEnum_Completed) or (queueStatus == Game.GameQueueStatusEnum_Errored) or (queueStatus == Game.GameQueueStatusEnum_Aborted):
     # queue is done running
-    listItems.append({"key": "Status", "label": jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum)})
-    if (queueStatus != Game.GameQueueStatusEnum_Completed):
-      listItems.append({"key": "Queue status", "label": jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum), "errorLevel": 2})
+    statusStr = jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum)
+    if (isCanceled):
+      statusStr = "CANCELED ({})".format(statusStr)
+    listItems.append({"key": "Status", "label": statusStr, "errorLevel": 2 if (isCanceled) or (queueStatus == Game.GameQueueStatusEnum_Errored) else 0})
     listItems.append({"key": "Originally queued on", "label": queuedDateNiceStr})
     # show how long it took to run
-    durationQueued = calcNiceDurationStringForBuildResult(buildResults, "buildDateQueued", "buildDateEnd")
     durationBuild = calcNiceDurationStringForBuildResult(buildResults, "buildDateStart", "buildDateEnd")
     listItems.append({"key": "Total time in queue", "label": durationQueued})
     listItems.append({"key": "Actual time to build", "label": durationBuild})
   else:
     # incomplete queue
-    listItems.append({"key": "Queue status", "label": jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum)})
+    statusStr = jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum)
+    statusErrorLevel = 0
+    if (isCanceled):
+      if (queueStatus == Game.GameQueueStatusEnum_Running):
+        statusStr = "CANCELED (but still running)"
+      else:
+        statusStr = "CANCELED"
+      statusErrorLevel = 2
+    #
+    listItems.append({"key": "Queue status", "label": statusStr, "errorLevel": statusErrorLevel})
     listItems.append({"key": "Queued on", "label": queuedDateNiceStr})
     listItems.append({"key": "Current time waiting in queue", "label": durationQueued})
+
 
   # add build info
   if (queueStatus != Game.GameQueueStatusEnum_None):
     buildVersion = jrfuncs.getDictValueOrDefault(buildResults, "buildVersion", "n/a")
     buildVersionDate = jrfuncs.getDictValueOrDefault(buildResults, "buildVersionDate", "n/a")
-    buildVersionStr = "{} ({})".format(buildVersion, buildVersionDate)
+    if (buildVersion == buildVersionDate):
+      buildVersionStr = buildVersion
+    else:
+      buildVersionStr = "{} ({})".format(buildVersion, buildVersionDate)
     listItems.append({"key": "Version build", "label": buildVersionStr})
   #
   buildError = jrfuncs.getDictValueOrDefault(buildResults, "buildError", False)
@@ -140,7 +159,7 @@ def formatBuildResultsForHtmlList(game, buildResults):
   if (buildTextHash != game.textHash):
     # out of date
     lastEditDateTimestamp = game.textHashChangeDate.timestamp()
-    buildDateTimestamp = jrfuncs.getDictValueOrDefault(buildResults, "buildDateStart", None)
+
     if (buildDateTimestamp is not None):
       buildDate = datetime.datetime.fromtimestamp(buildDateTimestamp)
       difSecs = lastEditDateTimestamp-buildDateTimestamp
@@ -148,6 +167,15 @@ def formatBuildResultsForHtmlList(game, buildResults):
       listItems.append({"key": "OUT OF DATE", "label": "Game text was modified {} after this build.".format(durationStr), "errorLevel": 2})
   else:
     listItems.append({"key": "Up to date", "label": "Yes; built with latest game text edits."})
+
+
+  # last build for aborts
+  if True:
+      if (lastBuildDateStartTimestamp!=0) and ((buildDateTimestamp is None) or (buildDateTimestamp != lastBuildDateStartTimestamp)):
+        lastBuildDate = datetime.datetime.fromtimestamp(lastBuildDateStartTimestamp)
+        listItems.append({"key": "Files last built", "label": jrfuncs.getNiceDateTime(lastBuildDate)})
+        lastBuildVersionStr = "{} ({})".format(lastBuildVersion, lastBuildVersionDate)
+        listItems.append({"key": "Version of files last built", "label": buildVersionStr})
 
   retHtml = formatDictListAsHtmlList(listItems)
   return retHtml

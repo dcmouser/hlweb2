@@ -162,7 +162,10 @@ HUEY = {
     "filename": "HlHueyDb.sqlite3",
     "results": True,  # Store return values of tasks.
     "store_none": False,  # If a task returns None, do not save to results.
-    "immediate": True,
+
+    # ATTN: controls immediate mode
+    "immediate": False,
+
     "utc": True,  # Use UTC for all times internally.
     "connection": {},
     "consumer": {
@@ -252,6 +255,14 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+
+
+
+# see https://stackoverflow.com/questions/55202684/does-bootstrap-django-error-message-has-no-red-color
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+}
 
 
 
