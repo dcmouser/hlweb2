@@ -1,9 +1,14 @@
 # django
 from django.utils import timezone
 from django.contrib import messages
+from django.template.defaultfilters import slugify
 
 # python modules
 from datetime import datetime
+import re
+
+
+
 
 
 def convertTimeStampToDateTimeDefaultNow(timeStamp):
@@ -35,3 +40,88 @@ def addFlashMessage(request, str, flagIsError):
 def addFlashMessages(request, strList):
     for str in strList:
         addFlashMessage(request, str, False)
+
+
+
+
+
+
+
+# see https://djangosnippets.org/snippets/690/
+def jrdUniquifySlug(instance, value, slug_field_name='slug', queryset=None, slug_separator='-'):
+    # set object.slug to a unique slug value
+
+
+    """
+    Calculates and stores a unique slug of ``value`` for an instance.
+
+    ``slug_field_name`` should be a string matching the name of the field to
+    store the slug in (and the field to check against for uniqueness).
+
+    ``queryset`` usually doesn't need to be explicitly provided - it'll default
+    to using the ``.all()`` queryset from the model's default manager.
+    """
+
+    # ATTN: TODO
+    # this is found code; one thing that seems bad about it is that it FORCES the slug to be changed to new value, even if it already has a unique one.. is this what we want?
+    # put another way, say on our first save, we had a conflict, and so we assigned a -2 suffix.. later we resave and the conflict is gone, this will auto change our slug to the original tried value
+    # but what if we dont WANT to change the slug once we've assigned it a valid unique value!
+
+    slug_field = instance._meta.get_field(slug_field_name)
+
+    slug = getattr(instance, slug_field.attname)
+    slug_len = slug_field.max_length
+
+    # Sort out the initial slug, limiting its length if necessary.
+    slug = slugify(value)
+    if slug_len:
+        slug = slug[:slug_len]
+    slug = jrd_slug_strip(slug, slug_separator)
+    original_slug = slug
+
+    # Create the queryset if one wasn't explicitly provided and exclude the
+    # current instance from the queryset.
+    if queryset is None:
+        queryset = instance.__class__._default_manager.all()
+    if instance.pk:
+        queryset = queryset.exclude(pk=instance.pk)
+
+    # Find a unique slug. If one matches, at '-2' to the end and try again
+    # (then '-3', etc).
+    next = 2
+    while not slug or queryset.filter(**{slug_field_name: slug}):
+        slug = original_slug
+        end = '%s%s' % (slug_separator, next)
+        if slug_len and len(slug) + len(end) > slug_len:
+            slug = slug[:slug_len-len(end)]
+            slug = jrd_slug_strip(slug, slug_separator)
+        slug = '%s%s' % (slug, end)
+        next += 1
+
+    setattr(instance, slug_field.attname, slug)
+
+
+def jrd_slug_strip(value, separator='-'):
+    """
+    Cleans up a slug by removing slug separator characters that occur at the
+    beginning or end of a slug.
+
+    If an alternate separator is used, it will also replace any instances of
+    the default '-' separator with the new separator.
+    """
+
+    separator = separator or ''
+    if separator == '-' or not separator:
+        re_sep = '-'
+    else:
+        re_sep = '(?:-|%s)' % re.escape(separator)
+    # Remove multiple instances and if an alternate separator is provided,
+    # replace the default '-' separator.
+    if separator != re_sep:
+        value = re.sub('%s+' % re_sep, separator, value)
+    # Remove separator from the beginning and end of the slug.
+    if separator:
+        if separator != '-':
+            re_sep = re.escape(separator)
+        value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
+    return value

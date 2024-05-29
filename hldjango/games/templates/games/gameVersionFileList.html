@@ -10,15 +10,10 @@
 {% block content %}
 
 
-<form action="{% url 'gameBuild' object.pk %}" method="post"> {% csrf_token %}
-
-    {{ form|crispy }}
-
     <h1>Older versions of game text for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
 
     {% fileUrlList user game.pk "versionedGameText" "date," %}
 
 
-</form>
 
 {% endblock content %}

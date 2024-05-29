@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+from django.http import HttpResponse, HttpResponseRedirect
 
 
 # python modules
@@ -11,9 +12,10 @@ import os
 
 # user modules
 from .models import Game, GameFile
-from .forms import BuildGameForm, GameFileMultipleUploadForm
+from .forms import GameFileMultipleUploadForm, GameFormForEdit, GameFormForCreate
 from . import gamefilemanager
 from lib.jr import jrdfuncs
+
 
 
 
@@ -55,9 +57,10 @@ class GameDetailView(DetailView):
 
 class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Game
+    form_class = GameFormForCreate
     permission_required = "games.add_game"
     template_name = "games/gameCreate.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text"]
+    #fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text"]
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -68,8 +71,9 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
+    form_class = GameFormForEdit
     template_name = "games/gameEdit.html"
-    fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+    #fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -83,14 +87,42 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         obj = self.get_object()
         return (obj.owner == self.request.user)
 
-    def get_form(self, form_class=None):
-        # make fields read-only
-        form = super().get_form(form_class)
-        myReadOnlyFieldList = ["lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
-        for fieldName in myReadOnlyFieldList:
-            form.fields[fieldName].disabled = True
 
-        return form
+    def form_valid(self, form):
+        # first save as normal
+
+        # force slug rebuild on name change
+        if ("name" in form.changed_data) and (not "slug" in form.changed_data):
+            # when they change the name, we reset the slug value, so it will get an updated value
+            if (False):
+                self.data = self.data.copy()
+                self.data["slug"] = ""
+            else:
+                # force slug value blank so it will be reset to game.name during save (we COULD do it here also)
+                self.object.slug = ""
+
+        # save
+        response = super(GameEditView, self).form_valid(form)
+
+        # now check if there is an error in settings
+        #
+        # get_object fails if we change slug?
+        #game = self.get_object()
+        game = self.object
+        #
+        if (not game.isErrorInSettings):
+            # no error, just do as normal
+            jrdfuncs.addFlashMessage(self.request, "Modifications to game have been saved.", False)
+            # redirect in case slug has changed?
+            url =  reverse_lazy("gameDetail", kwargs={'slug':game.slug})
+            return HttpResponseRedirect(url)
+            #return response
+
+        # error; report it
+        jrdfuncs.addFlashMessage(self.request, "There was an error parsing the game text settings. Your changes have been saved but game will not build until these are fixed.", True)
+        # and redirect to edit page
+        url =  reverse_lazy("gameEdit", kwargs={'slug':game.slug})
+        return HttpResponseRedirect(url)
 
 
 
@@ -99,7 +131,7 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Game
     template_name = "games/gameDelete.html"
-    success_url = reverse_lazy("home")
+    success_url = reverse_lazy("gameHome")
 
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
@@ -107,15 +139,6 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return (obj.owner == self.request.user)
 
 
-
-class GameGeneratedFileListView(DetailView):
-    model = Game
-    template_name = "games/gameGeneratedFileList.html"
-
-    def get_context_data(self, **kwargs):
-        # override to add context
-        context = super().get_context_data(**kwargs)
-        return context
 
 
 
@@ -134,22 +157,66 @@ class GameVersionFileListView(DetailView):
 
 
 
+class GameGenerateView(DetailView):
+    model = Game
+    template_name = "games/gameGeneratedFileList.html"
+
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+    def post(self, request, *args, **kwargs):
+        # handle BUILD request
+        game = self.get_object()
+
+        # get the game file directory
+        retv = game.buildGame(request)
+
+        url =  reverse("gameGenerate", kwargs={'slug':game.slug})
+        return HttpResponseRedirect(url)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Game related to files
 
 
 # helpers -- these could go into MODEL?
 
 def getQueryArgGameId(gameFileViewInstance, keyname):
-    gameId = gameFileViewInstance.request.resolver_match.kwargs[keyname]
-    return gameId
+    gameSlug = gameFileViewInstance.request.resolver_match.kwargs[keyname]
+    return gameSlug
 
 def gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, keyname):
-    gameId = getQueryArgGameId(gameFileViewInstance, keyname)
-    game = get_object_or_404(Game, pk=gameId)
+    gameSlug = getQueryArgGameId(gameFileViewInstance, keyname)
+    game = get_object_or_404(Game, slug=gameSlug)
     return game
 
 def gameSetFileExtraGameContextAndCheckGameOwner(gameFileViewInstance):
-    game = gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, 'pk')
+    game = gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, 'slug')
     gameFileViewInstance.extra_context={'game': game}
     return (game.owner == gameFileViewInstance.request.user)
 
@@ -186,9 +253,9 @@ class GameFilesReconcileView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         # do reconciliation; function should set flash messages to tell user what is happening
         retv = game.reconcileFiles(request)
         # set flash messages
-        jrdfuncs.addFlashMessage(request, retv)
+        jrdfuncs.addFlashMessage(request, retv, False)
         # redirect to file list
-        return redirect("gameFileList", pk=game.pk)
+        return redirect("gameFileList", slug=game.slug)
 
 
     # is user allowed to look at the file list for this game?
@@ -257,9 +324,20 @@ class GameCreateFileView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     def get_success_url(self):
         # success after delete goes to file list of game
         game = self.extra_context['game']
-        gamePk = game.pk
-        success_url = reverse_lazy("gameFileList", args = (gamePk,))
+        success_url = reverse_lazy("gameFileList", args = (game.slug,))
         return success_url
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -335,8 +413,7 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         # success after delete goes to file list of game
         game = self.extra_context['game']
-        gamePk = game.pk
-        success_url = reverse_lazy("gameFileList", args = (gamePk,))
+        success_url = reverse_lazy("gameFileList", args = (game.slug,))
         return success_url
 
     def test_func(self):
@@ -356,49 +433,7 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 
-class GameBuildView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    model = Game
-    template_name = "games/gameBuild.html"
 
-    def test_func(self):
-        # ensure access to this view only if it is owner accessing it
-        obj = self.get_object()
-        return (obj.owner == self.request.user)
-
-    def post(self, request, *args, **kwargs):
-        # handle BUILD request
-        obj = self.get_object()
-
-        # get the game file directory
-        retv = obj.buildGame(request)
-
-        # redirect to detail view; the buildGame() function should set flash messages to tell user what is happening
-        return redirect("gameDetail", pk=obj.pk)
-
-
-
-
-
-class GamePublishView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, DetailView):
-    model = Game
-    permission_required = "games.canPublishGames"
-    template_name = "games/gamePublish.html"
-
-    def test_func(self):
-        # ensure access to this view only if it is owner accessing it
-        obj = self.get_object()
-        return (obj.owner == self.request.user)
-
-    def post(self, request, *args, **kwargs):
-        # handle request
-        obj = self.get_object()
-
-        # get the game file directory
-        retv = obj.publishGame(request)
-
-        # redirect to detail view; the buildGame() function should set flash messages to tell user what is happening
-        return redirect("gameDetail", pk=obj.pk)
-    
 
 
 
@@ -407,7 +442,6 @@ class GamePublishView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTes
 class GamePlayView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Game
     template_name = "games/gamePlay.html"
-    form_class = BuildGameForm
 
 
     def test_func(self):

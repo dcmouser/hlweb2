@@ -1,13 +1,14 @@
+# django
 from django import forms
 
+# ace editor widget
+from django_ace import AceWidget
+
+# user
 from .models import Game, GameFile
 
 
 
-class BuildGameForm(forms.ModelForm):
-    class Meta:
-        model = Game
-        fields = "__all__"
 
 
 
@@ -38,3 +39,30 @@ class GameFileMultipleUploadForm(forms.Form):
     note = forms.CharField(max_length=80, help_text="Internal comments (optional)", required=False)
 
 
+
+class GameFormForEdit(forms.ModelForm):
+    class Meta:
+        model = Game
+        fields = ["name", "slug", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+        # or any other fields you want on the form
+        widgets = {
+            "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,)
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        myReadOnlyFieldList = ["lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
+        for fieldName in myReadOnlyFieldList:
+            self.fields[fieldName].disabled = True
+
+
+
+
+class GameFormForCreate(forms.ModelForm):
+    class Meta:
+        model = Game
+        fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text"]
+        # or any other fields you want on the form
+        widgets = {
+            "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,),
+        }

@@ -4,10 +4,10 @@
 {% block title %}New Game{% endblock title %}
 
 {% block content %}
-<h1>New File for Game "<a href="{% url 'gameFileList' game.pk %}">{{game.name}}</a>"</h1>
+<h1>New File for Game "<a href="{% url 'gameFileList' game.slug %}">{{game.name}}</a>"</h1>
 <form action="" method="post" enctype="multipart/form-data"> {% csrf_token %}
     {{ form|crispy }}
-    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-danger" role="button">Cancel</a>
+    <a href="{% url 'gameFileList' game.slug %}" class="btn btn-danger" role="button">Cancel</a>
     <input class="btn btn-success" type="submit" value="Save">
 </form>
 {% endblock content %}

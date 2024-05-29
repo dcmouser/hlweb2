@@ -12,14 +12,14 @@
 </div>
 
 {% if game.owner.pk == request.user.pk %}
-    <a href="{% url 'gameEdit' game.pk %}" class="btn btn-info" role="button">Edit</a>
-    <a href="{% url 'gameGeneratedFileList' game.pk %}" class="btn btn-info" role="button">Generated files</a>
-    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
-    <a href="{% url 'gameVersionFileList' game.pk %}" class="btn btn-info" role="button">Previous versions</a>
+    <a href="{% url 'gameEdit' game.slug %}" class="btn btn-info" role="button">Edit</a>
+    <a href="{% url 'gameGenerate' game.slug %}" class="btn btn-info" role="button">Generated files</a>
+    <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameVersionFileList' game.slug %}" class="btn btn-info" role="button">Previous versions</a>
     <!--
-    <a href="{% url 'gamePlay' game.pk %}" class="btn btn-info" role="button">Play</a>
+    <a href="{% url 'gamePlay' game.slug %}" class="btn btn-info" role="button">Play</a>
     -->
-    <a href="{% url 'gameDelete' game.pk %}" class="btn btn-info" role="button">Delete</a>
+    <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button" onclick="return confirm('Are you sure?');">Delete</a>
     {% endif %}
 
 {% endblock content %}

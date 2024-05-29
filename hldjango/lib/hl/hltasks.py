@@ -429,6 +429,8 @@ def publishGameFiles(game):
         "publishResult": publishResult,
         "publishErrored": publishErrored,
         "publishDate": currentDate.timestamp(),
+        "queueStatus": Game.GameQueueStatusEnum_Completed,
+        "canceled": False,
         }
     game.copyBuildResults("published", "buildDraft", overrideResults)
 

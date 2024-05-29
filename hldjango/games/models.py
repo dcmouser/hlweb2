@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 
-
 # user modules
 from .validators import validateGameFile
 
@@ -28,7 +27,7 @@ import traceback
 import json
 import os
 import datetime
-
+import uuid
 
 
 
@@ -38,6 +37,7 @@ import datetime
 
 class Game(models.Model):
     """Game object manages individual games/chapters/storybooks"""
+
 
     # enum for game queue status
     GameQueueStatusEnum_None = "NON"
@@ -81,10 +81,14 @@ class Game(models.Model):
     ]
     GameFormatLayoutCompleteList = [GamePreferredFormatLayout_Solo, GamePreferredFormatLayout_SoloPrint, GamePreferredFormatLayout_OneCol, GamePreferredFormatLayout_TwoCol]
 
+    # new unique slug (we allow blank==true just so that it passes clean operation, we will set it ourselves)
+    slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, unique=True, blank=True)
+    #slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, blank=True, null=True, default=uuid.uuid4)
+    uuid = models.UUIDField(help_text="Unique uuid used for file paths", max_length=64, default=uuid.uuid4, editable=False)
 
     # owner provides this info
-    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game")
-    text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True)
+    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game", blank=False)
+    text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True,)
     textHash = models.CharField(max_length=80, help_text="Hash of text", default="", blank=True)
     textHashChangeDate = models.DateTimeField(help_text="Date game text last changed", null=True, blank=True)
 
@@ -166,23 +170,54 @@ class Game(models.Model):
         return "{} ({})".format(self.title, self.name)
 
     def get_absolute_url(self):
-        return reverse("gameDetail", kwargs={"pk": self.pk})
+        return reverse("gameDetail", kwargs={"slug": self.slug})
 
+    # override clean to parse hash
     def clean(self):
         # called automatically on edit
         # update text hash
         #
+        # calc text hash and return if it is unchanged AND there was no error parsing settings last time
         textHashNew = calculateTextHashWithVersion(self.text)
-        if (textHashNew == self.textHash):
-            # text hash does not change, nothing needs updating
+        if (textHashNew == self.textHash) and (not self.isErrorInSettings):
+            # text hash does not change and there is no error, nothing needs updating
             return
         #
         # update settings and schedule rebuild?
-        self.textHash = textHashNew
-        self.textHashChangeDate = timezone.now()
+        if (textHashNew != self.textHash):
+            # user has changed text
+            self.textHash = textHashNew
+            self.textHashChangeDate = timezone.now()
+            # set this non-db field which we will check for when we save
+            self.flagSaveVersionedGameText = True
+
+
+        # this will happen even if text has not changed, as long as there was a previous error
         self.parseSettingsFromTextAndSetFields()
-        # save versioned game text
-        self.safeVersionedGameText()
+
+    
+    # override save to set slug
+    def save(self, **kwargs):
+        if (self.slug is None) or (self.slug==""):
+            # default new slug value based on name; used for NEW game or when we reset it to blank if user changes self.name
+            slugStr = self.name
+        else:
+            # start with previous value of slug!
+            slugStr = self.slug
+        # dont let slugname confuse our url paths
+        if (slugStr.lower() in ["file","new"]):
+            slugStr += "game"
+        #
+        jrdfuncs.jrdUniquifySlug(self, slugStr)
+        # call super class
+        super(Game, self).save(**kwargs)
+
+        # after we have saved an object (and assigned it a pk); check if we should save versionedText
+        if (hasattr(self,"flagSaveVersionedGameText") and self.flagSaveVersionedGameText):
+            # save versioned game text
+            self.saveVersionedGameText()
+
+
 
 
 
@@ -217,9 +252,9 @@ class Game(models.Model):
             if (len(errorList)==0):
                 self.setSettingStatus(False, "Successfully updated settings on {}.".format(niceDateStr))
             else:
-                self.setSettingStatus(True, "Errors in settings from {}: {}.".format(niceDateStr, "; ".join(errorList)))
+                self.setSettingStatus(True, "Errors parsing game text settings: {}.".format("; ".join(errorList)))
         except Exception as e:
-            msg = "Error parsing settings on{}: Exception = " + repr(e)
+            msg = "Exception while parsing game text settings: " + repr(e)
             msg += "; " + traceback.format_exc()
             self.setSettingStatus(True, msg)
 
@@ -272,6 +307,10 @@ class Game(models.Model):
     def setSettingStatus(self, isError, msg):
         self.settingsStatus = msg
         self.isErrorInSettings = isError
+        if (isError):
+            self.lastBuildLog = "ERROR while parsing game text settings: " + msg
+        else:
+            self.lastBuildLog = "Game text settings parsed: " + msg
 
 
 
@@ -434,6 +473,9 @@ class Game(models.Model):
             retv = self.cancelAllPendingBuilds(request)
             self.save()
             return
+        elif ("publish" in request.POST):
+            # publish request
+            return self.publishGame(request)
         else:
             raise Exception("Unspecified build mode.")
 
@@ -507,7 +549,7 @@ class Game(models.Model):
             if (result is None):
                 result = "Successfully published."
 
-        jrdfuncs.addFlashMessage(request, result)
+        jrdfuncs.addFlashMessage(request, result, False)
 
 
 
@@ -528,6 +570,7 @@ class Game(models.Model):
 
         # now walk list of files
         filePathList = []
+        jrfuncs.createDirIfMissing(directoryPath)
         obj = os.scandir(directoryPath)
         for entry in obj:
             if not entry.is_file():
@@ -583,7 +626,7 @@ class Game(models.Model):
 
 
 
-    def safeVersionedGameText(self):
+    def saveVersionedGameText(self):
         # base directory for game
         gameFileType = gamefilemanager.EnumGameFileTypeName_VersionedGame
         gameFileManager = gamefilemanager.GameFileManager(self)

@@ -119,7 +119,7 @@ def formatBuildResultsForHtmlList(game, buildResults):
   else:
     # incomplete queue
     statusStr = jrdfuncs.lookupDjangoChoiceLabel(queueStatus, Game.GameQueueStatusEnum)
-    statusErrorLevel = 0
+    statusErrorLevel = 1
     if (isCanceled):
       if (queueStatus == Game.GameQueueStatusEnum_Running):
         statusStr = "CANCELED (but still running)"
@@ -161,10 +161,14 @@ def formatBuildResultsForHtmlList(game, buildResults):
     lastEditDateTimestamp = game.textHashChangeDate.timestamp()
 
     if (buildDateTimestamp is not None):
-      buildDate = datetime.datetime.fromtimestamp(buildDateTimestamp)
       difSecs = lastEditDateTimestamp-buildDateTimestamp
       durationStr = jrfuncs.niceElapsedTimeStr(difSecs)
-      listItems.append({"key": "OUT OF DATE", "label": "Game text was modified {} after this build.".format(durationStr), "errorLevel": 2})
+    elif (lastBuildDateStartTimestamp!=0):
+      difSecs = lastEditDateTimestamp-lastBuildDateStartTimestamp
+      durationStr = jrfuncs.niceElapsedTimeStr(difSecs)
+    else:
+      durationStr = "some time"
+    listItems.append({"key": "OUT OF DATE", "label": "Game text was modified {} after this build.".format(durationStr), "errorLevel": 2})
   else:
     listItems.append({"key": "Up to date", "label": "Yes; built with latest game text edits."})
 
@@ -175,7 +179,7 @@ def formatBuildResultsForHtmlList(game, buildResults):
         lastBuildDate = datetime.datetime.fromtimestamp(lastBuildDateStartTimestamp)
         listItems.append({"key": "Files last built", "label": jrfuncs.getNiceDateTime(lastBuildDate)})
         lastBuildVersionStr = "{} ({})".format(lastBuildVersion, lastBuildVersionDate)
-        listItems.append({"key": "Version of files last built", "label": buildVersionStr})
+        listItems.append({"key": "Version of files last built", "label": lastBuildVersionStr})
 
   retHtml = formatDictListAsHtmlList(listItems)
   return retHtml
@@ -189,8 +193,10 @@ def formatDictListAsHtmlList(listItems):
     labelStr = li["label"]
     #
     errorLevel = li["errorLevel"] if ("errorLevel" in li) else 0
-    if (errorLevel>0):
+    if (errorLevel==2):
       labelStr = '<font color="red">' + labelStr + '</font>'
+    if (errorLevel>0):
+      labelStr = '<font color="orange">' + labelStr + '</font>'
     #
     lineHtml = "<li><b>{}</b>: {}</li>\n".format(keyStr, labelStr)
     retHtml += lineHtml

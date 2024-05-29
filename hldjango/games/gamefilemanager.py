@@ -50,14 +50,13 @@ GameFileTypeDbFieldChoices = [
 
 
 
-
 # helper
 def calculateGameFilePathRuntime(game, subdir, flagRelative):
-    gamePk = game.pk
+    gameId = calcGamePathIdPart(game)
     if (flagRelative):
-        path = "/".join(["games", str(gamePk), subdir])
+        path = "/".join(["games", gameId, subdir])
     else:
-        path = "/".join([str(settings.MEDIA_ROOT), "games", str(gamePk), subdir])
+        path = "/".join([str(settings.MEDIA_ROOT), "games", gameId, subdir])
     path = jrfuncs.canonicalFilePath(path)
     return path
 
@@ -72,6 +71,9 @@ def calculateAbsoluteMediaPathForRelativePath(relativePath):
     path = jrfuncs.canonicalFilePath(path)
     return path
 
+def calcGamePathIdPart(game):
+    idStr = "{}_{}".format(str(game.pk), game.uuid)
+    return idStr
 
 
 
@@ -196,17 +198,17 @@ class GameFileManager:
 
     def getDirectoryPathForGameType(self, gameFileTypeName):
         # return the directory file path where game files of this type are stored
-        gamePk = self.game.pk
+        gameId = calcGamePathIdPart(self.game)
         subdir = gameFileTypeName
-        filePath = "/".join([str(settings.MEDIA_ROOT), "games", str(gamePk), subdir])
+        filePath = "/".join([str(settings.MEDIA_ROOT), "games", gameId, subdir])
         filePath = jrfuncs.canonicalFilePath(filePath)
         return filePath
 
     def getMediaSubDirectoryPathForGameType(self, gameFileTypeName):
         # return the relative media directory file path where game files of this type are stored
-        gamePk = self.game.pk
+        gameId = calcGamePathIdPart(self.game)
         subdir = gameFileTypeName
-        filePath = "/".join(["games", str(gamePk), subdir])
+        filePath = "/".join(["games", gameId, subdir])
         filePath = jrfuncs.canonicalFilePath(filePath)
         return filePath
 
@@ -218,9 +220,9 @@ class GameFileManager:
 
     def getBaseUrlPathForGameType(self, gameFileTypeName):
         # return the url base path where game files of this type are stored
-        gamePk = self.game.pk
+        gameId = calcGamePathIdPart(self.game)
         subdir = gameFileTypeName        
-        urlPath = "/".join([str(settings.MEDIA_URL), "games", str(gamePk), subdir])
+        urlPath = "/".join([str(settings.MEDIA_URL), "games", gameId, subdir])
         return urlPath
 
 

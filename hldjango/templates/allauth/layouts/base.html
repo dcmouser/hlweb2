@@ -17,6 +17,8 @@
 		    <!-- favicon -->
 		    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}"/>
 
+			{{ form.media }}
+
         <title>
             {% block head_title %}HIGH & LOW WEB SERVICES{% endblock head_title %}
         </title>
@@ -108,17 +110,13 @@
 
 			    <div class="container-fluid ">
 			    <main>
-			        {% if messages %}
-			        <div class="card bg-light mb-3">
-			            <div class="card-header">
-			              Messages
-			            </div>
-			            <ul class="messages list-group list-group-flush">
+
+					{% if messages %}
 			                {% for message in messages %}
-			                    <li{% if message.tags %} class="{{ message.tags }} list-group-item"{% endif %}>{{ message }}</li>
+									<div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>
+									{{ message }}
+									</div>
 			                {% endfor %}
-			            </ul>
-			        </div>
 			        <hr/>
 			        {% endif %}
 

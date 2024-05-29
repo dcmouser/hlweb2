@@ -32,8 +32,8 @@
 
 <hr/>
     <div>
-        <a href="{% url 'gameFileCreate' game.pk %}" class="btn btn-info" role="button">Add new file to game</a>
-        <form method="post" action="{% url 'gameFileReconcile' game.pk %}"> {% csrf_token %}
+        <a href="{% url 'gameFileCreate' game.slug %}" class="btn btn-info" role="button">Add new file to game</a>
+        <form method="post" action="{% url 'gameFileReconcile' game.slug %}"> {% csrf_token %}
             {{ form|crispy }}
             <div><input class="btn btn-success" type="submit" name="reconcile" value="Reconcile file directory (auto add/delete)" onclick="return confirm('Are you sure?');"></div>
         </form>

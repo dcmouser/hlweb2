@@ -55,16 +55,26 @@ def fastExtractSettingsDictionary(text):
     #
     settings = {}
     # extract json settings
-    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE | re.IGNORECASE)
-    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE)
     # evilness
     text = jrfuncs.fixupUtfQuotesEtc(text)
     #
+    #regexSettings = re.compile(r'#\s*options\s*\n\{([\S\s]*?\})(\n+#)', re.MULTILINE | re.IGNORECASE)
+    #regexSettings = re.compile(r'(.*)#\s*options\s*\n(\{[\S\s]*?\})(\n+#).*', re.MULTILINE | re.IGNORECASE)
     regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*?\})(\n+#)', re.MULTILINE | re.IGNORECASE)
-    #regexSettings = re.compile(r'#\s*options\s*\n(\{[\S\s]*\})(\n+#)', re.MULTILINE | re.IGNORECASE)
     matches = regexSettings.search(text)
+    #matches = regexSettings.match(text)
     if (matches):
-        settingsString = matches[1]
+        # kludge to make error line number inside json match up with text line number
+        start = matches.start()
+        end = matches.end()
+        priorText = text[0:start]
+        priorTextNewlineCount=priorText.count("\n")
+        if (priorTextNewlineCount>0):
+            prorTextKludge= "\n" * (priorTextNewlineCount+1)
+        else:
+            prorTextKludge=""
+        #
+        settingsString = prorTextKludge + matches[1]
         settings = json.loads(settingsString)
     else:
         raise Exception("No options block found in text.")
@@ -1632,6 +1642,10 @@ class HlParser:
         # kludge fix up bad characters
         jsonOptionString = jrfuncs.fixupUtfQuotesEtc(jsonOptionString)
 
+        # kludge so that line numbers in reported error are correct
+        priorTextNewlineCount = int(block['lineNumber'])
+        prorTextKludge= "\n" * (priorTextNewlineCount)
+        jsonOptionString = prorTextKludge + jsonOptionString
 
         jsonOptions = json.loads(jsonOptionString)
         # set the WORKINGDIR options

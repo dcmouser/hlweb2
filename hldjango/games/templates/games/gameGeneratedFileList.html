@@ -10,7 +10,7 @@
 {% block content %}
 
 
-<form action="{% url 'gameBuild' object.pk %}" method="post"> {% csrf_token %}
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
 
     {{ form|crispy }}
 
@@ -31,18 +31,18 @@
 </form>
 
 
-<form action="{% url 'gamePublish' object.pk %}" method="post"> {% csrf_token %}
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
 
     <h3>Published Files</h3>
-    <div><input class="btn btn-success" type="submit" name="published" value="Publish the current draft PDF set as the new Official Release"></div>
+    <div><input class="btn btn-success" type="submit" name="publish" value="Publish the current draft PDF set as the new Official Release"></div>
     {% fileUrlList user game.pk "published" "" %}
 </form>
 
 
 
-<form action="{% url 'gameBuild' object.pk %}" method="post"> {% csrf_token %}
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
     <h3>Manage Queue</h3>
-    <div><input class="btn btn-success" type="submit" name="cancelBuildTasks" value="Cancel any currently queued builds."></div>
+    <div><input class="btn btn-success" type="submit" name="cancelBuildTasks" value="Cancel any currently queued builds." onclick="return confirm('Are you sure?');"></div>
 </form>
 <br/><br/>
 

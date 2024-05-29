@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     "accounts",
     "core",
     "games",
+    # 
+    "django_ace",
 ]
 
 MIDDLEWARE = [
@@ -163,8 +165,8 @@ HUEY = {
     "results": True,  # Store return values of tasks.
     "store_none": False,  # If a task returns None, do not save to results.
 
-    # ATTN: controls immediate mode
-    "immediate": False,
+    # ATTN: controls whether we use queued huey or run tasks immediately
+    "immediate": True,
 
     "utc": True,  # Use UTC for all times internally.
     "connection": {},
@@ -261,6 +263,10 @@ INTERNAL_IPS = [
 # see https://stackoverflow.com/questions/55202684/does-bootstrap-django-error-message-has-no-red-color
 from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
+    messages.DEBUG: 'secondary',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
 

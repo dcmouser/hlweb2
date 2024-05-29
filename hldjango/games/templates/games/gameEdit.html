@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<h1>Edit Game "<a href="{% url 'gameDetail' game.pk %}">{{ game.title }}</a>"</h1>
+<h1>Edit Game "<a href="{% url 'gameDetail' game.slug %}">{{ game.title }}</a>"</h1>
 
 <div class="gameEntry">
     <p><b>Title:</b> {{ game.title }}</p>
@@ -17,9 +17,9 @@
 
 <form action=""" method="post"> {% csrf_token %}
     {{ form|crispy }}
-    <a href="{% url 'gameFileList' game.pk %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
     <br/>
-    <a href="{% url 'gameDetail' game.pk %}" class="btn btn-primary" role="button">Cancel</a>
+    <a href="{% url 'gameDetail' game.slug %}" class="btn btn-primary" role="button">Cancel</a>
     <input class="btn btn-success" type="submit" value="Update">
 </form>
 {% endblock content %}
