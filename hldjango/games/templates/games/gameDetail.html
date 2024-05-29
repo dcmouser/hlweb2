@@ -1,15 +1,22 @@
 {% extends "allauth/layouts/base.html" %}
 
-
 {% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+
+
 {% block title %}Game Details{% endblock title %}
 
 {% block content %}
 <div class="gameEntry">
-    <h2>{{ game.title }} ({{ game.name }})</h2>
+    <h2>{{ game.name }} ({{ game.title }})</h2>
     <p><b>Owner:</b> {{ game.owner }}</p>
     <p>{{ game.summary }}</p>
 </div>
+
+
+{% fileUrlList user game.pk "published" "noInfo" %}
+
 
 {% if game.owner.pk == request.user.pk %}
     <a href="{% url 'gameEdit' game.slug %}" class="btn btn-info" role="button">Edit</a>
@@ -19,7 +26,7 @@
     <!--
     <a href="{% url 'gamePlay' game.slug %}" class="btn btn-info" role="button">Play</a>
     -->
-    <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button" onclick="return confirm('Are you sure?');">Delete</a>
+    <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button">Delete</a>
     {% endif %}
 
 {% endblock content %}

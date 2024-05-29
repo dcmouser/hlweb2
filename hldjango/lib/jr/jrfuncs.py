@@ -123,6 +123,35 @@ def copyFilePath(sourcePath, destPath):
 def deleteFilePathIfExists(filePath):
     if (pathExists(filePath)):
         os.remove(filePath)
+
+
+def deleteDirPathIfExists(dirPath):
+    if (not dirPath.endswith("/")):
+        dirPath += "/"
+    if (pathExists(dirPath)):
+        shutil.rmtree(dirPath + "/")
+        return True
+    return False
+
+
+def renameDirPath(dirPath, newDirPath, flagUniquify):
+    if (not dirPath.endswith("/")):
+        dirPath += "/"
+    if (not pathExists(dirPath)):
+        return False
+    if (pathExists(newDirPath)) and (not flagUniquify):
+        return False
+    # give it unique destination pathname if needed
+    if (pathExists(newDirPath)):
+        newDirPathBase = newDirPath
+        suffixIndex = 1
+        while (pathExists(newDirPath)):
+            suffixIndex += 1
+            newDirPath = newDirPathBase + str(suffixIndex)
+    # move it
+    retv = shutil.move(dirPath, newDirPath)
+    # return path moved to
+    return newDirPath
 #---------------------------------------------------------------------------
 
 

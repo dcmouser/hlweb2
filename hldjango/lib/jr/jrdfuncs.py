@@ -2,10 +2,12 @@
 from django.utils import timezone
 from django.contrib import messages
 from django.template.defaultfilters import slugify
+from django.core.exceptions import ValidationError
 
 # python modules
 from datetime import datetime
 import re
+import uuid
 
 
 
@@ -31,7 +33,7 @@ def lookupDjangoChoiceLabel(enumKey, enumList):
 
 
 def addFlashMessage(request, str, flagIsError):
-    if flagIsError or ("error" in str.lower()):
+    if flagIsError or ("error" in str.lower()) or ("exception" in str.lower()):
         messages.add_message(request, messages.ERROR, str)
     else:
         messages.add_message(request, messages.INFO, str)
@@ -125,3 +127,31 @@ def jrd_slug_strip(value, separator='-'):
             re_sep = re.escape(separator)
         value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
     return value
+
+
+
+
+
+
+
+
+def shortUuidAsString():
+    return str(uuid.uuid4())
+def shortUuidAsStringWithPkPrefix():
+    return "pk_" + str(uuid.uuid4())
+
+def resolveSubDirName(subdirname, pk):
+    if (subdirname.startswith("pk_")):
+        # replace "pk_" with game.pk to make it easier to identify the directory
+        subdirname=str(pk)+"-"+subdirname[3:]
+    return subdirname
+
+
+
+
+def validateName(value):
+    regexValidName = re.compile(r'^[\w\-\_ ]+$')
+    matches = regexValidName.match(value)
+    if (matches is None):
+        raise ValidationError("Can only contain letters, numbers, spaces, underscores, hyphens")
+

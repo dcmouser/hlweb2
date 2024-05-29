@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import GameListView, GameDetailView, GameCreateView, GameEditView, GameDeleteView, GameGenerateView, GamePlayView
 from .views import GameCreateFileView, GameFilesListView, GameFilesReconcileView, GameVersionFileListView
-from .views import GameFileDetailView, GameFileEditView, GameFileDeleteView
+from .views import GameFileDetailView, GameFileEditView, GameFileDeleteView, GameChangeDirView
 #
 
 
@@ -20,6 +20,7 @@ urlpatterns = [
     path("game/<slug:slug>/", GameDetailView.as_view(), name="gameDetail"),
     path("game/<slug:slug>/edit/", GameEditView.as_view(), name="gameEdit"),
     path("game/<slug:slug>/delete/", GameDeleteView.as_view(), name="gameDelete"),
+    path("game/<slug:slug>/changedir/", GameChangeDirView.as_view(), name="gameChangeDir"),
     path("", GameListView.as_view(), name="gameHome"),
     #
     # game and gamefile File related

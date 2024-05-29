@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core import validators
 
 # user modules
 from .validators import validateGameFile
@@ -83,11 +84,11 @@ class Game(models.Model):
 
     # new unique slug (we allow blank==true just so that it passes clean operation, we will set it ourselves)
     slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, unique=True, blank=True)
-    #slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, blank=True, null=True, default=uuid.uuid4)
-    uuid = models.UUIDField(help_text="Unique uuid used for file paths", max_length=64, default=uuid.uuid4, editable=False)
+    # dirname is set once at start, and governs the path where files are created; an admin could force it
+    subdirname = models.CharField(max_length=64, blank=False, unique=True, default=jrdfuncs.shortUuidAsStringWithPkPrefix, validators = [jrdfuncs.validateName])
 
     # owner provides this info
-    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game", blank=False)
+    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game", blank=False, validators = [jrdfuncs.validateName])
     text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True,)
     textHash = models.CharField(max_length=80, help_text="Hash of text", default="", blank=True)
     textHashChangeDate = models.DateTimeField(help_text="Date game text last changed", null=True, blank=True)
@@ -218,6 +219,18 @@ class Game(models.Model):
             self.saveVersionedGameText()
 
 
+    # override for deleting
+#    def delete(self):
+#        self.deleteUserGameDirectories()
+#        return super(Game, self).delete()
+
+
+
+
+
+
+
+
 
 
 
@@ -259,29 +272,7 @@ class Game(models.Model):
             self.setSettingStatus(True, msg)
 
 
-        # mark builds as being out of date
-        #self.markOutOfDate()
 
-
-
-
-    #def markOutOfDate(self):
-    #    self.outOfDatePreferred = True
-    #    self.outOfDateDebug = True
-    #    self.outOfDateDraft = True
-    #    self.outOfDatePublished = True
-
-
-
-    #def updateOutOfDatesOnSuccessfulBuildOrPublish(self, buildMode):
-    #    if (buildMode in ["buildPreferred", "buildAll"]):
-    #        self.outOfDatePreferred = False
-    #    if (buildMode in ["buildDebug", "buildAll"]):
-    #        self.outOfDateDebug = False  
-    #    if (buildMode in ["buildDraft", "buildAll"]):
-    #        self.outOfDateDraft = False  
-    #    if (buildMode in ["published"]):
-    #        self.outOfDatePublished = False  
 
 
 
@@ -694,11 +685,25 @@ class Game(models.Model):
 
 
 
+    def deleteUserGameDirectories(self, request):
+        # delete (or rename the user directory for game )
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        if (settings.DELETE_USER_GAMEFOLDER_METHOD=="realDelete"):
+            retvMessage = gameFileManager.deleteBaseDirectory()
+        elif (settings.DELETE_USER_GAMEFOLDER_METHOD=="rename"):
+            retvMessage = gameFileManager.deleteBaseDirectoryByRenaming()
+        elif (settings.DELETE_USER_GAMEFOLDER_METHOD=="nothing"):
+            pass
+        else:
+            raise Exception("Unknown settings.DELETE_USER_GAMEFOLDER_METHOD was '{}' should be from [realDelete, rename, nothing]".format(settings.DELETE_USER_GAMEFOLDER_METHOD))
+
+        jrdfuncs.addFlashMessage(request, retvMessage, False)
 
 
-
-
-
+    def renameDirectoryFrom(self, request, oldDir):
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        retvMessage = gameFileManager.renameBaseDirectoryFrom(oldDir)
+        jrdfuncs.addFlashMessage(request, retvMessage, False)
 
 
 

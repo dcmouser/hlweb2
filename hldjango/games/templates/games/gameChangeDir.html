@@ -1,0 +1,30 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% block title %}Change Directory for Game{% endblock title %}
+
+
+{% block content %}
+
+<h1>Change Directory for Game "<a href="{% url 'gameDetail' game.slug %}">{{ game.name }}</a>" ({{ game.title }})</h1>
+
+<div>
+    ATTENTION: This is an experimental function designed to let you customize the directory path where files for this game are stored (uploaded images, generated pdfs, etc.).  Changing this involves rename local drive folders and re-reconciling uploads.  Backup your game first before performing this operation.  It may break things.
+</div>
+
+<div class="gameEntry">
+    <p><b>Title:</b> {{ game.title }}</p>
+    <p><b>Owner:</b> {{ game.owner }}</p>
+    <p><b>Summary:</b> {{ game.summary }}</p>
+</div>
+
+
+<form action=""" method="post"> {% csrf_token %}
+    {{ form|crispy }}
+    <br/>
+    <a href="{% url 'gameDetail' game.slug %}" class="btn btn-primary" role="button">Cancel</a>
+    <input class="btn btn-success" type="submit" value="Update">
+</form>
+
+
+{% endblock content %}

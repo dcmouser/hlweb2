@@ -44,7 +44,7 @@ def userGameList(userPk, requestingUser):
     games = Game.objects.filter(Q(owner=userPk) & Q(isPublic=True))
   #
   game_list = games
-  return {'game_list': game_list}
+  return {"game_list": game_list, "flagShowNonPublic": flagShowNonPublic}
 
 
 
@@ -64,6 +64,8 @@ def fileUrlList(requestingUser, gamePk, gameFileTypeName, optionStr):
   optionStrList = optionStr.split(",")
   if ("date" in optionStrList):
     options["showDate"] = True
+  if ("noInfo" in optionStrList):
+    options["noInfo"] = True
 
   # get game
   game = Game.objects.get(pk=gamePk)
@@ -152,7 +154,7 @@ def formatBuildResultsForHtmlList(game, buildResults):
     publishDateNiceStr = convertTimeStampForBuildResult(buildResults, "publishDate")
     #listItems.append({"key": "Published on", "label": publishDateNiceStr})
     publishErrored = jrfuncs.getDictValueOrDefault(buildResults, "publishErrored", False)
-    listItems.append({"key": publishResult, "label": "on " + publishDateNiceStr, "errorLevel": 2 if publishErrored else 0})
+    listItems.append({"key": "Publish result", "label": publishResult + "on " + publishDateNiceStr, "errorLevel": 2 if publishErrored else 0})
   
   # is it out of date
   buildTextHash = jrfuncs.getDictValueOrDefault(buildResults, "buildTextHash", "")

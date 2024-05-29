@@ -43,7 +43,7 @@ class GameFileMultipleUploadForm(forms.Form):
 class GameFormForEdit(forms.ModelForm):
     class Meta:
         model = Game
-        fields = ["name", "slug", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+        fields = ["name", "slug", "subdirname", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
         # or any other fields you want on the form
         widgets = {
             "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,)
@@ -51,7 +51,7 @@ class GameFormForEdit(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        myReadOnlyFieldList = ["lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
+        myReadOnlyFieldList = ["subdirname", "lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
         for fieldName in myReadOnlyFieldList:
             self.fields[fieldName].disabled = True
 
@@ -66,3 +66,12 @@ class GameFormForCreate(forms.ModelForm):
         widgets = {
             "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,),
         }
+
+
+
+
+class GameFormForChangeDir(forms.ModelForm):
+    class Meta:
+        model = Game
+        fields = ["subdirname", ]
+

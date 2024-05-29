@@ -166,7 +166,7 @@ HUEY = {
     "store_none": False,  # If a task returns None, do not save to results.
 
     # ATTN: controls whether we use queued huey or run tasks immediately
-    "immediate": True,
+    "immediate": False,
 
     "utc": True,  # Use UTC for all times internally.
     "connection": {},
@@ -271,6 +271,8 @@ MESSAGE_TAGS = {
 }
 
 
+# for when a game is deleted, what to do with game folder
+DELETE_USER_GAMEFOLDER_METHOD = "rename"
 
 
 

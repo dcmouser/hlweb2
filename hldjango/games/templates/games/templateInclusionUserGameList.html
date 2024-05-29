@@ -1,4 +1,9 @@
-<h3>Public Games</h3>
+{% if flagShowNonPublic %}
+    <h3>My Games</h3>
+{% else %}
+    <h3>Public Games</h3>
+{% endif %}
+
 <ul>
     {% for game in game_list %}
         <li class="gameEntry">

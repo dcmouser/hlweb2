@@ -26,10 +26,13 @@
 
 {% userGameList customuser.pk user %}
 
-
-<a href="{% url 'accountEditProfile' customuser.pk %}" class="btn btn-primary" role="button">Edit Profile</a>
-<hr/>
-OR:
-{% include "allauth/layouts/accountChangeLinks.html" %} 
+{% if user.is_authenticated %}
+  {% if customuser.pk == user.pk %}
+    <a href="{% url 'accountEditProfile' customuser.pk %}" class="btn btn-primary" role="button">Edit Profile</a>
+    <hr/>
+    OR:
+    {% include "allauth/layouts/accountChangeLinks.html" %}
+  {% endif %}
+{% endif %}
 
 {% endblock content %}

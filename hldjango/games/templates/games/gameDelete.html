@@ -7,8 +7,8 @@
 {% block content %}
 <h1>Delete Game</h1>
 <form action="" method="post"> {% csrf_token %}
-    <p>Are you sure you want to delete "{{ game.name }}"?</p>
+    <p>Are you sure you want to delete "{{ game.name }}" ({{ game.title}})?</p>
     <a href="{% url 'gameDetail' game.slug %}" class="btn btn-primary" role="button">Cancel</a>
-    <input class="btn btn-danger" type="submit" value="Confirm">
+    <input class="btn btn-danger" type="submit" value="Confirm" onclick="return confirm('Are you sure?');">
 </form>
 {% endblock content %}

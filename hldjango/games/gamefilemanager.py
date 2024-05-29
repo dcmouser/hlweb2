@@ -8,7 +8,7 @@ import datetime
 from django.conf import settings
 
 # helpers
-from lib.jr import jrfuncs
+from lib.jr import jrfuncs, jrdfuncs
 from lib.jr.jrfuncs import jrprint
 from lib.jr.jrfilefinder import JrFileFinder
 
@@ -72,9 +72,7 @@ def calculateAbsoluteMediaPathForRelativePath(relativePath):
     return path
 
 def calcGamePathIdPart(game):
-    idStr = "{}_{}".format(str(game.pk), game.uuid)
-    return idStr
-
+    return jrdfuncs.resolveSubDirName(game.subdirname, game.pk)
 
 
 
@@ -195,6 +193,17 @@ class GameFileManager:
 
 
 
+    def getBaseDirectoryPathForGame(self):
+        gameId = calcGamePathIdPart(self.game)
+        filePath = "/".join([str(settings.MEDIA_ROOT), "games", gameId])
+        filePath = jrfuncs.canonicalFilePath(filePath)
+        return filePath
+
+    def getBaseDirectoryPathForGameWithExplicitSubdir(self, subdirname):
+        gameId = jrdfuncs.resolveSubDirName(subdirname, self.game.pk)
+        filePath = "/".join([str(settings.MEDIA_ROOT), "games", gameId])
+        filePath = jrfuncs.canonicalFilePath(filePath)
+        return filePath
 
     def getDirectoryPathForGameType(self, gameFileTypeName):
         # return the directory file path where game files of this type are stored
@@ -297,3 +306,41 @@ class GameFileManager:
         return resultMessage
 
 
+
+
+
+
+
+    def deleteBaseDirectory(self):
+        # delete the game directory
+        dirPath = self.getBaseDirectoryPathForGame()
+        #jrfuncs.deleteDirPathIfExists(dirPath)
+        resultMessage = "Deleting of base directory ({}) not supported yet.".format(dirPath)
+        return resultMessage
+
+
+    def deleteBaseDirectoryByRenaming(self):
+        # delete the game directory
+        dirPath = self.getBaseDirectoryPathForGame()
+        dirPathDeleteRename = dirPath + "_deleted"
+        retv = jrfuncs.renameDirPath(dirPath, dirPathDeleteRename, True)
+        if (retv == False):
+            resultMessage = "Failed to delete (by renaming) base directory ({}).".format(dirPath)
+        else:
+            resultMessage = "Deleting game folder '{}' by renaming.".format(dirPath)
+        return resultMessage
+
+
+    def renameBaseDirectoryFrom(self, oldDirPath):
+        # we have a new directory subdirname stored, we just need to rename it
+        dirPathDeleteRename = self.getBaseDirectoryPathForGame()
+        flagUniquify = False
+        retv = jrfuncs.renameDirPath(oldDirPath, dirPathDeleteRename, flagUniquify)
+        if (retv == False):
+            resultMessage = "Failed to rename directory from '{}' to '{}'.".format(oldDirPath, dirPathDeleteRename)
+        else:
+            resultMessage = "Renamed game folder from '{}' to '{}'.".format(oldDirPath, retv)
+            if (retv != dirPathDeleteRename):
+                # ATTN: we had to change the target name for uniqueness, so should we force a change in subdir
+                pass
+        return resultMessage

@@ -1,6 +1,9 @@
-{% autoescape off %}
-{{ buildResultsHtml }}
-{% endautoescape %}
+{% if "noInfo" not in options %}
+    {% autoescape off %}
+    {{ buildResultsHtml }}
+    {% endautoescape %}
+{% endif %}
+
 <h3>Files:</h3>
 <ul>
     {% for fileEntry in fileList %}
@@ -11,5 +14,10 @@
             {% endif %}
         </li>
     {% endfor %}
+
+    {% if fileList|length == 0 %}
+        <div>None.</div>
+    {% endif %}
+
 </ul>
 <hr/>

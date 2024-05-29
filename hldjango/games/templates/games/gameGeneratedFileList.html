@@ -42,7 +42,7 @@
 
 <form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
     <h3>Manage Queue</h3>
-    <div><input class="btn btn-success" type="submit" name="cancelBuildTasks" value="Cancel any currently queued builds." onclick="return confirm('Are you sure?');"></div>
+    <div><input class="btn btn-info" type="submit" name="cancelBuildTasks" value="Cancel any currently queued builds." onclick="return confirm('Are you sure?');"></div>
 </form>
 <br/><br/>
 

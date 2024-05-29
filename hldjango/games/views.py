@@ -9,10 +9,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 # python modules
 import os
+import uuid
 
 # user modules
 from .models import Game, GameFile
-from .forms import GameFileMultipleUploadForm, GameFormForEdit, GameFormForCreate
+from .forms import GameFileMultipleUploadForm, GameFormForEdit, GameFormForCreate, GameFormForChangeDir
 from . import gamefilemanager
 from lib.jr import jrdfuncs
 
@@ -43,7 +44,7 @@ class GameListView(ListView):
     template_name = "games/gameList.html"
 
 
-class GameDetailView(DetailView):
+class GameDetailView(UserPassesTestMixin, DetailView):
     model = Game
     template_name = "games/gameDetail.html"
 
@@ -53,6 +54,14 @@ class GameDetailView(DetailView):
         # add context
         viewAddGameFileListCountToContext(self, context)
         return context
+
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        obj = self.get_object()
+        # true if the game is public OR we are the owner
+        return (obj.owner == self.request.user) or (obj.isPublic)
+
+
 
 
 class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -65,7 +74,14 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         # force owner field to logged in creating user
         form.instance.owner = self.request.user
-        return super().form_valid(form)
+        # save
+        response = super().form_valid(form)
+        # force random subdirname
+        #obj = self.get_object()
+        #self.object.subdirname = uuid.uuid4()
+        return response
+
+
 
 
 
@@ -73,7 +89,6 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Game
     form_class = GameFormForEdit
     template_name = "games/gameEdit.html"
-    #fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
 
     def get_context_data(self, **kwargs):
         # override to add context
@@ -89,8 +104,6 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
     def form_valid(self, form):
-        # first save as normal
-
         # force slug rebuild on name change
         if ("name" in form.changed_data) and (not "slug" in form.changed_data):
             # when they change the name, we reset the slug value, so it will get an updated value
@@ -128,6 +141,71 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
 
+
+
+
+
+class GameChangeDirView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Game
+    form_class = GameFormForChangeDir
+    template_name = "games/gameChangeDir.html"
+
+    def get_context_data(self, **kwargs):
+        # override to add context
+        context = super().get_context_data(**kwargs)
+        # add context
+        viewAddGameFileListCountToContext(self, context)
+        return context
+    
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        obj = self.get_object()
+        return (obj.owner == self.request.user)
+
+
+    def form_valid(self, form):
+        if ("subdirname" not in form.changed_data):
+            # nothing to do
+            return super(GameChangeDirView, self).form_valid(form)
+
+        # we will be changing subdirname
+
+        # get old
+        priorSubDirName = form.initial["subdirname"]
+        # save
+        response = super(GameChangeDirView, self).form_valid(form)
+        # new
+        game = self.object
+
+        # now rename
+        gameFileManager = gamefilemanager.GameFileManager(game)
+        priorPath = gameFileManager.getBaseDirectoryPathForGameWithExplicitSubdir(priorSubDirName)
+        game.renameDirectoryFrom(self.request, priorPath)
+        game.reconcileFiles(self.request)
+
+        # and redirect to edit page
+        url =  reverse_lazy("gameEdit", kwargs={'slug':game.slug})
+        return HttpResponseRedirect(url)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Game
     template_name = "games/gameDelete.html"
@@ -138,11 +216,18 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         obj = self.get_object()
         return (obj.owner == self.request.user)
 
+    def form_valid(self, form):
+        # now delete folders
+        game = self.object
+        game.deleteUserGameDirectories(self.request)
+        # normal delete of object
+        response = super().form_valid(form)
+        #
+        return response
 
 
 
-
-class GameVersionFileListView(DetailView):
+class GameVersionFileListView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Game
     template_name = "games/gameVersionFileList.html"
 
@@ -151,13 +236,16 @@ class GameVersionFileListView(DetailView):
         context = super().get_context_data(**kwargs)
         return context
 
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        obj = self.get_object()
+        return (obj.owner == self.request.user)
 
 
 
 
 
-
-class GameGenerateView(DetailView):
+class GameGenerateView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Game
     template_name = "games/gameGeneratedFileList.html"
 
@@ -166,6 +254,10 @@ class GameGenerateView(DetailView):
         context = super().get_context_data(**kwargs)
         return context
 
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        obj = self.get_object()
+        return (obj.owner == self.request.user)
 
     def post(self, request, *args, **kwargs):
         # handle BUILD request
