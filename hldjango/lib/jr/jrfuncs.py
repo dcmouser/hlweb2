@@ -15,6 +15,7 @@ from functools import reduce
 import random
 import json
 import math
+import traceback
 
 
 
@@ -1399,4 +1400,18 @@ def safeCharsForFilename(str):
         else:
             return "_"
     return "".join(safe_char(c) for c in str).rstrip("_")
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+def exceptionPlusSimpleTraceback(e, contextStr):
+    # see https://docs.python.org/3/library/traceback.html
+    #tracebackText = traceback.format_exc(e)
+    tracebackLines = traceback.format_exception(e)
+    #tracebackLines = traceback.format_exception(e, limit = 2)
+    tracebackText = "\n".join(tracebackLines)
+    msg = "ERROR, exception while {}: {}. Traceback: {}".format(contextStr, repr(e), tracebackText)
+    return msg
 # ---------------------------------------------------------------------------

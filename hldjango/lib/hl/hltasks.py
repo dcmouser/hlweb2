@@ -189,10 +189,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         retv = hlParser.runBuildList(flagCleanAfter)
     
     except Exception as e:
-        #msg = "ERROR: Exception while building storybook. Exception = " + str(e)
-        #msg = "ERROR: Exception while building storybook. Exception = " + traceback.format_exc(e)
-        msg = "ERROR: Exception while building storybook. Exception = " + repr(e)
-        msg += "; " + traceback.format_exc()
+        msg = jrfuncs.exceptionPlusSimpleTraceback(e, "building storybook")
         jrprint(msg)
         buildLog += msg
         buildErrorStatus = True
@@ -300,7 +297,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     # save game
     game.save()
 
-    jrprint("!!!! FINISHED with a huey job ({}) status = '{}' !!!!".format(buildMode, queueStatus))
+    jrprint("Finished huey job '{}'; status = '{}' !!!!".format(buildMode, queueStatus))
 
     return retv
 
@@ -412,8 +409,7 @@ def publishGameFiles(game):
     try:
         publishResult = gameFileManager.copyPublishFiles(gamefilemanager.EnumGameFileTypeName_DraftBuild, gamefilemanager.EnumGameFileTypeName_Published)
     except Exception as e:
-        msg = "ERROR: Exception while trying to copy publish files. Exception = " + repr(e)
-        msg += "; " + traceback.format_exc()
+        msg = jrfuncs.exceptionPlusSimpleTraceback(e, "trying to copy publish files")
         jrprint(msg)
         publishResult = msg
         publishErrored = True

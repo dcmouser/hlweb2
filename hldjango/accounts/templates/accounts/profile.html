@@ -9,8 +9,8 @@
 
 <ul>
   <li><strong>Username</strong>: {{customuser.username}}</li>
-  <li><strong>First name</strong>: {{customuser.first_name}}</li>
-  <li><strong>Last name</strong>: {{customuser.last_name}}</li>
+  <li><strong>First name</strong>: {{customuser.first_name | naifblank}}</li>
+  <li><strong>Last name</strong>: {{customuser.last_name | naifblank}}</li>
 
   {% if user.is_authenticated %}
     {% if customuser.pk == user.pk %}
@@ -18,11 +18,9 @@
     {% endif %}
   {% endif %}
 
+  <li><strong>BGG Link</strong>: {{customuser.bgglink | naifblank}}</li>
 </ul>
 
-<ul>
-  <li><strong>BGG Link</strong>: {{customuser.bgglink}}</li>
-</ul>
 
 {% userGameList customuser.pk user %}
 

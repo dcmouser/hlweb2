@@ -16,6 +16,9 @@
 		    <link href="{% static 'css/core.css' %}" rel="stylesheet">
 		    <!-- favicon -->
 		    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}"/>
+			<!-- bootstrap icons? -->
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
 
 			{{ form.media }}
 
@@ -27,11 +30,13 @@
     </head>
 
 
+	<!-- ATTN: to control navbar collapse into burger width see navbar-expand-* below and https://stackoverflow.com/questions/19827605/how-to-change-bootstrap-navbar-collapse-breakpoint -->
+
 
     <body>
 	    <header class="p-3 mb-3 border-bottom">
 
-	        <nav class="navbar navbar-expand-lg navbar-dark bg-primary" id="hlnavbar">
+	        <nav class="navbar navbar-expand-sm navbar-dark bg-primary" id="hlnavbar">
 	        <div class="container-fluid ">
 
 	            <a class="navbar-brand" href="{% url 'coreHome' %}">HIGH & LOW</a>
@@ -124,8 +129,9 @@
 			        {% block header %}
 			        {% endblock header %}
 
-			        {% block content %}
+					{% block content %}
 			        {% endblock content %}
+
 			    </main>
 			    </div>
 
@@ -139,8 +145,9 @@
 	    <!-- bootstrap js bundle -->
 	    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 	    <!-- bootstrap addon lightbox -->
-	    <script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.3/dist/index.bundle.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.3/dist/index.bundle.min.js"></script>
 
+		<br/>
 
     </body>
 </html>

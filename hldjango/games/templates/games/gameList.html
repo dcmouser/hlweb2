@@ -1,6 +1,9 @@
 {% extends "allauth/layouts/base.html" %}
 
 {% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+
 {% block title %}Game List{% endblock title %}
 
 
@@ -12,7 +15,13 @@
 {% for game in game_list %}
     <li class="gameEntry">
         <a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a>
-        <p>{{ game.summary }}</p>
+        <p>
+            <b>Summary:</b> {{ game.summary }}<br/>
+            <b>Owner:</b> {{ game.owner }}<br/>
+            <b>Public:</b> {{ game.isPublic }}<br/>
+            <b>Lead stats:</b> {{ game.leadStats }}<br/>
+            <b>Published:</b> {% gamePublishInfoString game %}<br/>
+        </p>
     </li>
 {% endfor %}
 </ul>

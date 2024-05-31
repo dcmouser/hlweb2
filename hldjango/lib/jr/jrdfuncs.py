@@ -2,7 +2,8 @@
 from django.utils import timezone
 from django.contrib import messages
 from django.template.defaultfilters import slugify
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, FieldDoesNotExist
+from django.utils.safestring import mark_safe
 
 # python modules
 from datetime import datetime
@@ -155,3 +156,37 @@ def validateName(value):
     if (matches is None):
         raise ValidationError("Can only contain letters, numbers, spaces, underscores, hyphens")
 
+
+
+
+
+def jrPopoverLabels(model, field_strings):
+    # see https://github.com/django-crispy-forms/django-crispy-forms/issues/389
+
+    fields_html = {}
+    for field_string in field_strings:
+        try:
+            field = model._meta.get_field(field_string)
+        except FieldDoesNotExist:
+            continue #if custom field we skip it
+
+        html = field.verbose_name
+        if(field.help_text != ""):
+            # for icons see https://icons.getbootstrap.com/
+            #html += '<a tabindex="0" role="button" data-toggle="popover" data-html="true" data-toggle="tooltip" data-trigger="hover" data-placement="auto" title="'+field.help_text+'">&nbsp;<i class="bi-info-circle" style="font-size: 0.75rem; color: cornflowerblue;"></i></a>'
+            html += '<a tabindex="0" data-html="true" data-placement="auto" title="'+field.help_text+'">&nbsp;<i class="bi-info-circle" style="font-size: 0.75rem; color: cornflowerblue;"></i></a>'
+            #html += '<button type="button" class="btn btn-secondary btn-xs" data-toggle="tooltip" data-placement="top" title="'+field.help_text+'" >?</button>'
+        fields_html[field.name] = mark_safe(html)
+    return fields_html
+
+
+def jrBlankFields(model, field_strings):
+    fields_text = {}
+    for field_string in field_strings:
+        try:
+            field = model._meta.get_field(field_string)
+        except FieldDoesNotExist:
+            continue #if custom field we skip it
+
+        fields_text[field.name] = ""
+    return fields_text

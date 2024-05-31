@@ -1477,7 +1477,7 @@ class HlParser:
             self.processLeadStage2(lead,i)
 
         leadStats = self.calcLeadStats()
-        jrprint('FINISHED PROCESSING; SUMMARY STATS: ' + leadStats['summaryString'])
+        jrprint('FINISHED PROCESSING; SUMMARY STATS: ' + leadStats['summaryString'] + ".")
 
 
 
@@ -1502,7 +1502,7 @@ class HlParser:
         self.leadStats['textLength'] = textLength
         self.leadStats['count'] = len(self.leads)
         self.leadStats['wordCount'] = wordCount
-        self.leadStats['summaryString'] = '{} Leads / {:.2f}k of text / {:,} words.'.format(self.leadStats['count'], self.leadStats['textLength'] / 1000, self.leadStats['wordCount'])
+        self.leadStats['summaryString'] = '{} Leads / {:.2f}k of text / {:,} words'.format(self.leadStats['count'], self.leadStats['textLength'] / 1000, self.leadStats['wordCount'])
         return self.leadStats
     
     
@@ -2196,7 +2196,7 @@ class HlParser:
 
     def reportSummary(self):
         leadStats = self.calcLeadStats()
-        jrprint('SUMMARY STATS: ' + leadStats['summaryString'])
+        jrprint('SUMMARY STATS: ' + leadStats['summaryString'] + ".")
 # ---------------------------------------------------------------------------
 
 
@@ -5093,7 +5093,7 @@ class HlParser:
             mtext += ' * Base options: {}.\n'.format(self.renderEscapeForSafeMarkdown(self.jroptions.getAllBlocks()))
             mtext += ' * Working dir options: {}.\n'.format(self.renderEscapeForSafeMarkdown(self.jroptionsWorkingDir.getAllBlocks()))
         mtext += ' * Scan found {} lead files: {}.\n'.format(len(self.storyFileList), self.storyFileList)
-        mtext += ' * SUMMARY STATS: ' + leadStats['summaryString'] + '\n'
+        mtext += ' * SUMMARY STATS: ' + leadStats['summaryString'] + '.\n'
         mtext += '\n\n\n'
 
         # warnings
@@ -5386,8 +5386,7 @@ class HlParser:
                     stdErrText = ''
                     stderr_data = stdErrText.encode(decodeCharSet)
                 except Exception as e:
-                    msg = "Error using pdflatex on '{}'.".format(filePathAbs, repr(e))
-                    msg += "; " + traceback.format_exc()
+                    msg = jrfuncs.exceptionPlusSimpleTraceback(e,"running pdflatex on '{}'".format(filePathAbs))
                     jrprint(msg)
                     stdOutText = ''
                     stdErrText = msg

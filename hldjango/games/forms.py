@@ -1,12 +1,14 @@
 # django
 from django import forms
+from django.utils.safestring import mark_safe
 
 # ace editor widget
 from django_ace import AceWidget
 
 # user
 from .models import Game, GameFile
-
+# helpers
+from lib.jr import jrfuncs, jrdfuncs
 
 
 
@@ -43,15 +45,19 @@ class GameFileMultipleUploadForm(forms.Form):
 class GameFormForEdit(forms.ModelForm):
     class Meta:
         model = Game
-        fields = ["name", "slug", "subdirname", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+       #fields = ["name", "slug", "subdirname", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField", ]
+        fields = ["name", "slug", "subdirname", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text", "gameName", "lastBuildLog", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats",]
         # or any other fields you want on the form
         widgets = {
             "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,)
         }
+        labels = jrdfuncs.jrPopoverLabels(model, fields)
+        help_texts = jrdfuncs.jrBlankFields(model, fields)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        myReadOnlyFieldList = ["subdirname", "lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
+        #myReadOnlyFieldList = ["subdirname", "lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats", "settingsStatus", "buildResultsJsonField"]
+        myReadOnlyFieldList = ["subdirname", "lastBuildLog", "gameName", "title", "subtitle", "authors", "version", "versionDate", "summary", "difficulty", "cautions", "duration", "extraInfo", "url", "textHash", "textHashChangeDate", "publishDate", "leadStats",  ]
         for fieldName in myReadOnlyFieldList:
             self.fields[fieldName].disabled = True
 
@@ -66,12 +72,13 @@ class GameFormForCreate(forms.ModelForm):
         widgets = {
             "text": AceWidget(mode="markdown", width="100%", height="300px", wordwrap=True, showprintmargin=False,),
         }
-
-
+        labels = jrdfuncs.jrPopoverLabels(model, fields)
+        help_texts = jrdfuncs.jrBlankFields(model, fields)
 
 
 class GameFormForChangeDir(forms.ModelForm):
     class Meta:
         model = Game
         fields = ["subdirname", ]
-
+        labels = jrdfuncs.jrPopoverLabels(model, fields)
+        help_texts = jrdfuncs.jrBlankFields(model, fields)

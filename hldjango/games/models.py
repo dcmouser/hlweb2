@@ -88,13 +88,13 @@ class Game(models.Model):
     subdirname = models.CharField(max_length=64, blank=False, unique=True, default=jrdfuncs.shortUuidAsStringWithPkPrefix, validators = [jrdfuncs.validateName])
 
     # owner provides this info
-    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game", blank=False, validators = [jrdfuncs.validateName])
-    text = models.TextField(verbose_name="Full game text", help_text="Game text", default="", blank=True,)
-    textHash = models.CharField(max_length=80, help_text="Hash of text", default="", blank=True)
-    textHashChangeDate = models.DateTimeField(help_text="Date game text last changed", null=True, blank=True)
+    name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game; not used for urls or files; just for author info", blank=False, validators = [jrdfuncs.validateName])
+    text = models.TextField(verbose_name="Full game text", help_text="Game text using custom storybook markdown formatting; all other settings are parsed from this.  See docs for syntax.", default="", blank=True,)
+    textHash = models.CharField(max_length=80, help_text="Automatically calculated hash of game text; used to detect when game needs rebuilding.", default="", blank=True)
+    textHashChangeDate = models.DateTimeField(help_text="Automatically updated date game text was last changed", null=True, blank=True)
 
     # is the game public
-    isPublic = models.BooleanField(verbose_name="Is game public?", help_text="Is game publicly visible?")
+    isPublic = models.BooleanField(verbose_name="Is game public", help_text="Is game publicly visible? If unchecked the game will not be listed on public list of games.")
 
     # foreign keys
     owner = models.ForeignKey(
@@ -105,27 +105,27 @@ class Game(models.Model):
 
 
     # these properties should be extracted from the text
-    gameName = models.CharField(max_length=80, help_text="Public name of game", default="", blank=True)
+    gameName = models.CharField(max_length=80, help_text="Public name of game (parsed from game text)", default="", blank=True)
 
-    title = models.CharField(max_length=80, help_text="Title of game", default="", blank=True)
-    subtitle = models.CharField(max_length=80, help_text="Subtitle of game", default="", blank=True)
-    authors = models.CharField(max_length=255, help_text="Author(s) of game (w/emails)", default="", blank=True)
-    summary = models.TextField(help_text="Short description", default="", blank=True)
-    version = models.CharField(max_length=32, help_text="Version information", default="", blank=True)
-    versionDate = models.CharField(max_length=64, help_text="Version date", default="", blank=True)
-    difficulty = models.CharField(max_length=32, help_text="Difficulty", default="", blank=True)
-    cautions = models.CharField(max_length=32, help_text="Age rage, etc.", default="", blank=True)
-    duration = models.CharField(max_length=32, help_text="Expected playtime", default="", blank=True)
-    url = models.CharField(max_length=255, help_text="Homepage url", default="", blank=True)
-    extraInfo = models.TextField(help_text="Extra information (credits, links, etc.)", default="", blank=True)
+    title = models.CharField(max_length=80, help_text="Title of game (parsed from game text)", default="", blank=True)
+    subtitle = models.CharField(max_length=80, help_text="Subtitle of game (parsed from game text)", default="", blank=True)
+    authors = models.CharField(max_length=255, help_text="Author(s) of game w/emails (parsed from game text)", default="", blank=True)
+    summary = models.TextField(help_text="Short description (parsed from game text)", default="", blank=True)
+    version = models.CharField(max_length=32, help_text="Version information (parsed from game text)", default="", blank=True)
+    versionDate = models.CharField(max_length=64, help_text="Version date (parsed from game text)", default="", blank=True)
+    difficulty = models.CharField(max_length=32, help_text="Difficulty (parsed from game text)", default="", blank=True)
+    cautions = models.CharField(max_length=32, help_text="Age rage, etc. (parsed from game text)", default="", blank=True)
+    duration = models.CharField(max_length=32, help_text="Expected playtime (parsed from game text)", default="", blank=True)
+    url = models.CharField(max_length=255, help_text="Homepage url (parsed from game text)", default="", blank=True)
+    extraInfo = models.TextField(help_text="Extra information; credits, links, etc. (parsed from game text)", default="", blank=True)
 
     # preferred format details
-    preferredFormatPaperSize =  models.CharField(max_length=8, verbose_name="Preferred paper size", choices=GamePreferredFormatPaperSize, default=GamePreferredFormatPaperSize_Letter)
-    preferredFormatLayout =  models.CharField(max_length=8, verbose_name="Preferred Layout", choices=GamePreferredFormatLayout, default=GamePreferredFormatLayout_Solo)
+    preferredFormatPaperSize =  models.CharField(max_length=8, verbose_name="Preferred paper size; what you set here is what is used when performing the build preferred action.", choices=GamePreferredFormatPaperSize, default=GamePreferredFormatPaperSize_Letter)
+    preferredFormatLayout =  models.CharField(max_length=8, verbose_name="Preferred Layout; what you set here is what is used when performing the build preferred action.", choices=GamePreferredFormatLayout, default=GamePreferredFormatLayout_Solo)
 
 
     # settings parsing
-    settingsStatus = models.TextField(help_text="Parsed dettings status", default="", blank=True)
+    #settingsStatus = models.TextField(help_text="Parsed settings status (see here for details of error when attempting to parse settings)", default="", blank=True)
     isErrorInSettings = models.BooleanField(help_text="Was there an error parsing settings?")
 
     # computed from last build
@@ -135,15 +135,15 @@ class Game(models.Model):
     publishDate = models.DateTimeField(help_text="When was story last published?", null=True, blank=True)
 
     # tracking builds being out of date, etc
-    buildResultsJson = models.TextField(help_text="All build results as json string", default="", blank=True)
-    buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
+    buildResultsJsonField = models.JSONField(help_text="All build results as json; this is internal field you should not mess with.", default=dict, blank=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
+    #buildResultsJson = models.TextField(help_text="All build results as json string; this is an internal list you do not need to worry about.", default="", blank=True)
     #buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True, encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
 
 
 
     # result of building
     # OLD method, one value per model; now we store in buildResults
-    lastBuildLog = models.TextField(help_text="Last Build Log", default="", blank=True)
+    lastBuildLog = models.TextField(help_text="Results of last build; check here for errors.", default="", blank=True)
     # status
     #queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
     #isBuildErrored = models.BooleanField(help_text="Was there an error on the last build?")
@@ -199,17 +199,19 @@ class Game(models.Model):
     
     # override save to set slug
     def save(self, **kwargs):
-        if (self.slug is None) or (self.slug==""):
-            # default new slug value based on name; used for NEW game or when we reset it to blank if user changes self.name
-            slugStr = self.name
-        else:
-            # start with previous value of slug!
-            slugStr = self.slug
-        # dont let slugname confuse our url paths
-        if (slugStr.lower() in ["file","new"]):
-            slugStr += "game"
-        #
-        jrdfuncs.jrdUniquifySlug(self, slugStr)
+        if (self.slug is None) or (self.slug=="") or (hasattr(self,"flagSlugChanged") and (self.flagSlugChanged)):
+            # automatic uniqueification of slug; for efficiency, only do this if user has edited slug (which we record in edit form) or if its blank
+            if (self.slug is None) or (self.slug==""):
+                # default new slug value based on name; used for NEW game or when we reset it to blank if user changes self.name
+                slugStr = self.name
+            else:
+                # start with previous value of slug!
+                slugStr = self.slug
+            # dont let slugname confuse our url paths
+            if (slugStr.lower() in ["file","new"]):
+                slugStr += "game"
+            # this will do the actual setting of self.slug
+            jrdfuncs.jrdUniquifySlug(self, slugStr)
         # call super class
         super(Game, self).save(**kwargs)
 
@@ -267,8 +269,7 @@ class Game(models.Model):
             else:
                 self.setSettingStatus(True, "Errors parsing game text settings: {}.".format("; ".join(errorList)))
         except Exception as e:
-            msg = "Exception while parsing game text settings: " + repr(e)
-            msg += "; " + traceback.format_exc()
+            msg = jrfuncs.exceptionPlusSimpleTraceback(e,"parsing game text settings")
             self.setSettingStatus(True, msg)
 
 
@@ -296,10 +297,10 @@ class Game(models.Model):
 
 
     def setSettingStatus(self, isError, msg):
-        self.settingsStatus = msg
+        #self.settingsStatus = msg
         self.isErrorInSettings = isError
         if (isError):
-            self.lastBuildLog = "ERROR while parsing game text settings: " + msg
+            self.lastBuildLog = msg
         else:
             self.lastBuildLog = "Game text settings parsed: " + msg
 
@@ -530,17 +531,17 @@ class Game(models.Model):
 
 
     def publishGame(self, request):
-        result = None
+        msg = None
         if (True):
             # non queued publish
             try:
                 result = publishGameFiles(self)
             except Exception as e:
-                result = "Error Publishing: {}.".format (str(e))
-            if (result is None):
-                result = "Successfully published."
+                msg = jrfuncs.exceptionPlusSimpleTraceback(e, "publishing game")
+            if (msg is None):
+                msg = "Successfully published."
 
-        jrdfuncs.addFlashMessage(request, result, False)
+        jrdfuncs.addFlashMessage(request, msg, False)
 
 
 
@@ -606,7 +607,8 @@ class Game(models.Model):
                     addedFileCount += 1
             except Exception as e:
                 # existing file not found -- not an error
-                msgList.append("Exception trying to add file '{}': {}.".format(filePath), repr(e))
+                msg = jrfuncs.exceptionPlusSimpleTraceback(e, "trying to add file '{}'".format(filePath))
+                msgList.append(msg)
                 pass
 
         # combine messages

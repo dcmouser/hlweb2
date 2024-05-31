@@ -6,6 +6,7 @@ from django.utils import timezone
 
 # user imports
 from ..models import Game
+from .. import gamefilemanager
 from ..gamefilemanager import GameFileManager
 from games.models import Game
 
@@ -93,6 +94,58 @@ def fileUrlList(requestingUser, gamePk, gameFileTypeName, optionStr):
 
 
 
+
+
+@register.simple_tag()
+def gamePublishInfoString(game):
+  # nice info string about publication data and ispublic
+  buildResults = game.getBuildResultsAnnotated(gamefilemanager.EnumGameFileTypeName_Published)
+  #
+  publishResult = jrfuncs.getDictValueOrDefault(buildResults, "publishResult", None)
+  if (publishResult is not None):
+    publishDateNiceStr = convertTimeStampForBuildResult(buildResults, "publishDate")
+    #listItems.append({"key": "Published on", "label": publishDateNiceStr})
+    publishErrored = jrfuncs.getDictValueOrDefault(buildResults, "publishErrored", False)
+    publishDateNiceStr = convertTimeStampForBuildResult(buildResults, "publishDate")
+    retStr = publishDateNiceStr
+    if (publishErrored):
+      retStr += " - with errors"
+  else:
+    retStr = "no"
+  
+  if (game.isPublic):
+    retStr += " (public)"
+  else:
+    retStr += " (but not public)"
+
+  return retStr
+
+
+
+
+
+
+@register.filter(name="naifblank")
+def naifblank(value):
+    if (value is None) or (value==""):
+      return "n/a"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def formatBuildResultsForHtmlList(game, buildResults):
   listItems = list()
   queueStatus = jrfuncs.getDictValueOrDefault(buildResults, "queueStatus", None)
@@ -154,7 +207,7 @@ def formatBuildResultsForHtmlList(game, buildResults):
     publishDateNiceStr = convertTimeStampForBuildResult(buildResults, "publishDate")
     #listItems.append({"key": "Published on", "label": publishDateNiceStr})
     publishErrored = jrfuncs.getDictValueOrDefault(buildResults, "publishErrored", False)
-    listItems.append({"key": "Publish result", "label": publishResult + "on " + publishDateNiceStr, "errorLevel": 2 if publishErrored else 0})
+    listItems.append({"key": "Publish result", "label": publishResult + " on " + publishDateNiceStr, "errorLevel": 2 if publishErrored else 0})
   
   # is it out of date
   buildTextHash = jrfuncs.getDictValueOrDefault(buildResults, "buildTextHash", "")
@@ -240,3 +293,6 @@ def sortBuiltFileListNicelyKeyFunc(fileEntry):
   else:
     prefix = "2"
   return prefix + "_" + fileName.lower()
+
+
+

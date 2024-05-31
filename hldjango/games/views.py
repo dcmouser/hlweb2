@@ -74,6 +74,10 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         # force owner field to logged in creating user
         form.instance.owner = self.request.user
+
+        # set this so save() makes it unieue
+        self.flagSlugChanged = True
+
         # save
         response = super().form_valid(form)
         # force random subdirname
@@ -104,15 +108,16 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
     def form_valid(self, form):
+        game = self.object
+
         # force slug rebuild on name change
         if ("name" in form.changed_data) and (not "slug" in form.changed_data):
             # when they change the name, we reset the slug value, so it will get an updated value
-            if (False):
-                self.data = self.data.copy()
-                self.data["slug"] = ""
-            else:
-                # force slug value blank so it will be reset to game.name during save (we COULD do it here also)
-                self.object.slug = ""
+            # force slug value blank so it will be reset to game.name during save (we COULD do it here also)
+            game.slug = ""
+            game.flagSlugChanged = True
+        if ("slug" in form.changed_data):
+            game.flagSlugChanged = True
 
         # save
         response = super(GameEditView, self).form_valid(form)
@@ -121,7 +126,8 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         #
         # get_object fails if we change slug?
         #game = self.get_object()
-        game = self.object
+        #game = self.object
+
         #
         if (not game.isErrorInSettings):
             # no error, just do as normal
@@ -132,7 +138,7 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             #return response
 
         # error; report it
-        jrdfuncs.addFlashMessage(self.request, "There was an error parsing the game text settings. Your changes have been saved but game will not build until these are fixed.", True)
+        jrdfuncs.addFlashMessage(self.request, "There was an error parsing the game text settings. Your changes have been saved but game will not build until these are fixed.  See 'last build log' for details.", True)
         # and redirect to edit page
         url =  reverse_lazy("gameEdit", kwargs={'slug':game.slug})
         return HttpResponseRedirect(url)

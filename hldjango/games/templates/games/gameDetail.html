@@ -10,8 +10,12 @@
 {% block content %}
 <div class="gameEntry">
     <h2>{{ game.name }} ({{ game.title }})</h2>
-    <p><b>Owner:</b> {{ game.owner }}</p>
-    <p>{{ game.summary }}</p>
+    <p>
+        <b>Summary:</b> {{ game.summary }}<br/>
+        <b>Owner:</b> {{ game.owner }}<br/>
+        <b>Lead stats:</b> {{ game.leadStats }}<br/>
+        <b>Published:</b> {% gamePublishInfoString game %}<br/>
+    </p>
 </div>
 
 
