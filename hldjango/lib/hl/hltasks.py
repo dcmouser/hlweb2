@@ -181,7 +181,12 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     try:
         # create hl parser
         hlParser = hlparser.HlParser(optionsDirPath, overrideOptions)
+  
+    except Exception as e:
+        raise e
 
+
+    try:
         # parse text
         hlParser.parseStoryTextIntoBlocks(gameText, 'hlweb2')
 
@@ -241,7 +246,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     if (False) and (game.textHash != gameTextHash):
         # ERROR
         buildErrorStatus = True
-        buildLog = "ERROR: Game model text modified by author during build; needs rebuild."
+        buildLog += "ERROR: Game model text modified by author during build; needs rebuild."
 
     # queue status
     if (buildErrorStatus):
@@ -301,6 +306,11 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
 
     return retv
 
+
+def setGameBuildResultError(game, errorMessage):
+    # update build status with results of build, AND with the version we actually built (which may go out of date later)
+    # ATTN: unfinished
+    pass
 
 
 

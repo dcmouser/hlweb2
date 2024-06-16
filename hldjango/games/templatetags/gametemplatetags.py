@@ -3,6 +3,7 @@ from django import template
 from django.template.defaultfilters import stringfilter
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 
 # user imports
 from ..models import Game
@@ -123,12 +124,47 @@ def gamePublishInfoString(game):
 
 
 
+@register.simple_tag()
+def jrconfirmRebuildIfNotNeeded(game, gameFileTypeName):
+  # add a confirm onclick if the game is up to date
+  buildResults = game.getBuildResultsAnnotated(gameFileTypeName)
+  queueStatus = jrfuncs.getDictValueOrDefault(buildResults, "queueStatus", None)
+  buildTextHash = jrfuncs.getDictValueOrDefault(buildResults, "buildTextHash", "")
+  if (buildTextHash == game.textHash) and (queueStatus == Game.GameQueueStatusEnum_Completed):
+    retStr = "onclick=\"return confirm('These files appear to be up to date; are you sure you want to rebuild?');\""
+  else:
+    retStr = ""
+  #
+  return mark_safe(retStr)
+
+
 
 
 @register.filter(name="naifblank")
 def naifblank(value):
     if (value is None) or (value==""):
       return "n/a"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

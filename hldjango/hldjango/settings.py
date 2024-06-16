@@ -166,7 +166,7 @@ HUEY = {
     "store_none": False,  # If a task returns None, do not save to results.
 
     # ATTN: controls whether we use queued huey or run tasks immediately
-    "immediate": False,
+    "immediate": True,
 
     "utc": True,  # Use UTC for all times internally.
     "connection": {},

@@ -16,9 +16,12 @@ import re
 
 
 class HlMarkdown:
-    def __init__(self, options, hlParserRef):
-        self.options = options
+    def __init__(self, hlParserRef):
         self.parserRef = hlParserRef
+        self.options = None
+    
+    def setOptions(self, options):
+        self.options = options
 
     def renderMarkdown(self, text, renderFormat, flagSnippetVsWholeDocument):
         extras = {}
@@ -91,6 +94,20 @@ class HlMarkdown:
             # fonts
             # script https://ctan.org/pkg/aurical
             renderer.addPackage('aurical')
+
+            # fancy automatic open and close quotes -- doesnt find sty?
+            # but this triggers errors which are impossible to track down: "Package csquotes Error: Unbalanced groups or invalid nesting.""
+            if (self.options['autoStyleQuotes']):
+                #renderer.addPackage('quote')
+                renderer.addPackage('babel', ['english'])
+                renderer.addPackage('csquotes', ['autostyle', 'english = american'])
+                # see below in wrapMistletoeLatexDoc for additional command
+                #\MakeOuterQuote{"}
+            else:
+                renderer.addPackage('csquotes', [])
+                pass
+
+
 
 
             #
@@ -177,6 +194,12 @@ class HlMarkdown:
 
         addText += '\\renewcommand\\cftchapafterpnum{\\vskip-2pt}\n'
         addText += '\\renewcommand\\cftsecafterpnum{\\vskip-2pt}\n'
+
+        # for csquotes nice auto quots
+        if (self.options['autoStyleQuotes']):
+            addText += '\\MakeOuterQuote{"}\n'
+        else:
+            pass
 
         addText += preambleLatex
 

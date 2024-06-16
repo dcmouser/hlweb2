@@ -1296,7 +1296,7 @@ def makeNiceCommaAndOrList(strList, lastWord):
         return strList[0] + ' ' + lastWord + ' ' + strList[1]
     # longer
     listFront = strList[0:listLen-1]
-    text = ','.join(listFront)
+    text = ', '.join(listFront)
     text += ', ' + lastWord + ' ' + strList[listLen-1]
     return text
 # ---------------------------------------------------------------------------

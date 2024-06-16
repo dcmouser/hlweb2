@@ -6,8 +6,6 @@
 	"savedir": "$workingdir",
 	"storyFileEncoding": "utf-8",
 	"hlDataDir": "$basedir/hldata",
-	"hlDataDirVersion": "v2",
-	"hlDataDirVersionPrev": "v1",
 	"renderOptions": {
 		"formatUNUSED": "html",
 		"format": "latex",
@@ -34,8 +32,9 @@
 	"disableTaskTags": true,
 	"hlApiOptions": {"enabled": true, "disableSlowSearch": true},
 	"clockMode": true,
-	"clockTimeMissing": 5,
 	"clockTimeStep": 10,
-	"clockTimeDefaultLead": 30
+	"clockTimeDefaultLead": 30,
+	"defaultLeadLabels": true,
+	"autoStyleQuotesRENDISABLED": true
 }
 

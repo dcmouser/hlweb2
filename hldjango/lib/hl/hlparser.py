@@ -157,6 +157,8 @@ class HlParser:
             'missinganytags': {'named': ['id'], 'required': ['id']},
             'missingalltags': {'named': ['id'], 'required': ['id']},
             'requiretag': {'named': ['id', 'type', 'amount', 'time'], 'required': ['id']},
+            'requirealltags': {'named': ['id', 'type', 'amount', 'time'], 'required': ['id']},
+            'requireanytags': {'named': ['id', 'type', 'amount', 'time'], 'required': ['id']},
             'mentiontags': {'named': ['id'], 'required': ['id']},
 
 
@@ -189,7 +191,7 @@ class HlParser:
             'warning': {'named': ['msg']},
             'remind': {'named': ['type'], 'required': ['type']},
 
-            'autohint': {},
+            'autohint': {'named': ['amount']},
             'deadlineinfo': {'named': ['day', 'stage', 'limit', 'last', 'start', 'end']},
 
             'time': {'named': ['amount']},
@@ -206,9 +208,8 @@ class HlParser:
         #
         self.calculatedRenderOptions = None
         #
-        renderOptions = self.getComputedRenderOptions()
-        markdownOptions = renderOptions['markdown']
-        self.hlMarkdown = HlMarkdown(markdownOptions, self)
+        # force autoStyleQuotes
+        self.hlMarkdown = HlMarkdown(self)
         #
         # hl api
         self.hlapi = None
@@ -222,7 +223,7 @@ class HlParser:
         #
         self.didRunDebugExtraSteps = False
         self.didRender = False
-        self.storegGameText = ''
+        self.storedGameText = ''
         #
         self.generatedFiles = []
         self.getGeneratedFilesForZip = []
@@ -244,11 +245,11 @@ class HlParser:
     def storedGameTextClear(self):
         self.storedGameText = ''
     def storedGameTextAdd(self, text):
-        if (self.storegGameText!=''):
-            self.storegGameText += '\n'
-        self.storegGameText += text
+        if (self.storedGameText!=''):
+            self.storedGameText += '\n'
+        self.storedGameText += text
     def getStoredGameText(self):
-        return self.storegGameText
+        return self.storedGameText
 
     def addGeneratedFile(self, filePath, flagAddZipList = True):
         self.generatedFiles.append(filePath)
@@ -267,7 +268,7 @@ class HlParser:
 # ---------------------------------------------------------------------------
     def getHlApi(self):
         if (self.hlapi is None):
-            dversion = self.getOptionVal('hlDataDirVersion', None)
+            dversion = self.getOptionValThrowException('hlDataDirVersion')
             hlDataDirVersioned = self.getOptionValThrowException('hlDataDir') + '/' + dversion
             hlDataDirVersioned = self.resolveTemplateVars(hlDataDirVersioned)
             hlApiOptions = self.getOptionVal('hlApiOptions', {})
@@ -277,7 +278,7 @@ class HlParser:
 
     def getHlApiPrev(self):
         if (self.hlapiPrev is None):
-            dversion = self.getOptionVal('hlDataDirVersion', None)
+            dversion = self.getOptionValThrowException('hlDataDirVersion')
             dversionPrev = self.getOptionVal('hlDataDirVersionPrev', None)
             if (dversionPrev is None) or (dversion == dversionPrev):
                 return None
@@ -298,7 +299,7 @@ class HlParser:
     def updateHlApiDirs(self):
         # called after processing working dir options; ugly reuse of code above
         api1 = self.getHlApi()
-        dversion = self.getOptionVal('hlDataDirVersion', None)
+        dversion = self.getOptionValThrowException('hlDataDirVersion')
         hlDataDirVersioned = self.getOptionValThrowException('hlDataDir') + '/' + dversion
         hlDataDirVersioned = self.resolveTemplateVars(hlDataDirVersioned)
         api1.setDataDir(hlDataDirVersioned)
@@ -558,14 +559,19 @@ class HlParser:
 
     def saveAltStoryText(self, fileText, outFilePath, encoding):
         # 
-        leadHeadRegex = re.compile(r'^# ([^:\(\)\/]*[^\s])(\s*\(.*\))?(\s*\/\/.*)?$')
+        #leadHeadRegex = re.compile(r'^# ([^:\(\)\/]*[^\s])(\s*\(.*\))?(\s*\/\/.*)?$')
+        leadHeadRegex = re.compile(r'^# ([^:\(\)\/]*[^\s])(:\s*auto\s*)?(\s*\(.*\))?(\s*\/\/.*)?$')
+        #leadHeadRegex2 = re.compile(r'^# ([^:\(\)\/]*[^\s])(\s*\(.*\))?(\s*\/\/.*)?$')
         # walk it and write it
         with open(outFilePath, 'w', encoding=encoding) as outfile:
-            fileText.replace('\r\n','\n')
+            fileText = fileText.replace('\r\n','\n')
+            fileText = fileText.replace('\r','')
             lines = fileText.split('\n')
             for line in lines:
                 # fixup \r\n lines?
                 matches = leadHeadRegex.match(line)
+                #if (matches is None):
+                #    matches = leadHeadRegex2.match(line)
                 if (matches is not None):
                     # got a match - can we find an id?
                     leadId = matches[1].strip()
@@ -576,10 +582,10 @@ class HlParser:
                         if (':' in label) or ('(' in label) or (')' in label):
                             label = '"{}"'.format(label)
                         line = '# {}: {}'.format(leadId, label)
-                        if (matches.group(2) is not None):
-                            line += matches.group(2)
                         if (matches.group(3) is not None):
                             line += matches.group(3)
+                        if (matches.group(4) is not None):
+                            line += matches.group(4)
 
                 #
                 outfile.write(line+'\n')
@@ -617,6 +623,10 @@ class HlParser:
         inDoubleQuotes = False
         #
         self.storedGameTextAdd(text)
+
+        # find and process options
+        self.findAndProcessOptionsInGameText()
+
         #
         # add head comments to text so we skip all beginning stuff
         text = '# comments\n' + text
@@ -952,6 +962,20 @@ class HlParser:
 # ---------------------------------------------------------------------------
     
 
+
+
+# ---------------------------------------------------------------------------
+    def getNiceLeadLabelById(self, leadId):
+        hlapi = self.getHlApi()
+        [existingLeadRow, existingRowSourceKey] = hlapi.findLeadRowByLeadId(leadId)
+        if (not existingLeadRow is None):
+            # found a lead
+            label = self.calcLeadLabelForLeadRow(existingLeadRow)
+            return label
+        return ''
+# ---------------------------------------------------------------------------
+
+
 # ---------------------------------------------------------------------------
     def makeBlockHeader(self, headerText, sourceLabel, lineNumber, defaultHeaderType):
         #
@@ -966,13 +990,29 @@ class HlParser:
         #   ID STRING: ID LABEL HERE (extra options here)
         #   ID STRING: (extra options here)
 
+        # default lead labels if none specified?
+        optionDefaultLeadLabels = self.getOptionVal('defaultLeadLabels', True)
+
+
+
         # manual parse
         pos = 0
         [id, pos, nextc] = self.parseConsumeFunctionCallArgNext(block, headerText, pos, [':','(', ''])
+
+        dblabel = self.getNiceLeadLabelById(id)
+
         if (nextc==':'):
             [label, pos, nextc] = self.parseConsumeFunctionCallArgNext(block, headerText, pos+1, ['(', ''])
+            origLabel = label
+            if (label=="auto"):
+                # use dblabel
+                label = dblabel
         else:
+            origLabel = None
             label = None
+            if (optionDefaultLeadLabels):
+                label = dblabel
+
         if (nextc=='('):
             argString = headerText[pos:]
         else:
@@ -1004,6 +1044,9 @@ class HlParser:
                 properties['type'] = 'hint'
             else:
                 properties['type'] = defaultHeaderType
+        # store db labels
+        properties['dblabel'] = dblabel
+        properties['origLabel'] = origLabel
 
         # special ids
         self.handleSpecialHeadIdProperties(id, properties)
@@ -1619,7 +1662,9 @@ class HlParser:
 
         elif (blockType=='options'):
             # special options, just execute; do it here early
-            self.processOptionsBlock(block)
+            # ATTN: we no longer do this here due to evilness, we need to parse it explicitly first; so here we ignore it
+            #self.processOptionsBlock(block)
+            pass
 
         elif (blockType=='comments'):
             # do nothing
@@ -1636,23 +1681,42 @@ class HlParser:
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
+    def findAndProcessOptionsInGameText(self):
+        jsonOptions = fastExtractSettingsDictionary(self.storedGameText)
+        self.procesOptionsDict(jsonOptions)
+
+
     def processOptionsBlock(self, block):
         jsonOptionString = self.childRawBlockText(block)
+        priorTextNewlineCount = int(block['lineNumber'])
 
         # kludge fix up bad characters
         jsonOptionString = jrfuncs.fixupUtfQuotesEtc(jsonOptionString)
 
         # kludge so that line numbers in reported error are correct
-        priorTextNewlineCount = int(block['lineNumber'])
+
         prorTextKludge= "\n" * (priorTextNewlineCount)
         jsonOptionString = prorTextKludge + jsonOptionString
 
         jsonOptions = json.loads(jsonOptionString)
+
+        self.processOptionsDict(self, jsonOptions)
+    
+
+
+    def procesOptionsDict(self, jsonOptions):
+
         # set the WORKINGDIR options
         self.jroptionsWorkingDir.mergeRawDataForKey('options', jsonOptions)
         #
         # Change api version
         self.updateHlApiDirs()
+
+        # markdown options
+        renderOptions = self.getComputedRenderOptions()
+        markdownOptions = renderOptions['markdown']
+        markdownOptions['autoStyleQuotes'] = self.getOptionValThrowException("autoStyleQuotes")
+        self.hlMarkdown.setOptions(markdownOptions)
 
         # store chapter name
         info = self.getOptionValThrowException('info')
@@ -2442,15 +2506,18 @@ class HlParser:
             block = childBlocks[blockIndex]
             blockType = block['type']
             if (blockType=='text'):
-                text += block['text']
-                reportText += block['text']
+                cleanText = self.checkCleanBlockText(block, block['text'])
+                text += cleanText
+                reportText += cleanText
             elif (blockType=='code'):
                 textPositionStyle = self.calcTextPositionStyle(text)
                 codeResult = self.evaluateCodeBlock(block, lead, textPositionStyle, behalfLead, evaluationOptions, context)
                 if ('text' in codeResult):
-                    text += codeResult['text']
+                    cleanText = self.checkCleanBlockText(block, codeResult['text'])
+                    text += cleanText
                 if ('reportText' in codeResult):
-                    reportText += codeResult['reportText']
+                    cleanText = self.checkCleanBlockText(block, codeResult['reportText'])
+                    reportText += cleanText
                 #
                 if ('action' in codeResult):
                     action = codeResult['action']
@@ -2553,6 +2620,55 @@ class HlParser:
 
         return [text, reportText]
 # ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+    def checkCleanBlockText(self, block, text):
+        # ATTN: NEW check for balanced double quotes and throw exception if unbalanced
+        if (self.getOptionValThrowException("autoStyleQuotes")):
+            textlen = len(text)
+            inDoubleQuote = False
+            lineCount = 0
+            quoteLines = 0
+            maxQuoteLines = 0
+            startLastQuoteLine = 0
+            candidateLines = []
+            thresholdLineLen = 2
+            for i in range(0,textlen):
+                c = text[i]
+                if (c=='"'):
+                    inDoubleQuote = not (inDoubleQuote)
+                    if (not inDoubleQuote):
+                        if (quoteLines > thresholdLineLen):
+                            # add this line# (end of quote)
+                            lineNumToAdd = lineCount + block['lineNumber']
+                            if (not lineNumToAdd in candidateLines):
+                                candidateLines.append(lineNumToAdd)
+                        quoteLines = 0
+                    else:
+                        startLastQuoteLine = lineCount
+                if (c=='\n'):
+                    lineCount+=1
+                    if (inDoubleQuote):
+                        quoteLines+=1
+                if (inDoubleQuote) and (quoteLines > thresholdLineLen):
+                    # add starting line number of quote
+                    lineNumToAdd = startLastQuoteLine + block['lineNumber']
+                    if (not lineNumToAdd in candidateLines):
+                        candidateLines.append(lineNumToAdd)
+            #
+            if (inDoubleQuote):
+                startLine = block['lineNumber']
+                endLine = startLine + lineCount
+                self.raiseBlockException(block, 0, 'Unbalanced double quotes in block between lines {} and {}; best guess lines: {}.'.format(startLine, endLine, candidateLines))
+        return text
+# ---------------------------------------------------------------------------
+
+
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -3427,9 +3543,15 @@ class HlParser:
                 markText = self.calcMarkInstructions(markType, amount)
                 #
                 if (len(hintLeadList)==1):
-                    resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, ' + markText + ', then visit ' + hintLeadList[0] + '\n'
+                    if (markText!=''):
+                        resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, ' + markText + ', then visit ' + hintLeadList[0] + '\n'
+                    else:
+                        resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, then visit ' + hintLeadList[0] + '\n'
                 else:
-                    resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, ' + markText + ', then visit one more more of the following:\n'
+                    if (markText!=''):
+                        resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, ' + markText + ', then visit one more more of the following:\n'
+                    else:
+                        resultText = '%solo.VerticalSpace%\n---\nAs a last resort, if you cannot figure out how to find it, then visit one more more of the following:\n'
                     for line in hintLeadList:
                         resultText += ' * ' + line + '\n'
                 # for link
@@ -3493,11 +3615,17 @@ class HlParser:
 
 # ---------------------------------------------------------------------------
     def calcMarkInstructions(self, markType, amount):
-        text = self.getText('Symbol.Checkbox') + 'Mark **{}** {} checkbox{} in your case log'.format(amount, markType, jrfuncs.plurals(amount,'es'))
+        if (amount>0):
+            text = self.getText('Symbol.Checkbox') + 'Mark **{}** {} checkbox{} in your case log'.format(amount, markType, jrfuncs.plurals(amount,'es'))
+        else:
+            text = ''
         return text
 
     def calcMarkHourInstructions(self, markType, amount):
-        text = self.getText('Symbol.Checkbox') + 'Mark 1 {} checkbox in your case log for every {} whole hour{} remaining before 6pm (rounded up).'.format(markType, amount, jrfuncs.plurals(amount,'s'))
+        if (amount>0):
+            text = self.getText('Symbol.Checkbox') + 'Mark 1 {} checkbox in your case log for every {} whole hour{} remaining before 6pm (rounded up).'.format(markType, amount, jrfuncs.plurals(amount,'s'))
+        else:
+            text = ''
         return text
 
 
@@ -3686,6 +3814,9 @@ class HlParser:
             #
             source = existingLeadRowProperties['source'] if ('source' in existingLeadRowProperties) else existingRowSourceKey
             ptype = existingLeadRowProperties['ptype']
+
+#            if (leadId=="7-8901"):
+#                print("debugBreak")
 
             # add only fictional to special fictional files
             if (source in fictionalSourceList):
@@ -4827,6 +4958,7 @@ class HlParser:
                     return leadText
 
             flagShowIdLabel = jrfuncs.getDictValueFromTrueFalse(leadProperties, 'idlabel', True)
+            leadLabel = ''
             if (flagShowIdLabel):
                 # lead id
                 if (not jrfuncs.getDictValueOrDefault(leadProperties, 'noid', False)):
@@ -4845,13 +4977,21 @@ class HlParser:
                     markdownText = '### ' + leadLabel + '\n'
                     leadText += markdownText
 
+
             # what content are we outputting, normal text or report text (annotated for author)?
             if (outMode=='normal'):
                 leadText += lead['text']
             elif (outMode=='report'):
+                optionDefaultLeadLabels = self.getOptionVal('defaultLeadLabels', True)
+                if (True) or (not optionDefaultLeadLabels):
+                    if ('dblabel' in leadProperties):
+                        dblabel = leadProperties['dblabel']
+                        if (dblabel != '') and (not dblabel in leadLabel):
+                            leadText += '#### DbLabel: *' + dblabel + '*\n'
                 leadText += lead['reportText']
             else:
                 raise Exception('Unknown lead output mode, should be normal|report')
+
 
 
             # new, add default clock time if needed
@@ -5156,7 +5296,8 @@ class HlParser:
         for i in range(0, leadCount):
             lead = self.leads[i]
             properties = lead['properties']
-            leadLabel = properties['label']
+            #leadLabel = properties['label']
+            leadLabel = properties['origLabel'] if ('origLabel' in properties) else properties['label']
             if (properties['label'] is not None):
                 leadStr = '{}:{}'.format(self.makeTextLinkToLead(lead, None, False, True), leadLabel)
             else:
@@ -5282,6 +5423,12 @@ class HlParser:
         elif (typestr=='stop_nomore'):
             markdownText = 'Your case has ended, there is nothing more to read.\n'
             repText = self.wrapStopText(markdownText, renderFormat)
+
+        elif (typestr=='stop_begin'):
+            markdownText = 'Stop reading this case book now, and begin searching for leads in the directories.\n'
+            repText = self.wrapStopText(markdownText, renderFormat)
+
+
 
         else:
             raise Exception('ERROR IN renderedTextSpecial: {} format {}'.format(typestr, renderFormat))
@@ -5534,6 +5681,11 @@ class HlParser:
         # change evil unicode double quots
         text = text.replace('“', '"')
         text = text.replace('”', '"')
+
+        # new fucked up single quotes
+        text = text.replace('’', "'")
+        text = text.replace('‘', "'")
+
         return text
 
 
@@ -5870,6 +6022,10 @@ class HlParser:
         versionstr = jrfuncs.getDictValueOrDefault(info, 'version', None)
         datestr =  jrfuncs.getDictValueOrDefault(info, 'versionDate', None)
         repText = ''
+        #
+        if (len(versionstr)>0) and (versionstr[0].isdigit()):
+            versionstr = "v" + versionstr
+        #
         if (renderFormat=='html'):
             if (flagBreakPage):
                 repText += '<div class="coverpage">'
@@ -5885,7 +6041,7 @@ class HlParser:
             if (subtitlestr is not None) and (subtitlestr!=''):
                 repText += '\\centering\n\\vspace*{0in} \\begin{LARGE}\\bfseries \\textbf{' + self.hlMarkdown.escapeLatex(subtitlestr) + '}\n\\par\\end{LARGE}\n'
             repText += '\\vspace{0.0in}\\begin{Large}\\bfseries by ' + self.hlMarkdown.escapeLatex(authorstr) + '\n\\par\\end{Large}\n'
-            repText += '\\vspace{0.0in} ' + self.hlMarkdown.escapeLatex(versionstr) + ' - ' + self.hlMarkdown.escapeLatex(datestr) + '\\par\\vspace{0.5in}\\par\n'
+            repText += '\\vspace{0.0in} ' + self.hlMarkdown.escapeLatex(versionstr) + ' - ' + self.hlMarkdown.escapeLatex(datestr) + '\\par\\vspace{0.1in}\\par\n'
             # repText += '\\flushleft\n'
         #
         return repText
@@ -6005,7 +6161,8 @@ class HlParser:
         leadProprties = lead['properties']
         #
         leadId = lead['id']
-        label = leadProprties['label'] if ('label' in leadProprties) else None
+        #label = leadProprties['label'] if ('label' in leadProprties) else None
+        label = leadProprties['origLabel'] if ('origLabel' in leadProprties) else leadProprties['label']
         autoid = leadProprties['autoid'] if ('autoid' in leadProprties) else False
         map = leadProprties['map'] if ('map' in leadProprties) else False
         #
@@ -6102,11 +6259,13 @@ class HlParser:
                         msg = '! Primary database search found similar entry: #{} "{}" @ [{}] from {}? (dist {:.2f})].'.format(guessLead['properties']['lead'], guessLead['properties']['dName'], guessLead['properties']['address'], guessSource, dist)
             elif (label == existingLeadRowLabel):
                 # found a match
-                msg = 'Primary database match, identical label, address = [{}]'.format(existingLeadRowAddress)
+                msg = 'Primary database match, identical label, address = "{}"'.format(existingLeadRowAddress)
             elif (jrfuncs.semiMatchStringsNoPunctuation(label, existingLeadRowLabel)):
-                msg = 'Primary database label semi-match vs "{}" at db address [{}].'.format(existingLeadRowLabel, existingLeadRowAddress)
+                msg = 'Primary database label semi-match vs "{} @ {}".'.format(existingLeadRowLabel, existingLeadRowAddress)
+            elif (label == 'n/a'):
+                msg = '! Primary database hit "{} @ {}" when label in game text is BLANK.'.format(existingLeadRowLabel, existingLeadRowAddress)
             else:
-                msg = '! Primary database hit but possibly conflicting label vs "{}" at db address [{}].'.format(existingLeadRowLabel, existingLeadRowAddress)
+                msg = '! Primary database hit but possibly conflicting label vs "{} @ {}".'.format(existingLeadRowLabel, existingLeadRowAddress)
             #
             if (msg!=''):
                 debugMsgs.append(msg)
@@ -6322,7 +6481,7 @@ class HlParser:
             else:
                 self.updateMarkBoxTracker(markType, amount, behalfLead)
                 extraInstructions = ' In addition, {} now.'.format(self.calcMarkInstructions(markType, amount))
-            baseText = 'If you have *NOT* {},  stop reading now, and return here when you have.' + extraInstructions + '\n * Otherwise, '
+            baseText = 'If you have *NOT* {}, stop reading now, and return here when you have.' + extraInstructions + '\n * Otherwise, '
             codeResult['action'] = 'inline'
             codeResult['args'] = {}
             if ('time' in args):
@@ -6379,7 +6538,7 @@ class HlParser:
             tagDict = self.doDefineTag(tagIdExtended, args, lead, None, block)
             return tagDict
         if (flagMustExist):
-            msg = 'Could not find tag with extended id "{}".'.format(tagIdExtended)
+            msg = 'Could not find tag with extended id "{}"; expected to find a hint entry like "# hint.{}" or a $definetag({}) in the # setup section.  '.format(tagIdExtended, tagIdExtended, tagIdExtended)
             self.raiseBlockException(block, 0, msg)
         return None
 

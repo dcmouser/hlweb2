@@ -496,7 +496,27 @@ class Game(models.Model):
         # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
         # ATTN: eventually move all this to the function that actually builds
         taskRetv = queueTaskBuildStoryPdf(self.pk, requestOptions)
-        result = taskRetv.get()
+        try:
+            result = taskRetv.get()
+        except Exception as e:
+            # exception here may mean file in use could not build
+            msg = jrfuncs.exceptionPlusSimpleTraceback(e, "trying to build pdf")
+            result = msg
+            message = "Result of {} for game '{}': {}.".format(buildModeNice, self.name, result)
+            jrdfuncs.addFlashMessage(request, message, True)
+            # force error build results
+            buildResults = {
+                "queueStatus": Game.GameQueueStatusEnum_Errored,
+                "buildDateQueued": timezone.now().timestamp(),
+                "buildError": result,
+                "buildLog": result,
+            }
+            # copy over last build results that are important
+            self.copyLastBuildResultsTo(buildResultsPrevious, buildResults)
+            self.setBuildResults(buildMode, buildResults)
+            #
+            self.save()
+            return
 
         # send to detail view with flash message
         if (isinstance(result, str)):
@@ -634,7 +654,10 @@ class Game(models.Model):
         fullFilePath = "{}/{}.txt".format(directoryPath, fileName)
         encoding = "utf-8"
         jrfuncs.createDirIfMissing(directoryPath)
-        jrfuncs.saveTxtToFile(fullFilePath, self.text)
+        # strange double newlines unless we do this (see https://stackoverflow.com/questions/63004501/newlines-in-textarea-are-doubled-in-number-when-saved)
+        textOut = self.text
+        textOut = '\n'.join(textOut.splitlines())
+        jrfuncs.saveTxtToFile(fullFilePath, textOut, encoding=encoding)
 
 
 

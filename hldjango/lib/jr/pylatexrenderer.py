@@ -162,7 +162,7 @@ class PyLaTeXRenderer(LaTeXRenderer):
 
 
     def render_quote(self, token):
-        self.packages['csquotes'] = []
+        #self.packages['csquotes'] = []
         template = '\\begin{{displayquote}}\n{inner}\\end{{displayquote}}\n'
         return template.format(inner=self.render_inner(token))
 
