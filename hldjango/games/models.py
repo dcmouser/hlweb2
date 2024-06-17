@@ -135,9 +135,9 @@ class Game(models.Model):
     publishDate = models.DateTimeField(help_text="When was story last published?", null=True, blank=True)
 
     # tracking builds being out of date, etc
-    buildResultsJsonField = models.JSONField(help_text="All build results as json; this is internal field you should not mess with.", default=dict, blank=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
+    buildResultsJsonField = models.JSONField(help_text="All build results as json; this is internal field you should not mess with.", default=dict, blank=True, null=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
     #buildResultsJson = models.TextField(help_text="All build results as json string; this is an internal list you do not need to worry about.", default="", blank=True)
-    #buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True, encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
+    #buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True, null=True, encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
 
 
 
