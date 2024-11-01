@@ -1,3 +1,10 @@
+10/24/24:
+LARK IS:
+poetry add lark[regex]
+
+
+
+
 https://builtwithdjango.com/blog/basic-django-setup <-- FAILS but see comment to use "poetry run django-admin startproject hldjango ." leaving off the py
 
 mkdir hldjango

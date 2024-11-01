@@ -1,0 +1,22 @@
+{% if "noInfo" not in options %}
+    {% autoescape off %}
+    {{ buildResultsHtml }}
+    {% endautoescape %}
+{% endif %}
+
+<ul>
+    {% for fileEntry in fileList %}
+        <li class="fileEntry">
+            <a href="{{ fileEntry.url }}" target="_blank">{{ fileEntry.name }}</a> ({{ fileEntry.fileSizeNiceStr }})
+            {% if "showDate" in options %}
+                - {{ fileEntry.fileDateString }}
+            {% endif %}
+        </li>
+    {% endfor %}
+
+    {% if fileList|length == 0 %}
+        <div>None.</div>
+    {% endif %}
+
+</ul>
+<hr/>

@@ -1,0 +1,1776 @@
+\documentclass[oneside, openany, 10pt, paper=letter, DIV=15]{scrbook}%
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{lastpage}
+\usepackage{FiraSans} % font
+\usepackage{librebaskerville} % font
+\usepackage{setspace}
+\usepackage{graphicx} % for graphics
+\usepackage{amssymb} % symbols
+\usepackage{amsthm} % symbols
+\usepackage{amsmath} % symbols
+\usepackage{wasysym} % symbols
+\usepackage{MnSymbol} % symbols
+\usepackage{parskip}
+\usepackage{scrlayer-scrpage} % main document class
+\usepackage{tocloft} % table of contents support
+\usepackage{multicol} % multi-column support
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
+\usepackage{tikz}
+\usepackage{clock} % clock symbols
+\usepackage[clock]{ifsym} % clock symbols
+\usepackage{fontawesome5} % various symbols
+\usepackage{pgfornament} % ornaments like tombstones between leads
+\usepackage{fancybox} % fancy boxed blocks of text
+
+\usepackage{aurical}
+\usepackage{listings} % checkbox lists
+\usepackage{pdfpages} % embedding pdf files?
+\usepackage{enumitem} % lists of items
+\usepackage{refcount} % new ContinuedOnNextPage Stuff
+\usepackage{tabularray} % autosizing tables (tabulary seemed broken)
+\usepackage[export]{adjustbox} % for image alignment in table cells
+\usepackage{printlen} % for reporting image sizes
+
+\usepackage{options} % needed by others? see https://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/longfbox/longfbox.sty
+\usepackage{pict2e} % see above (longbox needs?)
+\usepackage[most]{tcolorbox} % more fancy boxed blocks
+\usepackage{longfbox} % more fancy boxed blocks
+\usepackage{lettrine} % first big character drop caps
+\usepackage{lipsum} % for testing blocks of text
+\usepackage{marginnote} % margin notes
+\def\fakepar{\hfill\mbox{}\vspace{\parskip}\newline\mbox{}\hspace{\parindent}}
+\usepackage[english]{babel}
+\usepackage[autostyle, english = american, debug=true]{csquotes}
+
+\raggedbottom
+\raggedcolumns
+
+\let\origaddcontentsline\addcontentsline
+\let\origcftaddtitleline\cftaddtitleline
+\setlength{\columnsep}{1cm}%
+\onehalfspacing%
+\setlength{\parindent}{0pt}%
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=0.5cm]{chapter}
+\renewcommand*{\chapterheadstartvskip}{\vspace*{-1.0cm}}
+\renewcommand*{\chapterheadendvskip}{\vspace*{0.5cm}}
+\renewcommand{\cftsecfont}{\ttfamily}
+\renewcommand{\cftsubsecfont}{\ttfamily}
+\renewcommand{\cftsubsubsecfont}{\ttfamily}
+\renewcommand{\cftchappagefont}{\ttfamily}
+\renewcommand{\cftsecpagefont}{\ttfamily}
+\renewcommand{\cfttoctitlefont}{\fontsize{25}{30}\selectfont\bfseries\scshape}
+\DeclareTOCStyleEntries[entryformat=\ttfamily, pagenumberformat=\ttfamily]{tocline}{subsection, subsubsection}
+
+\renewcommand\cftchapafterpnum{\vskip-2pt}
+\renewcommand\cftsecafterpnum{\vskip-2pt}
+\newcommand\cbsubheading[1]{\vskip-0.35cm\textbf{#1}}
+\renewcommand\contentsname{}
+\defcaptionname{\languagename}{\contentsname}{}
+\addtokomafont{chapter}{\fontsize{50}{60}\selectfont}\renewcommand{\cftchapfont}{\ttfamily}
+\setkomafont{disposition}{\bfseries}
+\setlength{\cftbeforetoctitleskip}{-2em}
+\setlength{\cftaftertoctitleskip}{-2em}
+
+% checkbox lists, etc (uses package enumitem)
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=\openbox}
+\newlist{nobulletlist}{itemize}{2}
+\setlist[nobulletlist]{label=}
+
+% kludge fix for longfbox (see code comments)
+\makeatletter
+\newdimen\@tempdimd
+\makeatother
+\MakeOuterQuote{"} % Automatically use different left and right quote mark symbols (WARNING: This can lead to hard to diagnose errors on imbalanced double quotes!!)
+
+% embed info into generated pdf
+\hypersetup{
+pdfauthor={Jesse Reichler <jessereichler@gmail.com>},
+pdftitle={The Wrong Book Partial},
+pdfsubject={New York Noir - The Wrong Book Partial v1.92},
+pdfkeywords={casebook},
+}
+\date{4/8/24}
+
+
+\begin{document}
+
+
+\normalsize%
+\clearpairofpagestyles
+
+% footers get page numbers and a "continued on next page" line if appropriate
+\rofoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
+\lefoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
+\newif\ifwarnpgbrk
+\warnpgbrkfalse
+\newcounter{question}
+\newcommand\mycontdfoot{\ifwarnpgbrk \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
+\newcommand\mycontdfootLabelMethodUnused{\ifnum\getpagerefnumber{question-start-\thequestion}<\getpagerefnumber{question-end-\thequestion} \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
+\newenvironment{breakwarnsec}{\warnpgbrktrue}{}
+\cleardoublepage
+\addcontentsline{toc}{chapter}{~~Front Matter}
+\newpage
+\addcontentsline{toc}{section}{~~Cover Page}
+\label{e30}
+
+\AddToHookNext{shipout/background}{
+  \begin{tikzpicture}[remember picture,overlay]
+  \node[opacity=0.33] at (current page.center) {
+   \includegraphics[width=\paperwidth,height=\paperheight]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial/uploads/MrsBrowning_20231207_155355s.jpg}
+  };
+  \end{tikzpicture}
+}
+\begin{titlepage}
+\begin{center}
+\vspace*{0in} \begin{Huge}\bfseries \textbf{The Wrong Book Partial} \par\end{Huge}
+\vspace*{0in} \begin{Large}\bfseries \textbf{A Case for New York Noir} \par\end{Large}
+\vspace*{0in} \bfseries by \textbf{Jesse Reichler} \par
+\vspace*{0in} \bfseries \textbf{v1.92 - 4/8/24} \par \vspace{0.1in} \par
+\begin{center}
+\tcbox[sharp corners, size=tight, boxsep=2pt, boxrule=2pt]{\includegraphics[width=\columnwidth, height=3in,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial/uploads/biblePageSize.jpg} }
+
+\end{center}
+\end{center}
+
+\textbf{SUMMARY}%:
+
+The Wrong Book is a 3{-}day case set in 1948 New York City, around the Times Square neighborhood. Jack Deverell is a private investigator hired to recover a valuable book stolen under mysterious circumstances.
+\begin{flushleft}
+\begin{itemize} \setlength\itemsep{-0.5em}
+\item \textbf{Author}: Jesse Reichler <jessereichler@gmail.com>
+\item \textbf{Additional credits}: Editing by Debbie Levy
+\item \textbf{Web}: \path{https://boardgamegeek.com/thread/3276594/play-the-wrong-book-case-now}
+\item \textbf{Difficulty}: 4 out of 5
+\item \textbf{Playtime}: 4 hours
+\item \textbf{Cautions}: Occasional adult language
+\item \textbf{Build tool}: Casebook v2.2 (10/22/24)
+\item \textbf{Compiled}: Wednesday, October 30 at 07:35 PM
+\item \textbf{Stats}: 62 Leads / 7.4k Words / 50.0 KB
+\end{itemize}
+\end{flushleft}
+\end{titlepage}
+\section*{Table of Contents}%
+
+\addcontentsline{toc}{section}{~~Table of Contents}
+\label{e31}
+~
+\begin{multicols*}{2}
+\warnpgbrktrue 
+\tableofcontents
+\warnpgbrkfalse \end{multicols*}
+\section*{Instructions}%
+
+\addcontentsline{toc}{section}{~~Instructions}
+\label{e32}
+\warnpgbrktrue \includepdf[scale=0.8,pagecommand={}]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/sharedUploads/pdfs/caselog.pdf}
+
+
+To play this case you will need:
+
+~
+
+~
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Day One}%
+
+\addcontentsline{toc}{chapter}{~~Day One}
+\newpage
+\section*{Introduction}%
+
+\addcontentsline{toc}{section}{~~Introduction}
+\label{e34}
+\warnpgbrktrue \textbf{11 am Monday, March 1st, 1948}
+
+\lipsum[1-5]
+
+\lettrine[lines=2, nindent=0.5em]{I}{ got into the office early this morning and opened the place up myself}.  These days it’s almost easier to sleep in my chair than in my bed.  I’m just dozing off when I hear a knock at the door.
+
+
+
+\marginnote[\sffamily\scriptsize Hello world how are you?]{} 
+
+There’s just enough of a pause to give me time to push my hat back and pretend I’m awake.  In walks Jewel with a stack of papers in her hand, trailed by a lady I don’t recognize.  She looks to be in her early 40s.  She’s well put together, with matching black hat and handbag, and shiny black heels.  Looks like she’s from money -- my favorite kind of client.
+
+“This is Mrs. Browning,” says Jewel. “She wants to hire you to find something or other.”
+
+I stand up and stick out my hand. “Nice to meet you, Mrs. Browning,” I say, and she puts her white-gloved hand in mine.
+
+“I’ll take it from here,” I say to Jewel, who’s already headed for the door.
+
+“If she’s looking for a bird, don’t take the job,” she says over her shoulder.
+
+“You’re not, are you?” I say to Mrs. Browning.
+
+“Not what?” she asks.
+
+“Looking for a lost bird.”
+
+“Who are you, Sam Spade?”
+
+A big grin forms on my face, and I sit back down in my chair.  She may be from money, but I like her already.  “No”, she says, “I’m looking for a book”.
+
+She sits down in the chair opposite my desk and digs into her handbag for a cigarette.  I know how this goes, so I just wait for her to get settled and start talking.
+
+“It’s a very rare and valuable book, Mr. Deverell.  One that’s been in my family for generations.  It’s been stolen, and I want you to get it back for me.”
+
+“Sounds like a job for the police,” I say.
+
+She rolls her eyes and leans forward to tap her cigarette in my ashtray.  “I just came from the police -- they’re the ones who sent me to you.”
+
+“I see.”  I loosen my tie and pull out the ledger from my desk drawer.  “Well, my rate is 50 dollars a day plus expenses -- and that’s whether I recover the book or not.”  What I don’t say is that my normal rate’s 40 dollars a day; the extra 10 is my matching-hat-and-handbag rate.  “If that suits you, we can get started right away.”
+
+“That will be just fine,” she says.
+
+“OK, start from the beginning, tell me about this book and what you think happened to it.”
+
+“Very well,” she says, rummaging into her handbag.  “This is a photo of the book.”  She hands me a photo of an ornate book, indicating that I can keep it.
+
+“It’s an Octavo King James Bible. It was purchased by my great-great-great-grandfather in 1700.”  She hesitates for a moment, like she’s choosing her words carefully.  “You must understand, Mr. Deverell, that I come from a deeply religious family -- this book has been smuggled across oceans and deserts, and passed down from generation to generation, from mother to daughter to daughter.  And now it’s been stolen. I must have it back.  It is of incalculable sentimental value.”
+
+“I guess it’s got some non-sentimental value, as well.”
+
+She wrinkles her mouth.  “It is worth a small fortune.  Though that is of little concern to me.”
+
+She takes a long drag of her cigarette and continues.
+
+“I came down from Boston the day before yesterday, to have it appraised -- for insurance purposes, you understand.  I had appointments yesterday with two dealers that had come highly recommended.  The first, a fellow named Wyckoff.  An older gentleman, perhaps 60 years old, tall, white hair, and walks with a limp.  He arrived at my hotel room around 8am.  He studied the book for about 30 minutes, then asked to take the book home with him overnight so he could study it further.  I told him that was out of the question.
+
+The second dealer was a Mr. Gorski, who came by around 10am. He was a tiny man, Polish maybe, in his 40s or 50s, with a round balding head and wire-rimmed glasses. He spent a good hour going over the book with a magnifying glass, and said he would get back to me with his assessment.  He also requested that he be permitted to take the book back to his apartment to study it.  I again said no.  That was yesterday.  This morning I went out for breakfast -- I couldn’t have been gone for more than an hour -- and when I returned to the room, the book was gone.”
+
+“So it was taken from your hotel room this morning.  You’re quite sure of that?”
+
+“Quite.”
+
+“And you’ve no doubt talked to the hotel staff already?  Could a maid have walked off with it?”
+
+She taps her cigarette into the ashtray.  “I’ve talked to the hotel staff.  They claim that the maid was nowhere near the room while I was out.”
+
+“Nothing else disturbed?” I ask.  “Nothing else taken?”
+
+“Some jewelry in a nightstand drawer was also taken -- ruby earrings and a matching ruby and silver necklace and bracelet, but they are of no importance to me.  There was cash and traveler’s checks on the entryway table that were untouched.”
+
+“And where is it you’re staying?” I ask.
+
+“The Hotel Cumberland in Times Square.  Room 713.”
+
+“I guess that rules out someone coming in through the window.  Any sign of someone messing with the lock to your door?”
+
+“I’m sure I have no idea.”
+
+“OK, Mrs. Browning, I think that gives me enough to get started.”  I stand up and show her to the door.  “I can reach you at the Cumberland?”
+
+“Yes, you can call directly up to room 713 by dialing 1{-}7110.”
+
+Then, with the first sign of real concern I’ve seen from her, she says “Until the book is recovered I dare not return home.  Oh, if you do find the book, Mr. Deverell, please be very careful with it -- it’s several hundred years old and in very fragile shape -- the less you handle it the better.”
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}{\Large \faTags}\hspace{0.1cm}You have gained the following items (please note these in your case log):
+\begin{itemize}
+\item 
+\textbf{Document 7}
+
+\item 
+\textbf{Document 8}
+
+\item 
+\textbf{Marker O}
+
+\end{itemize}
+
+\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{5} items \textbf{must} be found before you may end \textbf{day 1}. You should note this in your case log in some way to avoid having to consult this list while playing:
+\begin{itemize}
+\item 
+\textbf{Marker F}
+
+\item 
+\textbf{Marker G}
+
+\item 
+\textbf{Marker H}
+
+\item 
+\textbf{Marker M}
+
+\item 
+\textbf{Marker T}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! Record in your case log that \textbf{day 1} starts at \textbf{11am} and ends at \textbf{8pm}. If you have \textit{not} found all of the required items listed above by \textbf{8pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+
+
+\raisebox{-2.0pt}{\Large \faHandPointRight[regular]}\hspace{0.1cm}\textbf{Note}: There are specific hints available for each of the the day's required items (see index). However, if you need guidance on where to focus your efforts on any given day, you can drop by your old police precinct in the Financial District for some advice (if you arrive between \textbf{3pm and 4pm} you can catch the chief on his break and get his advice without penalty).
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Stop reading this case book now, and begin searching for leads in the directories.
+
+Continue to the next page only when you are ready to  end \textbf{day 1}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{DAY 1 End{-}of{-}shift Briefing}%
+
+\addcontentsline{toc}{section}{~~DAY 1 End{-}of{-}shift Briefing}
+\label{e36}
+\warnpgbrktrue 
+
+Jewel and I meet in the office to review developments in the case after the first day.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{5} items \textbf{must} have been found before you ended \textbf{day 1}. If you have missed one or more, return to searching for leads until you find all of them (if stuck, consult the hints section):
+\begin{itemize}
+\item 
+\textbf{Marker F}
+
+\item 
+\textbf{Marker G}
+
+\item 
+\textbf{Marker H}
+
+\item 
+\textbf{Marker M}
+
+\item 
+\textbf{Marker T}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! You should have noted in your case log that \textbf{day 1} started at \textbf{11am} and ended at \textbf{8pm}. If you have \textit{not} found all of the required items listed above by \textbf{8pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+
+
+
+
+~
+
+~
+
+\setlength{\fboxsep}{2em} \begin{center}\shadowbox{\begin{minipage}[c]{.80\columnwidth}
+{\Large \faTheaterMasks}\hspace{0.1cm}If you finished the day before entering overtime, you have enough spare time to see a movie; go to \hyperref[{r12}]{8{-}5382 on p.\pageref*{r12}}, and then return here.\end{minipage}}\end{center}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Proceed only when you are ready to begin \textbf{day 2}.
+
+~
+
+\textit{NOTE: If you’ve been playing for a couple of hours, now might be a good time to take a break before continuing...}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Day Two}%
+
+\addcontentsline{toc}{chapter}{~~Day Two}
+\newpage
+\section*{Day 2 Morning}%
+
+\addcontentsline{toc}{section}{~~Day 2 Morning}
+\label{e39}
+\warnpgbrktrue \textbf{9:15 am Tuesday, March 2nd, 1948}
+
+\setlength{\fboxsep}{2em} \begin{center}\shadowbox{\begin{minipage}[c]{.80\columnwidth}\ttfamily\bfseries\itshape {\Large \faVolumeUp}\hspace{0.1cm}… You are listening to WABC radio in New York City.  These are your top headlines.  In international news, the Congressional Aviation Policy Board has increased its demand for Air Force funding by several billion dollars to avert a future world war…
+
+...In local news, traffic snarls continue to plague the Garment District this morning, despite the new staggered traffic policy.  Police commander Arthur Wallander called representatives to work out further concessions…
+
+...At midnight tonight the Museum of Natural History will open its doors to the New York elite for an early sneak peak at the upcoming exhibition of controversial religious books. True to its name, the exhibition has stirred up a great deal of controversy, with local church elders protesting what they have called sacrilegious works of dubious authenticity.  And now a word from our sponsor…
+
+...Suffering from indigestion?  Looking for a midday pick-me-up?  Try Muller’s Antacid, bottled locally, and good for your eyes…\end{minipage}}\end{center}
+
+I get into my office a little past 9am on Tuesday morning, and I find Jewel glaring at a large brown-paper-wrapped parcel sitting in the center of her desk, about the size of a typewriter.
+
+“What’s that?” I ask.
+
+“Somebody dropped it off in front of the door a few minutes after I got in and skedaddled.  Doesn’t have a return address.”
+
+We both stare at it for a long minute.  “I don’t suppose you have a secret admirer?” I ask.
+
+“Maybe your new girlfriend got you a hat to match your shoes.”
+
+We spend another minute staring at the writing on the package.  It’s ornate, a bit like calligraphy.  All it says is “Detective’s Office”.
+
+Finally I take the pocket knife out of my back pocket with a flourish and snap it open, then cut off the outer wrapping.
+
+“You were right,” I say. “It’s a hat box.”
+
+There’s a faded watermark on the bottom, “Classic” something or another -- I can’t quite make it out.  I slit open the packing tape, and underneath several layers of newspaper I find a heavy book, wrapped in what appears to be several layers of silk.
+
+There’s a note on top, in the same calligraphy. Jewel and I read it together.
+
+“Looks like your case just solved itself,” says Jewel.
+
+“Ring up Mrs. Browning at the Cumberland,” I say.  “Tell her I’m on my way over.  And Jewel -- don’t tell her what I’m bringing.”
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-2.0pt}{\Large \faCameraRetro}\hspace{0.1cm}You have gained access to \textbf{Document 8}, which can be found at the back of this case book (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{3} items \textbf{must} be found before you may end \textbf{day 2}. You should note this in your case log in some way to avoid having to consult this list while playing:
+\begin{itemize}
+\item 
+\textbf{Marker S}
+
+\item 
+\textbf{Marker U}
+
+\item 
+\textbf{Marker V}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! Record in your case log that \textbf{day 2} starts at \textbf{10am} and ends at \textbf{4pm}. If you have \textit{not} found all of the required items listed above by \textbf{4pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+
+
+\raisebox{-2.0pt}{\Large \faHandPointRight[regular]}\hspace{0.1cm}\textbf{Note}: There are specific hints available for each of the the day's required items (see index). However, if you need guidance on where to focus your efforts on any given day, you can drop by your old police precinct in the Financial District for some advice (if you arrive between \textbf{3pm and 4pm} you can catch the chief on his break and get his advice without penalty).
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Stop reading this case book now, and begin searching for leads in the directories.
+
+Continue to the next page only when you are ready to  end \textbf{day 2}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Day 2 End{-}of{-}shift Briefing}%
+
+\addcontentsline{toc}{section}{~~Day 2 End{-}of{-}shift Briefing}
+\label{e41}
+\warnpgbrktrue Day 2 is in the books, but there’s still a lot I don’t understand about this case.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{3} items \textbf{must} have been found before you ended \textbf{day 2}. If you have missed one or more, return to searching for leads until you find all of them (if stuck, consult the hints section):
+\begin{itemize}
+\item 
+\textbf{Marker S}
+
+\item 
+\textbf{Marker U}
+
+\item 
+\textbf{Marker V}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! You should have noted in your case log that \textbf{day 2} started at \textbf{10am} and ended at \textbf{4pm}. If you have \textit{not} found all of the required items listed above by \textbf{4pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Day 2 Late Night Leads}%
+
+\addcontentsline{toc}{section}{~~Day 2 Late Night Leads}
+\label{e42}
+\warnpgbrktrue 
+
+After a busy day I’m ready to hop on a train and hit the sack.  But I guess the night is still young; I could squeeze in one more stop before I head home.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\color{red}{\Large \faBalanceScale}\hspace{0.1cm}}You may now choose ONE AND ONLY ONE of the following special late-night leads to visit:
+\begin{itemize}
+\item 
+Ask Jewel to try to finagle a pair of tickets to the midnight exhibit at the Natural History Museum; go to \hyperref[{r19}]{6{-}4004 on p.\pageref*{r19}}, and then return here.
+
+\item 
+OR, head over to the Cumberland Hotel bar for a night cap and to look around; go to \hyperref[{r20}]{3{-}6099 on p.\pageref*{r20}}, and then return here.
+
+\end{itemize}\end{minipage}}\par}
+
+ After you resolve your choice you may proceed to the next page to end your day.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Proceed only when you are ready to begin \textbf{day 3}.
+
+~
+
+\textit{NOTE: If you’ve been playing for a couple of hours, now might be a good time to take a break before continuing...}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Day Three}%
+
+\addcontentsline{toc}{chapter}{~~Day Three}
+\newpage
+\section*{Day 3 Morning}%
+
+\addcontentsline{toc}{section}{~~Day 3 Morning}
+\label{e45}
+\warnpgbrktrue \textbf{8 am Wednesday, March 3rd, 1948}
+
+Not wanting to be caught flat-footed again, Jewel and I are having our coffee on the stoop outside the office this morning, listening to the radio.
+
+\setlength{\fboxsep}{2em} \begin{center}\shadowbox{\begin{minipage}[c]{.80\columnwidth}\ttfamily\bfseries\itshape {\Large \faVolumeUp}\hspace{0.1cm}… You are listening to WABC radio in New York City.  These are your top headlines.  In domestic news, the House Judiciary Committee has passed the Anti-Lynching bill in a 2 to 1 vote, marking the second item achieved by president Truman from his promised civil rights agenda.
+
+...In local news, local police report that the condition of the subway attendant assaulted without warning on Tuesday has been upgraded to stable condition.  His attacker remains unidentified and at large.  A subway spokesman has advised subway riders to exercise caution and be aware of their surroundings..  And in what police are saying is an unrelated attack, a man was murdered last night in central park near the Engineer’s Gate.
+
+...And now a word from our sponsors…  When you absolutely positively have to get there on time: A1 Carriage and Cab -- the safe and civilized way to travel…\end{minipage}}\end{center}
+
+I show Jewel the sketch I made of Mrs. Browning on the way into work.
+
+“You’re getting better,” says Jewel.  “But you didn’t quite capture her latent malevolence.”
+
+“She’s a client, Jewel, be good.”
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-2.0pt}{\Large \faCameraRetro}\hspace{0.1cm}You have gained access to \textbf{Document 9}, which can be found at the back of this case book (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+
+I take another big swig of my cup.  “You’re going to have to tell me where you get this coffee from one of these days.”
+
+“You’re the detective, figure it out.”
+
+“Jewel, don’t make me follow you home.”
+
+She rolls her eyes at me.  “Promises, promises.”
+
+Before I can say something stupid, a small white van pulls up with the word “SPEEDY” written on the side, and a young man in overalls hops out, bounds up the steps, and lays an envelope in front of our door.  “Mmm… the coffee smells good,” he says, and winks at Jewel. “I could do with a cup myself.”  And then he’s off.
+
+I roll my eyes. “Good grief.”
+
+The writing on the envelope seems to match the hat box note from yesterday.  Again, no return address.
+
+“You know,” says Jewel, “Mrs. Browning has called twice this morning asking if we’ve made any progress finding her book.  Want me to ring her up and let her know about this note?”
+
+“Hmmm… I don’t know…  Maybe Mrs. Browning should sit this one out.”
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-2.0pt}{\Large \faCameraRetro}\hspace{0.1cm}You have gained access to \textbf{Document 10}, which can be found at the back of this case book (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{9} items \textbf{must} be found before you may end \textbf{day 3}. You should note this in your case log in some way to avoid having to consult this list while playing:
+\begin{itemize}
+\item 
+\textbf{Marker C}
+
+\item 
+\textbf{Marker D}
+
+\item 
+\textbf{Marker P}
+
+\item 
+\textbf{Marker W}
+
+\item 
+\textbf{Marker X}
+
+\item 
+\textbf{Marker Y}
+
+\item 
+\textbf{Document 1}
+
+\item 
+\textbf{Document 2}
+
+\item 
+\textbf{Document 3}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! Record in your case log that \textbf{day 3} starts at \textbf{8am} and ends at \textbf{5pm}. If you have \textit{not} found all of the required items listed above by \textbf{5pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+
+
+\raisebox{-2.0pt}{\Large \faHandPointRight[regular]}\hspace{0.1cm}\textbf{Note}: There are specific hints available for each of the the day's required items (see index). However, if you need guidance on where to focus your efforts on any given day, you can drop by your old police precinct in the Financial District for some advice (if you arrive between \textbf{3pm and 4pm} you can catch the chief on his break and get his advice without penalty).
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Stop reading this case book now, and begin searching for leads in the directories.
+
+Continue to the next page only when you are ready to  end \textbf{day 3}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Day 3 End{-}of{-}shift Briefing}%
+
+\addcontentsline{toc}{section}{~~Day 3 End{-}of{-}shift Briefing}
+\label{e47}
+\warnpgbrktrue \textbf{6 pm Wednesday, March 3rd, 1948}
+
+Back at the office, Jewel is as anxious as ever to talk about the case…
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\Large \faTags}\hspace{0.1cm}The following \textbf{9} items \textbf{must} be found before you may end \textbf{day 3}. You should note this in your case log in some way to avoid having to consult this list while playing:
+\begin{itemize}
+\item 
+\textbf{Marker C}
+
+\item 
+\textbf{Marker D}
+
+\item 
+\textbf{Marker P}
+
+\item 
+\textbf{Marker W}
+
+\item 
+\textbf{Marker X}
+
+\item 
+\textbf{Marker Y}
+
+\item 
+\textbf{Document 1}
+
+\item 
+\textbf{Document 2}
+
+\item 
+\textbf{Document 3}
+
+\end{itemize}
+
+
+~
+
+\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}THE CLOCK IS TICKING! Record in your case log that \textbf{day 3} starts at \textbf{8am} and ends at \textbf{5pm}. If you have \textit{not} found all of the required items listed above by \textbf{5pm}, you enter \textbf{overtime}.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find all of the required items.\end{minipage}}\par}
+
+
+\raisebox{-2.0pt}{\Large \faHandPointRight[regular]}\hspace{0.1cm}\textbf{Note}: There are specific hints available for each of the the day's required items (see index). However, if you need guidance on where to focus your efforts on any given day, you can drop by your old police precinct in the Financial District for some advice (if you arrive between \textbf{3pm and 4pm} you can catch the chief on his break and get his advice without penalty).
+
+
+
+\hrulefill
+
+\textbf{After you finish this end-of-shift briefing you will be ready to begin wrapping up the case.} Go to \hyperref[{e64}]{Conclusion (p.\pageref*{e64})}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  The case is nearing an end. You will have another chance to search for leads, but in the meantime, turn to: \hyperref[{e64}]{Conclusion (p.\pageref*{e64})}.
+
+
+~
+
+\textit{NOTE: If you’ve been playing for a couple of hours, now might be a good time to take a break before continuing...}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Leads Section}%
+
+\addcontentsline{toc}{chapter}{~~Leads Section}
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  WARNING! Do \textbf{not} read through the rest of this document like a book from beginning to end. Lead entries are meant to be read individually only when you look up a lead by its number.
+
+Close this book now and follow rulebook instructions for looking up leads.
+\newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{1}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~1}
+\label{e8}
+\newpage
+\subsection*{1{-}4054}%
+
+\addcontentsline{toc}{subsection}{~~1{-}4054}
+\label{r29}
+\cbsubheading{Central Park Precinct (\hyperref[{e50}]{7{-}6051 on p.\pageref*{e50}}) contd.}%
+
+\warnpgbrktrue I waste some time in front of the DMV trying to think of a reason to go inside, and then leave.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{1{-}7110}%
+
+\addcontentsline{toc}{subsection}{~~1{-}7110}
+\label{e54}
+\cbsubheading{Mr's Brownings Hotel Room}%
+
+\warnpgbrktrue We visit mrs. browning in her hotel
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{1{-}7904}%
+
+\addcontentsline{toc}{subsection}{~~1{-}7904}
+\label{r64}
+\cbsubheading{99 E (\hyperref[{e13}]{p.\pageref*{e13}}) contd.}%
+
+\warnpgbrktrue We ask around the 17th Precinct for any scuttlebut on the neighborhood.  We’re told it’s a quiet place with very little crime.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{2}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~2}
+\label{e8}
+\newpage
+\subsection*{2{-}0018}%
+
+\addcontentsline{toc}{subsection}{~~2{-}0018}
+\label{r30}
+\cbsubheading{Central Park Precinct (\hyperref[{e50}]{7{-}6051 on p.\pageref*{e50}}) contd.}%
+
+\warnpgbrktrue I waste some time in front of the DMV trying to think of a reason to go inside, and then leave.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{2{-}1740}%
+
+\addcontentsline{toc}{subsection}{~~2{-}1740}
+\label{r41}
+\cbsubheading{Beth Israel Teaching Hospital (\hyperref[{e53}]{8{-}0109 on p.\pageref*{e53}}) contd.}%
+
+\warnpgbrktrue I sweet-talk the receptionist at the check-in desk into letting me go up to the room of the subway attendant who was attacked on Tuesday, by telling her I’m a friend of the victim.  I try not to remember how I left him to bleed out in the station.
+
+In his hospital room, Mr. Kornacki looks grave.  He seems to think I saved his life.  I don’t tell him he’s wrong.
+
+He’s wheezing and struggling to talk, and I’m not sure I should even let him try.  But I lean in to hear what he has to say.
+
+“It’s only a dime…” he says, shaking his head, “All this over a dime?”
+
+“Just get some rest.” I say. “You’ll be OK.”
+
+Then I head back to the office for a drink and hope I’m right.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker B2} (please note this in your case log).
+
+\end{minipage}}\par}
+
+\begin{center}\includegraphics[width=\columnwidth, height=4in,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial/uploads/bethIsrael.png} \end{center}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{2{-}1954}%
+
+\addcontentsline{toc}{subsection}{~~2{-}1954}
+\label{e57}
+\cbsubheading{Back at Beth Israel (contd. from \hyperref[{e53}]{8{-}0109 on p.\pageref*{e53}})}%
+
+\warnpgbrktrue I sweet-talk the receptionist at the check-in desk into letting me go up to the room of Mr. Kornacki, the subway attendant who was attacked on Tuesday, by telling her I’m a friend of the victim.  Eh. it’s not too far off from the truth.
+
+In his hospital room, Mr. Kornacki looks much improved from when I last saw him, and he grasps my hand weakly when he recognizes me.  He seems to think I saved his life.  I don’t tell him he’s wrong.
+
+I have to lean in close to hear his short, whispered words, but he does his best to tell me what he remembers.
+
+He was attacked by a large, swarthy man -- at least 6ft tall.  He doesn’t remember what he was wearing, but definitely not a full suit.  The man had tried to rush past him through the turnstile to the platform without paying, and the attendant had blocked his path.  The fee went up to a dime last year, he added, and some people were very unhappy about it.  Somehow I doubt that was the issue.  Then, before Kornacki knew what had happened, he saw a flash of a blade and felt his shirt covered in blood.
+
+I ask him if he recalls any strange smell, but he can’t remember.  The man ran past him and onto the uptown platform.  “It’s only a dime…” he finally says, shaking his head.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker B2} (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{3}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~3}
+\label{e8}
+\newpage
+\subsection*{3{-}0005}%
+
+\addcontentsline{toc}{subsection}{~~3{-}0005}
+\label{r61}
+\cbsubheading{15 E (\hyperref[{e12}]{p.\pageref*{e12}}) {-} after day 2}%
+
+\warnpgbrktrue At the precinct house we’re filled in on some details of the attack on the subway attendant, though there aren’t many.
+
+No witnesses, no apparent motive.  He wasn’t robbed, and the cash box was untouched.  The victim is being treated at Beth Israel hospital and is in critical but stable condition, scheduled for surgery tonight.  He hasn’t made a statement yet, but may be well enough to talk by Wednesday afternoon.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{3{-}1255}%
+
+\addcontentsline{toc}{subsection}{~~3{-}1255}
+\label{r54}
+\cbsubheading{Consulate of India (\hyperref[{e62}]{5{-}6094 on p.\pageref*{e62}}) contd.}%
+
+\warnpgbrktrue I happen to know one of the security guys who works at the India Consulate, a retired cop named Jeffrey Haykin.  I have to wait for nearly an hour for him to come downstairs, but that probably works in my favor as he feels bad for making me wait so long.
+
+I describe my guy to him, give him my best guess at a name -- Choku or Chako, or something similar -- and tell him this guy is too violent to have avoided a criminal record.
+
+Jeff heads back upstairs, and a half-hour later he’s back with a name.
+
+“Choka Bahandari.  He’s a bad dude.  Served time in India for animal abuse and some kind of ritualistic killing, before some batshit crazy rich white lady bribed someone at the jail and the next thing you know he shows up in the US.”
+
+“Thanks, Jeff, I owe you one.”
+
+“Be careful, Jack,” he calls out to me, “this guy is dangerous.”
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker A} (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 60 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{3{-}4281}%
+
+\addcontentsline{toc}{subsection}{~~3{-}4281}
+\label{r36}
+\cbsubheading{17th Precinct (\hyperref[{e52}]{8{-}6591 on p.\pageref*{e52}}) {-} after day 2}%
+
+\warnpgbrktrue At the precinct house we’re filled in on some details of the attack on the subway attendant, though there aren’t many.
+
+No witnesses, no apparent motive.  He wasn’t robbed, and the cash box was untouched.  The victim is being treated at Beth Israel hospital and is in critical but stable condition, scheduled for surgery tonight.  He hasn’t made a statement yet, but may be well enough to talk by Wednesday afternoon.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{3{-}6099}%
+
+\addcontentsline{toc}{subsection}{~~3{-}6099}
+\label{r20}
+\cbsubheading{Day 2 Late Night Leads (\hyperref[{e42}]{p.\pageref*{e42}}) {-} Late Night Drink at the Cumberland Hotel}%
+
+\warnpgbrktrue I take a seat at the Cumberland Hotel bar and order a whiskey, neat.  Nothing fancy about the bar, but it does offer me a discreet view of the lobby from where I’m seated.
+
+There’s a girl to my left who looks like she might have been a dancer in another life.  She’s too tan to be a New York native, so I ask her what she’s doing in the city.  She tells me she’s traveling with her husband, and just like that, a man I recognize pulls up alongside her.
+
+“Come on, Jenny, we’ll be late,” he says.
+
+“OK, Bill, I’m coming,” she says.
+
+It’s Bud Abbott.  He looks shorter in real life.  I look around for Lou but he’s nowhere to be seen.  I try to hear what they’re saying as they move off, but all I pick up is something about Coney Island.
+
+The rest of the evening is uneventful, and at around 12:45 am I call it a night and pay my tab.  As I’m heading out, I almost get knocked over by someone hurrying the other way -- big hulking guy with light-brown skin and a big bushy beard. 
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{1} culture checkbox in your case log.\end{minipage}}\par}
+
+
+Return to \hyperref[{e42}]{Day 2 Late Night Leads (p.\pageref*{e42})}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{3{-}9553}%
+
+\addcontentsline{toc}{subsection}{~~3{-}9553}
+\label{r39}
+\cbsubheading{Beth Israel Teaching Hospital (\hyperref[{e53}]{8{-}0109 on p.\pageref*{e53}}) contd.}%
+
+\warnpgbrktrue I walk around the hospital trying to remember what I was looking for but give up after a few minutes.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{3{-}9631}%
+
+\addcontentsline{toc}{subsection}{~~3{-}9631}
+\label{r40}
+\cbsubheading{Beth Israel Teaching Hospital (\hyperref[{e53}]{8{-}0109 on p.\pageref*{e53}}) contd.}%
+
+\warnpgbrktrue I ask about the subway attendant but I’m told he’s still in surgery and they expect him to be under anesthesia until morning.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{5}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~5}
+\label{e8}
+\newpage
+\subsection*{5{-}1321}%
+
+\addcontentsline{toc}{subsection}{~~5{-}1321}
+\label{r65}
+\cbsubheading{99 E (\hyperref[{e13}]{p.\pageref*{e13}}) {-} after day 2}%
+
+\warnpgbrktrue At the precinct house we’re filled in on some details of the attack on the subway attendant, though there aren’t many.
+
+No witnesses, no apparent motive.  He wasn’t robbed, and the cash box was untouched.  The victim is being treated at Beth Israel hospital and is in critical but stable condition, scheduled for surgery tonight.  He hasn’t made a statement yet, but may be well enough to talk by Wednesday afternoon.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{5{-}3494}%
+
+\addcontentsline{toc}{subsection}{~~5{-}3494}
+\label{r60}
+\cbsubheading{15 E (\hyperref[{e12}]{p.\pageref*{e12}}) contd.}%
+
+\warnpgbrktrue We ask around the 17th Precinct for any scuttlebut on the neighborhood.  We’re told it’s a quiet place with very little crime.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{5{-}4329}%
+
+\addcontentsline{toc}{subsection}{~~5{-}4329}
+\label{e61}
+\cbsubheading{Gorski, Walenty {-} Apt. 3c}%
+
+\warnpgbrktrue The door to apartment 3c is small and cheap, hollow core and painted white.  I guess it’s a bad habit that my mind is always figuring how hard it would be to break down a door.  A small handwritten card taped to the door says “\textbf{Gorski, Walenty}”.
+
+I knock a few times and listen, but there’s no sign of any activity.
+
+There’s a mail slot near the bottom of the door, so after I look around and see the hallway is clear, I go down on the balls of my feet and push open the slot and look in.  Place looks pretty empty.  A chair sitting in the hallway and an empty table.  Nothing on the walls.  Pretty suspicious when you think about it.  I stand in front of the door for a minute considering my options… Can’t really bust down the door on a hunch.  I wonder if maybe a neighbor or doorman would know anything about the occupant.
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker F} (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{5{-}6094}%
+
+\addcontentsline{toc}{subsection}{~~5{-}6094}
+\label{e62}
+\cbsubheading{Consulate of India}%
+
+\warnpgbrktrue \begin{itemize}
+\item 
+If you have \textit{not} previously acquired \textbf{Marker Z}, stop reading now, and return here after you have.
+
+\item 
+Otherwise go to \hyperref[{r54}]{3{-}1255 on p.\pageref*{r54}}.
+
+\end{itemize}
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{5{-}6096}%
+
+\addcontentsline{toc}{subsection}{~~5{-}6096}
+\label{e58}
+\cbsubheading{Gorski, T.}%
+
+\warnpgbrktrue Apparently Gorski is a pretty popular name.  Unfortunately after a brief talk with the resident I can see this isn’t the Gorski I’m looking for.  Still, knocking on doors is part of the job, and I’m bound to find him eventually.
+
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 10 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{5{-}8291}%
+
+\addcontentsline{toc}{subsection}{~~5{-}8291}
+\label{r33}
+\cbsubheading{Carnegie District Precinct (\hyperref[{e51}]{7{-}7572 on p.\pageref*{e51}}) {-} after day 2}%
+
+\warnpgbrktrue The Carnegie precinct looks like a cushy detail for cops wanting to enjoy the second half of their careers.  Back when I was a cop, I wouldn’t be caught dead working in such a sleepy neighborhood.  The decor looks like they aren’t hurting for money either.
+
+I look around on the off-chance that I recognize someone, but no such luck, so I tell the officer on duty that I’m a PI and may have some information about yesterday’s murder at the Engineer’s Gate in Central Park.  He directs me to the detectives’ room up the wide polished marble staircase.
+
+The detective in charge of the case has his own office, and not a small one.  He’s eating a sandwich with a knife and a fork.  He sees me staring at his plate.
+
+“My dentures are acting up,” he says, pointing to his mouth with his fork, as if that explained it. “What do you know about my murder?”
+
+“Was he a tall guy, tan suit, pencil-thin moustache?”
+
+“Yeah, what do you know about him?”
+
+I decide that he doesn’t need to know about Mrs. Browning and her book, and just tell him that I think it’s likely he was killed by the same guy who cut the throat of the subway attendant at 51st Street.
+
+“Did you identify the body?” I ask.
+
+Dentures pauses with the fork half-way in his mouth and peers up at me.  This guy’s going to make me work for it.
+
+“Was it by any chance a Walenty Gorski?” I ask.
+
+“No. Who’s Gorski?”
+
+I lean closer and give him my best “we’re on the same team” look.  “Tell you what: I’ll share what I know if you give me the name of the victim.  It’s going to be in the paper by tomorrow anyway.”
+
+After a bit more back-and-forth he tells me that the dead guy was Constantine Afanasyev, resident of East Village.  He was found face-down outside of Central Park, at the Engineer’s Gate entrance.  He had a large buck knife in his lower back, and was stabbed several times. Was probably dead within minutes.
+
+They think he was killed late last night.  He didn’t have Gorski’s mail on him, just a wallet with a few bucks, some change, a driver’s license, and some weird notes that they couldn’t make sense of -- written in a foreign language, they think.  I ask to see the notes and he tells me I’d have a better chance getting a date with Lana Turner.
+
+“We’re still waiting on an autopsy from the Chief Medical examiner, but it looks like this guy was dead within minutes of the attack -- didn’t even get a chance to run.”
+
+“Any idea what he was doing uptown?” I finally ask.
+
+“You tell me,” he says, forking in another square.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker B} (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 60 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{6}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~6}
+\label{e8}
+\newpage
+\subsection*{6{-}3528}%
+
+\addcontentsline{toc}{subsection}{~~6{-}3528}
+\label{e59}
+\cbsubheading{Gorski, I.}%
+
+\warnpgbrktrue Apparently Gorski is a pretty popular name.  Unfortunately after a brief talk with the resident I can see this isn’t the Gorski I’m looking for.  Still, knocking on doors is part of the job, and I’m bound to find him eventually.
+
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 10 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{6{-}4004}%
+
+\addcontentsline{toc}{subsection}{~~6{-}4004}
+\label{r19}
+\cbsubheading{Day 2 Late Night Leads (\hyperref[{e42}]{p.\pageref*{e42}}) {-} Late Night at the Natural History Museum}%
+
+\warnpgbrktrue Probably it’s the connection to our case, but I find myself genuinely curious about the exhibit of controversial religious books.  Jewel and I hop the train to 79th Street on the Upper West Side.
+
+The midnight gala event at the museum is a pretty ritzy affair.  I’m not sure how Jewel managed to get us tickets at the last minute, but she’s resourceful like that.  As we’re walking up the steps we see mayor Fiorello La Guardia, already inside shaking hands with someone, his pudgy face and rotund body exuding unmistakeable charm.
+
+\begin{center}\includegraphics[width=\columnwidth, height=6in,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial/uploads/MuseumNaturalHistory2.jpg} \end{center}
+
+The Museum of Natural History is one of my favorite places.  It never ceases to put me in a contemplative mood. Dozens of dimly-lit rooms, with giant life-sized dioramas of cavemen and dinosaurs, pottery and tablets from the beginning of civilization, and sparkling gemstones the size of your head.
+
+Jewel seems just as interested as I am, and we leisurely walk to the religious book exhibit, separated by only a few feet of space but a million years of daydreaming.
+
+The controversial book exhibit itself is mildly interesting.  I’m half-expecting to see a copy of Mrs. Browning’s book on display, but no dice.  There’s a big section discussing religious books from different cultures, and how each one was treated as blasphemous and sacrilegious by others, despite their common themes.  And there’s a section of shockingly vibrant paintings of Hindu gods that defy description.  I make a note to myself to dig out my oil paints when I get home.
+
+There is a section on controversial Christian Bibles, but they seem to be mostly about misprinted editions. The “Wicked” Bible, otherwise known as the “Sinner’s Bible”, was published in 1631 in London, where they accidentally left out the word "not" from the sentence  "Thou shalt not commit adultery."  Ouch.  Most copies were destroyed, making it highly valuable.  But there’s no hint of any controversy related to Mrs. Browning’s book.
+
+“Pretty fascinating stuff, huh, Jewel?”
+
+Jewel doesn’t hear me; she’s lost in thought.  We wander around a bit more in silence, then part ways and head to our respective homes.
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{3} culture checkboxes in your case log.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-3.3pt}{\Large \faTag}\hspace{0.1cm}You have gained \textbf{Marker O} (please note this in your case log).
+
+\end{minipage}}\par}
+
+
+Return to \hyperref[{e42}]{Day 2 Late Night Leads (p.\pageref*{e42})}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{7}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~7}
+\label{e8}
+\newpage
+\subsection*{7{-}0179}%
+
+\addcontentsline{toc}{subsection}{~~7{-}0179}
+\label{e56}
+\cbsubheading{My Broken House}%
+
+\warnpgbrktrue We are in my broken house.
+
+How does it look?
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{7{-}4460}%
+
+\addcontentsline{toc}{subsection}{~~7{-}4460}
+\label{e55}
+\warnpgbrktrue We are in my house
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Advance time \textbf{2 hours}.\end{minipage}}\par}
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{7{-}6051}%
+
+\addcontentsline{toc}{subsection}{~~7{-}6051}
+\label{e50}
+\cbsubheading{Central Park Precinct}%
+
+\warnpgbrktrue The central park precinct isn’t much of a precinct at all, and looks like it’s mostly for show.  A place for tourists to stop in and file reports on park pickpockets or con artists.  I guess if I’m interested in a crime that occurred on the outskirts of the park It’s going to be handled by the closest neighborhood precinct next to the park.
+\begin{itemize}
+\item 
+If you are missing \textbf{both} of the the following 2 items (\textbf{Document 2} and \textbf{Marker O}), go to \hyperref[{r29}]{1{-}4054 on p.\pageref*{r29}}.
+
+\item 
+If you have \textit{any} of the the following 3 items (\textbf{Document 2}, \textbf{Document 9}, or \textbf{Marker O}), go to \hyperref[{r30}]{2{-}0018 on p.\pageref*{r30}}.
+
+\end{itemize}
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{7{-}7572}%
+
+\addcontentsline{toc}{subsection}{~~7{-}7572}
+\label{e51}
+\cbsubheading{Carnegie District Precinct}%
+
+\warnpgbrktrue 
+
+\begin{itemize}
+\item 
+If it is \textbf{before day} \textbf{3}, advance time \textbf{1 hour}, then leave.
+
+\item 
+Otherwise, go to \hyperref[{r33}]{5{-}8291 on p.\pageref*{r33}}.
+
+\end{itemize}
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{7{-}9422}%
+
+\addcontentsline{toc}{subsection}{~~7{-}9422}
+\label{r35}
+\cbsubheading{17th Precinct (\hyperref[{e52}]{8{-}6591 on p.\pageref*{e52}}) contd.}%
+
+\warnpgbrktrue We ask around the 17th Precinct for any scuttlebut on the neighborhood.  We’re told it’s a quiet place with very little crime.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{8}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~8}
+\label{e8}
+\newpage
+\subsection*{8{-}0109}%
+
+\addcontentsline{toc}{subsection}{~~8{-}0109}
+\label{e53}
+\cbsubheading{Beth Israel Teaching Hospital}%
+
+\warnpgbrktrue 
+
+If you are missing previously acquired \textbf{Marker S}, go to \hyperref[{r39}]{3{-}9553 on p.\pageref*{r39}}.
+
+If it is \textbf{before day} \textbf{3}, go to \hyperref[{r40}]{3{-}9631 on p.\pageref*{r40}}.
+\begin{itemize}
+\item 
+Otherwise, If you have previously acquired \textbf{Marker E}, go to \hyperref[{e57}]{2{-}1954 (p.\pageref*{e57})}
+
+\item 
+Otherwise, If you have previously acquired \textbf{Marker R}, go to \hyperref[{r41}]{2{-}1740 on p.\pageref*{r41}}.
+
+\end{itemize}
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{8{-}2725}%
+
+\addcontentsline{toc}{subsection}{~~8{-}2725}
+\label{r76}
+\cbsubheading{Hint for Marker F (\hyperref[{e20}]{p.\pageref*{e20}}) contd.}%
+
+\warnpgbrktrue Hint: You are looking for a Polish guy named Gorski who lives in an apartment building; if in doubt visit all Gorskis in the directory until you find someplace suspicious.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{8{-}5382}%
+
+\addcontentsline{toc}{subsection}{~~8{-}5382}
+\label{r12}
+\cbsubheading{DAY 1 End{-}of{-}shift Briefing (\hyperref[{e36}]{p.\pageref*{e36}}) contd.}%
+
+\warnpgbrktrue 
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{2} culture checkboxes in your case log.\end{minipage}}\par}
+
+
+
+With a little spare time on my hands, I head down to the Hippodrome in Times Square and catch a late night showing of Out of the Past.  I’m on my own as Jewel has got other plans.  Robert Mitchum’s pretty damn good, though I’ll take Bogey every time.  Then there’s Jane Greer… Now why don’t I get clients like that.  Half way through the movie though, my thoughts keep returning to my case.
+
+\begin{center}\includegraphics[width=\columnwidth, height=6in,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial/uploads/moviePosterOutOfThePast.jpg} \end{center}
+Return to \hyperref[{e36}]{DAY 1 End{-}of{-}shift Briefing (p.\pageref*{e36})}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\subsection*{8{-}6591}%
+
+\addcontentsline{toc}{subsection}{~~8{-}6591}
+\label{e52}
+\cbsubheading{17th Precinct}%
+
+\warnpgbrktrue 
+
+If it is \textbf{before day} \textbf{3}, go to \hyperref[{r35}]{7{-}9422 on p.\pageref*{r35}}.
+\begin{itemize}
+\item 
+Otherwise, go to \hyperref[{r36}]{3{-}4281 on p.\pageref*{r36}}.
+
+\end{itemize}
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\hspace{0.1cm}Time advances 30 minutes.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{SHCD LEADS}%
+
+\addcontentsline{toc}{chapter}{~~SHCD LEADS}
+\newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{E}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~E}
+\label{e9}
+\newpage
+\begin{multicols*}{2}
+\subsection*{15 E}%
+
+\addcontentsline{toc}{subsection}{~~15 E}
+\label{e12}
+\warnpgbrktrue This is at 15 east
+
+If it is \textbf{before day} \textbf{3}, go to \hyperref[{r60}]{5{-}3494 on p.\pageref*{r60}}.
+\begin{itemize}
+\item 
+Otherwise, go to \hyperref[{r61}]{3{-}0005 on p.\pageref*{r61}}.
+
+\end{itemize}
+
+﻿
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \subsection*{99 E}%
+
+\addcontentsline{toc}{subsection}{~~99 E}
+\label{e13}
+\warnpgbrktrue This is at 99 east
+
+If it is \textbf{before day} \textbf{3}, go to \hyperref[{r64}]{1{-}7904 on p.\pageref*{r64}}.
+\begin{itemize}
+\item 
+Otherwise, go to \hyperref[{r65}]{5{-}1321 on p.\pageref*{r65}}.
+
+\end{itemize}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\end{multicols*}
+\begingroup\addtokomafont{section}{\fontsize{96}{128}\selectfont}
+\section*{NW}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~NW}
+\label{e9}
+\newpage
+\begin{multicols*}{2}
+\subsection*{24 NW}%
+
+\addcontentsline{toc}{subsection}{~~24 NW}
+\label{e10}
+\warnpgbrktrue This is at twenty four north west
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \subsection*{25 NW}%
+
+\addcontentsline{toc}{subsection}{~~25 NW}
+\label{e11}
+\warnpgbrktrue This is at twenty five north wst
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\end{multicols*}
+\chapter*{Documents}%
+
+\addcontentsline{toc}{chapter}{~~Documents}
+\newpage
+\section*{Document 4}%
+
+\addcontentsline{toc}{section}{~~Document 4}
+\label{e27}
+This document is for the found letter
+
+Test val 1 info.duration: 4
+\newpage
+\section*{Document 5}%
+
+\addcontentsline{toc}{section}{~~Document 5}
+\label{e28}
+This document is for the found driver's license
+\newpage
+\cleardoublepage
+\chapter*{End Matter}%
+
+\addcontentsline{toc}{chapter}{~~End Matter}
+\newpage
+\section*{Conclusion}%
+
+\addcontentsline{toc}{section}{~~Conclusion}
+\label{e64}
+\warnpgbrktrue \textbf{10 pm Wednesday, March 3rd, 1948}
+
+~
+
+When I get into the office, Jewel is sitting cross-legged on her desk eating Chinese take-out food, cold sesame noodles and dumplings.
+
+“Jack, I think it’s time to wrap this case up.  Mrs. Browning just called and she’s furious that you haven’t found the book yet.  She said she’s coming in bright and early tomorrow morning and you better have something for her.  You know what you’re going to tell her?”
+
+I pick up a dumpling with my chopsticks and dip it into the soy sauce, enjoying the salty ocean taste.  “I’m not sure…”
+
+~
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+{\color{red}{\Large \faExclamationCircle}\hspace{0.1cm}}You will have two more opportunities to resume searching for leads before the end of this case.  This is your first opportunity to do so, and your last opportunity to do so without acquiring demerits. If you do wish to resume searching for leads at this point, consider yourself to be in overtime on \textbf{day 3 (Wednesday)}.  Proceed to the next page to answer final questions only when you have finished searching for new leads.\end{minipage}}\par}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Proceed only when you are ready to answer questions.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Questions}%
+
+\addcontentsline{toc}{section}{~~Questions}
+\label{e66}
+\warnpgbrktrue 
+
+Read and answer the following questions.  You may re-reread any previously visited leads to refresh your memory but you may not visit new leads at this point.
+
+~
+
+\textbf{Q1. Why was the book stolen in the first place, by whom, and how did they get their hands on it?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Q2.  If someone did break into Mrs. Browning’s hotel room, how did they do it and how did they know when it would be safe to do so?  If it was an inside job, then who was the inside person? Or was the book never actually stolen?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Q3. Who has it now? Where is it? How do you know? If we assume Mrs. Browning’s Book will never be recovered, and no one will ever confess, how might you go about proving who removed it from the hotel room?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Q4. What about the train station attack and the murder near the park.  The cops are breathing down my neck, wanting to know what our case has to do with them.  How do the knife attacks relate to the case we’re investigating?  Can you provide the police with the killer’s full name and current location?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Q5. What about the theft of Mrs. Browning’s jewelry?  Do we know who took it, and why, and where it is?  And most importantly, what’s your evidence?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Secondary Questions:}
+
+~
+
+\textbf{Q6. Who is Gorski? What’s his role in all this?  Is he working alone, and if not, who else is involved?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+
+~
+
+\textbf{Q7. And what about the book that was delivered on Tuesday -- Mrs. Browning doesn’t seem to want it.  Is it real?}
+
+\begin{flushleft}
+\begin{nobulletlist} \setlength\itemsep{-0.5em}
+\item \textbf{A}) It’s fake and not worth anything
+\item \textbf{B}) It’s real and worth a fortune
+\end{nobulletlist}
+\end{flushleft}
+
+
+~
+
+\textbf{Q8. Check all the following that apply}
+
+\begin{flushleft}
+\begin{todolist} \setlength\itemsep{-0.5em}
+\item \textbf{A}) I had fun
+\item \textbf{B}) I was tried
+\item \textbf{C}) It was too long
+\item \textbf{D}) It was too hard
+\end{todolist}
+\end{flushleft}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Once you have answered all questions on the previous page(s) you may turn the page for the \textbf{conclusion to the case}.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Hints Section}%
+
+\addcontentsline{toc}{chapter}{~~Hints Section}
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\hspace{0.1cm}}  Do \textbf{not} access the hints section except when looking up a specific hint from the table of contents at the start of this case book.
+\newpage
+\section*{Hint for Document 4}%
+
+\addcontentsline{toc}{section}{~~Hint for Document 4}
+\label{e23}
+\warnpgbrktrue This is a hint for the letter document.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Hint for Document 5}%
+
+\addcontentsline{toc}{section}{~~Hint for Document 5}
+\label{e24}
+\warnpgbrktrue This is a hint for the letter document.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Hint for Document 8}%
+
+\addcontentsline{toc}{section}{~~Hint for Document 8}
+\label{e25}
+\warnpgbrktrue This is the hint for hatnote.
+
+\hrulefill
+
+If you still need help, as a last resort {\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{3} demerit checkboxes in your case log}, then visit one or more of the following leads where this item is obtained:
+\begin{itemize}
+\item \hyperref[{e34}]{Introduction on p.\pageref*{e34}}
+\item \hyperref[{e39}]{Day 2 Morning on p.\pageref*{e39}}
+\end{itemize}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Hint for Marker F}%
+
+\addcontentsline{toc}{section}{~~Hint for Marker F}
+\label{e20}
+\warnpgbrktrue 
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{2} demerit checkboxes in your case log.\end{minipage}}\par}
+
+
+
+Jewel: “You found Gorski’s house or apartment?”
+
+If you are stuck, go to \hyperref[{r76}]{8{-}2725 on p.\pageref*{r76}}.
+
+\hrulefill
+
+If you still need help, as a last resort {\color{red}{\Large \faCheckSquare[regular]}\hspace{0.1cm}Mark \textbf{3} demerit checkboxes in your case log}, then visit the following lead where this item is obtained:
+\begin{itemize}
+\item \hyperref[{e61}]{5{-}4329 on p.\pageref*{e61}}
+\end{itemize}
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Hint for Marker F2}%
+
+\addcontentsline{toc}{section}{~~Hint for Marker F2}
+\label{e21}
+\warnpgbrktrue This is a hint for the found book.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+\section*{Hint for Marker G2}%
+
+\addcontentsline{toc}{section}{~~Hint for Marker G2}
+\label{e22}
+\warnpgbrktrue This is a hint for the found tin can.
+\nopagebreak
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}%
+\warnpgbrkfalse \newpage
+
+\end{document}
+
+% Generated by casebook tool Casebook v2.2 (10/22/24) on Wednesday, October 30 at 07:35 PM
+

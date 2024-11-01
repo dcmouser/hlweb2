@@ -1,0 +1,25 @@
+{% extends "allauth/layouts/base.html" %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+
+{% block content %}
+<h1>Status Page</h1>
+
+<br/>
+<h2>Huey Task Queue</h2>
+<ul>
+    <li>Queue Size: {{ huey.queueSize }}</li>
+    <li>Enqueued Items: {{ huey.enqueued_itemsHtml }}</li>
+    <li>All Results: {{ huey.all_resultsHtml }}</li>
+</ul>
+
+<h4>Settings</h4>
+<p>
+    {{ huey.settingsHtml }}
+</p>
+
+
+
+{% endblock content %}

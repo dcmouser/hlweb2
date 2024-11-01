@@ -1,0 +1,17 @@
+**/fly.toml
+**/.git/
+
+**/*.sqlite3
+!db/hlDjangoDb.sqlite3
+
+**/*_secret.py
+!code/hldjango/settingsdir/production_docker_secret.py
+!code/hldjango/settingsdir/settings_secure_secret.py
+
+**/*.ps1
+**/*.bat
+**/*.log
+**/log*.txt
+**/UNUSED
+**/OLDJUNK
+**/*.bak

@@ -1,0 +1,42 @@
+{% extends "allauth/layouts/base.html" %}
+
+
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+
+{% block title %}Game Files{% endblock title %}
+
+
+{% block content %}
+<h1>Game File List for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
+
+<ul class="gameFileList">
+{% for gamefile in gamefile_list %}
+    <li class="gameFileEntry">
+        <a href="{{ gamefile.get_absolute_url }}">{{ gamefile.filefield.name | justfilename }}</a>
+
+        {% if gamefile.note %}
+         &nbsp;({{ gamefile.note }})
+        {% endif %}
+
+        {% if gamefile.filefield.url|isImageFilePath %}
+            <br/>
+                <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
+                    <img src="{{ gamefile.filefield.url }}" class="imgThumbnailSized"/>
+                </a>
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+<hr/>
+    <div>
+        <a href="{% url 'gameFileCreate' game.slug %}" class="btn btn-info" role="button">Upload new files for game</a>
+        <form method="post" action="{% url 'gameFileReconcile' game.slug %}"> {% csrf_token %}
+            {{ form|crispy }}
+            <div><input class="btn btn-success" type="submit" name="reconcile" value="Reconcile file directory (auto add/delete)" onclick="return confirm('Are you sure?');"></div>
+        </form>
+    </div>
+
+{% endblock content %}

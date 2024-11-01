@@ -1,0 +1,50 @@
+{
+     "label": "commandline build of wrongBookPartial",
+     "tasks": [
+          {
+               "label": "preferred format build",
+               "taskName": "latexBuildPdf",
+               "outputPath": "./output",
+               "reportMode": false,
+               "variant": "",
+               "baseFileName": "wrongBookPartial",
+               "outputSuffix": "_preferred_soloscr_letter",
+               "outputSubdir": "",
+               "taskGenerateMindMap": false,
+               "taskSaveLeadJsons": false,
+               "taskSaveHtmlSource": false,
+               "taskZipFiles": false,
+               "latexPaperSize": "letter",
+               "latexFontSize": "10",
+               "doubleSided": false,
+               "leadColumns": 1,
+               "leadBreak": "solo",
+               "cleanExtras": false
+          },
+          {
+               "label": "zipping built files",
+               "taskName": "zipFiles",
+               "outputPath": "./output",
+               "reportMode": false,
+               "variant": "",
+               "baseFileName": "wrongBookPartial",
+               "outputSuffix": "_preferred",
+               "outputSubdir": "",
+               "cleanExtras": null
+          }
+     ],
+     "parserOptions": {
+          "grammarFilePath": "$GRAMMARDATA/casebook_grammar.lark",
+          "startSymbol": "start",
+          "encoding": "utf-8",
+          "sourceFileText": "",
+          "sourceFilePath": "wrongBookPartial.casebook",
+          "autoRunEarly": true
+     },
+     "generalOptions": {
+          "debugMode": true,
+          "continueOnException": false,
+          "localMediaDirectory": "./uploads",
+          "sharedMediaDirectory": "../sharedUploads"
+     }
+}

@@ -18,8 +18,28 @@
             "preLaunchTask": "Clear terminal",
             "type": "debugpy",
             "request": "launch",
-            "program": "./manage.py",
-            "args": ["runserver","--noreload"],
+            "program": "./code/manage.py",
+            "args": ["runserver","0.0.0.0:8000", "--noreload", "--settings", "hldjango.settingsdir.jrlocal_win10"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Auto generate and export documentation",
+            "preLaunchTask": "Clear terminal",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "./code/casebooktools.py",
+            "args": ["--command", "makedocs"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run commandline test task build (wrongBookPartialJob.json)",
+            "preLaunchTask": "Clear terminal",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "./code/casebooktools.py",
+            "args": ["--workingdir", "E:/MyDocs/Programming/Python/hlweb2/hldjango/code/tests/casebookFiles/wrongBookPartial", "--job", "wrongBookPartialJob.json"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

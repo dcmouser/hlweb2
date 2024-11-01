@@ -1,0 +1,33 @@
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+
+{% if flagShowNonPublic %}
+    <h3>My games</h3>
+{% else %}
+    <h3>Public Games</h3>
+{% endif %}
+
+<ul>
+    {% for game in game_list %}
+        <li class="gameEntry">
+            <a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a>
+            <table class="gameListEntryTable">
+                <tr>
+                    <td class="gameListEntryImage">
+                        {{ game|gameThumbnailForGameList }}
+                    </td>
+                    <td>
+                        <p>
+                            <b>Summary:</b> {{ game.summary }}<br/>
+                            <b>Lead stats:</b> {{ game.leadStats }}<br/>
+                            <b>Published:</b> {% gamePublishInfoString game %}<br/>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </li>
+    {% endfor %}
+</ul>
+
+
+

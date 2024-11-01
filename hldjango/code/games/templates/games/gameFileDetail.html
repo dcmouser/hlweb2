@@ -1,0 +1,31 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+
+
+{% block title %}Game File Details{% endblock title %}
+
+{% block content %}
+<div class="gameFileEntry">
+    <h2><a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a></h2>
+    <ul>
+        <li><b>FILE</b>: {{ gamefile.filefield.name }}</li>
+        <li><b>COMMENT</b>: {{ gamefile.note }}</li>
+    </ul>
+
+    {% if gamefile.filefield.url|isImageFilePath %}
+        <p>
+            <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
+                <img src="{{ gamefile.filefield.url }}" class="imgReasonableSized"/>
+            </a>
+        </p>
+    {% else %}
+        <p><a href="{{ gamefile.filefield.url }}" target="_blank">Open file in new tab</a></p>
+    {% endif %}
+
+    <a href="{% url 'gameFileEdit' gamefile.pk %}" class="btn btn-secondary" role="button">Edit</a>
+    <a href="{% url 'gameFileDelete' gamefile.pk %}" class="btn btn-info" role="button">Delete</a>
+</div>
+
+{% endblock content %}

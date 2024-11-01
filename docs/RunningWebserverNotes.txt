@@ -1,0 +1,5 @@
+High & Low Demoing and local web server access
+To run H&L web server on desktop pc and remotely access:
+python manage.py runserver 0.0.0.0:8000
+Then we can access via
+Http:192.168.0.11:8000

@@ -1,0 +1,10 @@
+﻿// Secondary include
+
+## 99E
+This is at 99 east
+$embedLead(“8-6591”)
+//$embedFile("caselog.pdf", scale=0.80, pagenum=true)
+//$badfunc("hello world")
+// end of secondary include
+
+

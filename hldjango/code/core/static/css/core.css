@@ -1,0 +1,73 @@
+
+#navbarSupportedContent  > .navbar-nav .nav-link.active {
+    /* active navbar menu item; this selector overrides default django bootstrap selector so we can customize */
+}
+
+
+
+
+/* these two go together, the latter overriding the former when making a link visible only in certain cases */
+.jrnavhide {
+    display: none;
+}
+.jrnavshow {
+    display: block;
+}
+
+
+
+
+
+/* sizing images on a page so they can be clicked for lightbox */
+img.imgReasonableSized {
+    max-width: 15%;
+    max-height: 15%;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+
+img.imgThumbnailSized {
+    max-width: 5%;
+    max-height: 5%;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+
+ul.gameFileList {
+    list-style: none;
+}
+
+li.gameFileEntry {
+    margin-bottom: 20px;
+}
+
+
+
+
+/* red error styling */
+.errorlist {
+    color: red;
+    font-weight: bold;
+}
+.error input, .error select {
+    border: 2px red solid;
+}
+
+
+
+
+table.gameListEntryTable {
+	border: 0px;
+}
+
+td.gameListEntryImage img {
+	border: 1px;
+}
+
+img.gameThumbnail {
+	max-width: 100px !important;
+	max-height: 120px !important;
+	/*border: 1px;*/
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  margin-right:10px;
+}

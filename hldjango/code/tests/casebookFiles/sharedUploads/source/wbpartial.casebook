@@ -1,0 +1,455 @@
+Casebook v2: The Wrong Book
+
+
+
+TODO:
+Add dialog to end of day briefings.
+Directory Requirements:
+Ideally there are no pawn shops in Chinatown or East Village that are too close to Cremonesi’s pawn shop, because the spatial puzzle helps you track it down to that location.
+Neighborhoods most used according to export of all places:
+TS, CM, TB, EV, BO, CC, TL, CS, GD, UW, HK, LH, YV,SH
+
+
+# OPTIONS
+$set(info.name, “wrongBookPartial”)
+$set(info.title, “The Wrong Book”)
+$set(info.subtitle, “A case for New York Noir”)
+$set(info.authors, “Jesse Reichler <jessereichler@gmail.com>”)
+$set(info.version, “1.9.2”)
+$set(info.versionDate, “4/8/24”)
+$set(info.difficulty, “4 out of 5”)
+$set(info.duration, “4 hours”)
+$set(info.cautions, “Occasional adult language”)
+$set(info.summary, “The Wrong Book is a 3-day case set in 1948 New York City, around the Times Square neighborhood. Jack Deverell is a private investigator hired to recover a valuable book stolen under mysterious circumstances.”)
+$set(info.extraInfo, “Editing by Debbie Levy; thanks to all the help from playtesters”)
+$set(info.url, “https://boardgamegeek.com/thread/3276594/play-the-wrong-book-case-now”)
+
+// $set(info.mycustomprop, 99)
+
+$declareVar(test,"")
+$declareConst(test2,"hello")
+$set(test, info.name + "2")
+//$set(test2, test)
+//$declareVar(test)
+
+
+$set(game.clocked, true)
+$set(game.clockTimeStep, 10)
+$set(game.clockTimeDefaultLead, 30)
+
+$set(data.version, “v2”)
+$set(data.versionPrevious, “v1”)
+
+$set(parser.autoStyleQuotes, true)
+$set(parser.disabledBalancedQuoteCheck, false)
+
+
+
+# SETUP
+$defineTag(“cond.compassion”)
+$defineTag(“cond.ruthless”)
+$defineTag(“cond.financial”)
+$defineTag(“cond.eccentric”)
+$defineTag(“cond.lawful”)
+$defineTag(“cond.duty”)
+$defineTag(“cond.jewel”)
+$defineTag(“trophy.CarnegiePrecinct”)
+$defineTag(“trophy.BethIsrael”)
+$defineTag(“trophy.RealEstate”)
+$defineTag(“trophy.Wannemaker”)
+$defineTag(“trophy.HallOfRecords”)
+$defineTag(“trophy.PropertyRecords”)
+$defineTag(“trophy.CarloLori”)
+$defineTag(“trophy.MedicalExaminer”)
+$defineTag(“doc.biblepic”)
+$defineTag(“doc.hatnote”)
+$defineTag(“doc.browningsketch”)
+$defineTag(“doc.safenote”)
+
+
+
+
+
+# FRONT "Front Matter"
+$(leadColumns=1, heading="")
+
+# D1 “Day One”
+$(leadColumns=1, sectionBreak="soloFacing", leadBreak="after")
+
+# D2 “Day Two”
+$(leadColumns=1, sectionBreak="soloFacing", leadBreak="after")
+
+# D3 “Day Three”
+$(leadColumns=1, sectionBreak="soloFacing", leadBreak="after")
+
+# LEADS "Leads Section"
+$(sectionBreak="soloFacing", childPlugins="nynoir")
+
+# DOCUMENTS "Documents"
+$(leadColumns=1, tombstones=false, sectionBreak="soloFacing", leadBreak="after", childPlugins="docs")
+
+# END "End Matter"
+$(leadColumns=1, sectionBreak="soloFacing")
+
+# HINTS "Hints Section"
+$(leadColumns=1, sectionBreak="soloFacing", leadBreak="after", childPlugins="hints")
+
+
+# SHCD "SHCD LEADS" $(childPlugins="shcd")
+
+## 24NW
+This is at twenty four north west
+
+## NW 25
+This is at twenty five north wst
+
+## 15E
+This is at 15 east
+$embedLead(“8-6591”)
+$embedFile("caselog.pdf", scale=0.80, pagenum=true)
+
+
+
+
+
+$macro.include("secondary.casebook")
+
+
+
+this is $badfunc2("hello world")
+
+
+
+
+# HINTS
+
+## cond.foundBook
+This is a hint for the found book
+
+## cond.foundCan
+This is a hint for the found can
+
+## doc.letter
+This is a hint for the letter document
+
+## doc.license
+This is a hint for the letter document
+
+## doc.hatnote
+This is the hint for hatnote
+$autohint()
+
+
+# DOCUMENTS
+
+## doc.letter "Letter we found in dumpster"
+This document is for the found letter
+
+## doc.license "Found driver's license"
+This document is for the found driver's license
+
+
+
+
+
+
+# FRONT
+
+## COVER "Cover Page"
+$(sectionBreak="after", tombstones=false, heading="")
+$blurbCoverPage(): { $image (“biblePageSize.jpg”, height=”3in”) }
+//$blurbCoverPage(): {}
+
+## CONTENTS "Table of Contents"
+$(sectionBreak="after", tombstones=false)
+$toc(columns=2)
+
+## Instructions
+To play this case you will need:
+$include(path=”$templatedir/requirements.md”)
+~
+$include(path=”$templatedir/tips.md”)
+~
+$if(game.clocked): $include(path=”$templatedir/clockInstructions.md”)
+
+
+# D1
+
+## Introduction
+**11 am Monday, March 1st, 1948**
+I got into the office early this morning and opened the place up myself.  These days it’s almost easier to sleep in my chair than in my bed.  I’m just dozing off when I hear a knock at the door.
+There’s just enough of a pause to give me time to push my hat back and pretend I’m awake.  In walks Jewel with a stack of papers in her hand, trailed by a lady I don’t recognize.  She looks to be in her early 40s.  She’s well put together, with matching black hat and handbag, and shiny black heels.  Looks like she’s from money -- my favorite kind of client.
+“This is Mrs. Browning,” says Jewel. “She wants to hire you to find something or other.”
+I stand up and stick out my hand. “Nice to meet you, Mrs. Browning,” I say, and she puts her white-gloved hand in mine.
+“I’ll take it from here,” I say to Jewel, who’s already headed for the door.
+“If she’s looking for a bird, don’t take the job,” she says over her shoulder.
+“You’re not, are you?” I say to Mrs. Browning.
+“Not what?” she asks.
+“Looking for a lost bird.”
+“Who are you, Sam Spade?”
+A big grin forms on my face, and I sit back down in my chair.  She may be from money, but I like her already.  “No”, she says, “I’m looking for a book”.
+She sits down in the chair opposite my desk and digs into her handbag for a cigarette.  I know how this goes, so I just wait for her to get settled and start talking.
+“It’s a very rare and valuable book, Mr. Deverell.  One that’s been in my family for generations.  It’s been stolen, and I want you to get it back for me.”
+“Sounds like a job for the police,” I say.
+She rolls her eyes and leans forward to tap her cigarette in my ashtray.  “I just came from the police -- they’re the ones who sent me to you.”
+“I see.”  I loosen my tie and pull out the ledger from my desk drawer.  “Well, my rate is 50 dollars a day plus expenses -- and that’s whether I recover the book or not.”  What I don’t say is that my normal rate’s 40 dollars a day; the extra 10 is my matching-hat-and-handbag rate.  “If that suits you, we can get started right away.”
+“That will be just fine,” she says.
+“OK, start from the beginning, tell me about this book and what you think happened to it.”
+“Very well,” she says, rummaging into her handbag.  “This is a photo of the book.”  She hands me a photo of an ornate book, indicating that I can keep it.
+“It’s an Octavo King James Bible. It was purchased by my great-great-great-grandfather in 1700.”  She hesitates for a moment, like she’s choosing her words carefully.  “You must understand, Mr. Deverell, that I come from a deeply religious family -- this book has been smuggled across oceans and deserts, and passed down from generation to generation, from mother to daughter to daughter.  And now it’s been stolen. I must have it back.  It is of incalculable sentimental value.”
+“I guess it’s got some non-sentimental value, as well.”
+She wrinkles her mouth.  “It is worth a small fortune.  Though that is of little concern to me.”
+She takes a long drag of her cigarette and continues.
+“I came down from Boston the day before yesterday, to have it appraised -- for insurance purposes, you understand.  I had appointments yesterday with two dealers that had come highly recommended.  The first, a fellow named Wyckoff.  An older gentleman, perhaps 60 years old, tall, white hair, and walks with a limp.  He arrived at my hotel room around 8am.  He studied the book for about 30 minutes, then asked to take the book home with him overnight so he could study it further.  I told him that was out of the question.
+The second dealer was a Mr. Gorski, who came by around 10am. He was a tiny man, Polish maybe, in his 40s or 50s, with a round balding head and wire-rimmed glasses. He spent a good hour going over the book with a magnifying glass, and said he would get back to me with his assessment.  He also requested that he be permitted to take the book back to his apartment to study it.  I again said no.  That was yesterday.  This morning I went out for breakfast -- I couldn’t have been gone for more than an hour -- and when I returned to the room, the book was gone.”
+“So it was taken from your hotel room this morning.  You’re quite sure of that?”
+“Quite.”
+“And you’ve no doubt talked to the hotel staff already?  Could a maid have walked off with it?”
+She taps her cigarette into the ashtray.  “I’ve talked to the hotel staff.  They claim that the maid was nowhere near the room while I was out.”
+“Nothing else disturbed?” I ask.  “Nothing else taken?”
+“Some jewelry in a nightstand drawer was also taken -- ruby earrings and a matching ruby and silver necklace and bracelet, but they are of no importance to me.  There was cash and traveler’s checks on the entryway table that were untouched.”
+“And where is it you’re staying?” I ask.
+“The Hotel Cumberland in Times Square.  Room 713.”
+“I guess that rules out someone coming in through the window.  Any sign of someone messing with the lock to your door?”
+“I’m sure I have no idea.”
+“OK, Mrs. Browning, I think that gives me enough to get started.”  I stand up and show her to the door.  “I can reach you at the Cumberland?”
+“Yes, you can call directly up to room 713 by dialing $reflead("MrsBrowning", false, false).”
+Then, with the first sign of real concern I’ve seen from her, she says “Until the book is recovered I dare not return home.  Oh, if you do find the book, Mr. Deverell, please be very careful with it -- it’s several hundred years old and in very fragile shape -- the less you handle it the better.”
+$gaintag(“doc.biblepic”)
+$deadlineinfo(1, “pre”, 15, start=11,end=20)
+$remind (“allyHelp3pm”)
+$stop(“day”)
+
+
+## End-of-shift Briefing
+
+Jewel and I meet in the office to review developments in the case after the first day.
+$deadlineinfo(1,”post”, 15, start=11,end=20)
+Choose one:
+* $golead("Conclusion")
+* $golead("MrsBrowning")
+* $golead("7-7572")
+~
+~
+$symbol(“bonus”) If you finished the day before entering overtime, you have enough spare time to go to a movie. $inline(time=0, back=true): {
+With a little spare time on my hands, I head down to the Hippodrome in Times Square and catch a late night showing of Out of the Past.  I’m on my own as Jewel has got other plans.  Robert Mitchum’s pretty damn good, though I’ll take Bogey every time.  Then there’s Jane Greer… Now why don’t I get clients like that.  Half way through the movie though, my thoughts keep returning to my case.
+	$inline(): {Then I thought about it more.  When you are ready, $returnlead().}
+
+$mark("culture",2)
+$image(“moviePosterOutOfThePast.jpg”, height=”6in”)
+$stop(“newday”)
+}
+
+
+# D2
+
+## Day 2 Morning
+**9:15 am Tuesday, March 2nd, 1948**
+$radio(): {
+… You are listening to WABC radio in New York City.  These are your top headlines.  In international news, the Congressional Aviation Policy Board has increased its demand for Air Force funding by several billion dollars to avert a future world war…
+...In local news, traffic snarls continue to plague the Garment District this morning, despite the new staggered traffic policy.  Police commander Arthur Wallander called representatives to work out further concessions…
+...At midnight tonight the Museum of Natural History will open its doors to the New York elite for an early sneak peak at the upcoming exhibition of controversial religious books. True to its name, the exhibition has stirred up a great deal of controversy, with local church elders protesting what they have called sacrilegious works of dubious authenticity.  And now a word from our sponsor…
+...Suffering from indigestion?  Looking for a midday pick-me-up?  Try Muller’s Antacid, bottled locally, and good for your eyes…
+}
+
+I get into my office a little past 9am on Tuesday morning, and I find Jewel glaring at a large brown-paper-wrapped parcel sitting in the center of her desk, about the size of a typewriter.
+“What’s that?” I ask.
+“Somebody dropped it off in front of the door a few minutes after I got in and skedaddled.  Doesn’t have a return address.”
+We both stare at it for a long minute.  “I don’t suppose you have a secret admirer?” I ask.
+“Maybe your new girlfriend got you a hat to match your shoes.”
+We spend another minute staring at the writing on the package.  It’s ornate, a bit like calligraphy.  All it says is “Detective’s Office”.
+Finally I take the pocket knife out of my back pocket with a flourish and snap it open, then cut off the outer wrapping.  
+“You were right,” I say. “It’s a hat box.” 
+There’s a faded watermark on the bottom, “Classic” something or another -- I can’t quite make it out.  I slit open the packing tape, and underneath several layers of newspaper I find a heavy book, wrapped in what appears to be several layers of silk.
+There’s a note on top, in the same calligraphy. Jewel and I read it together.
+“Looks like your case just solved itself,” says Jewel.
+“Ring up Mrs. Browning at the Cumberland,” I say.  “Tell her I’m on my way over.  And Jewel -- don’t tell her what I’m bringing.”
+$gaintag(“doc.hatnote”)
+$logicsuggests(“1-7000”)
+$deadlineinfo(2, ”pre”, 10, start=10, end=16)
+$remind(“allyHelp3pm”)
+$stop(“day”)
+
+## Day 2 End-of-shift Briefing
+Day 2 is in the books, but there’s still a lot I don’t understand about this case.
+$deadlineinfo(2, “post”, 10, start=10, end=16)
+
+## Day 2 Late Night Leads
+
+After a busy day I’m ready to hop on a train and hit the sack.  But I guess the night is still young; I could squeeze in one more stop before I head home.
+$box(): {
+$symbol(“choice”) You may now choose ONE AND ONLY ONE of the following special late-night leads to visit:
+. Ask Jewel to try to finagle a pair of tickets to the midnight exhibit at the Natural History Museum; $inline(“Late Night at the Natural History Museum”, back=true): {
+$logicsuggestedby(“Day 2 Morning”)
+Probably it’s the connection to our case, but I find myself genuinely curious about the exhibit of controversial religious books.  Jewel and I hop the train to 79th Street on the Upper West Side.
+The midnight gala event at the museum is a pretty ritzy affair.  I’m not sure how Jewel managed to get us tickets at the last minute, but she’s resourceful like that.  As we’re walking up the steps we see mayor Fiorello La Guardia, already inside shaking hands with someone, his pudgy face and rotund body exuding unmistakeable charm.
+$image (“MuseumNaturalHistory2.jpg”, height=”6in”)
+The Museum of Natural History is one of my favorite places.  It never ceases to put me in a contemplative mood. Dozens of dimly-lit rooms, with giant life-sized dioramas of cavemen and dinosaurs, pottery and tablets from the beginning of civilization, and sparkling gemstones the size of your head.
+Jewel seems just as interested as I am, and we leisurely walk to the religious book exhibit, separated by only a few feet of space but a million years of daydreaming.
+The controversial book exhibit itself is mildly interesting.  I’m half-expecting to see a copy of Mrs. Browning’s book on display, but no dice.  There’s a big section discussing religious books from different cultures, and how each one was treated as blasphemous and sacrilegious by others, despite their common themes.  And there’s a section of shockingly vibrant paintings of Hindu gods that defy description.  I make a note to myself to dig out my oil paints when I get home.
+There is a section on controversial Christian Bibles, but they seem to be mostly about misprinted editions. The “Wicked” Bible, otherwise known as the “Sinner’s Bible”, was published in 1631 in London, where they accidentally left out the word "not" from the sentence "Thou shalt not commit adultery.”  Ouch.  Most copies were destroyed, making it highly valuable.  But there’s no hint of any controversy related to Mrs. Browning’s book.
+“Pretty fascinating stuff, huh, Jewel?”
+Jewel doesn’t hear me; she’s lost in thought.  We wander around a bit more in silence, then part ways and head to our respective homes.
+$mark("culture",3)
+$gaintag(“cond.jewel”)
+}
+. OR, head over to the Cumberland Hotel bar for a night cap and to look around; $inline(“Late Night Drink at the Cumberland Hotel”, back=true): {
+I take a seat at the Cumberland Hotel bar and order a whiskey, neat.  Nothing fancy about the bar, but it does offer me a discreet view of the lobby from where I’m seated.
+There’s a girl to my left who looks like she might have been a dancer in another life.  She’s too tan to be a New York native, so I ask her what she’s doing in the city.  She tells me she’s traveling with her husband, and just like that, a man I recognize pulls up alongside her.
+“Come on, Jenny, we’ll be late,” he says.
+“OK, Bill, I’m coming,” she says.
+It’s Bud Abbott.  He looks shorter in real life.  I look around for Lou but he’s nowhere to be seen.  I try to hear what they’re saying as they move off, but all I pick up is something about Coney Island.
+The rest of the evening is uneventful, and at around 12:45 am I call it a night and pay my tab.  As I’m heading out, I almost get knocked over by someone hurrying the other way -- big hulking guy with light-brown skin and a big bushy beard. 
+$mark("culture",1)
+}
+} // box end
+After you resolve your choice you may proceed to the next page to end your day.
+$stop(“afterlate”)
+# D3
+
+## Day 3 Morning
+**8 am Wednesday, March 3rd, 1948**
+Not wanting to be caught flat-footed again, Jewel and I are having our coffee on the stoop outside the office this morning, listening to the radio.
+$radio(): {
+… You are listening to WABC radio in New York City.  These are your top headlines.  In domestic news, the House Judiciary Committee has passed the Anti-Lynching bill in a 2 to 1 vote, marking the second item achieved by president Truman from his promised civil rights agenda.
+...In local news, local police report that the condition of the subway attendant assaulted without warning on Tuesday has been upgraded to stable condition.  His attacker remains unidentified and at large.  A subway spokesman has advised subway riders to exercise caution and be aware of their surroundings..  And in what police are saying is an unrelated attack, a man was murdered last night in central park near the Engineer’s Gate.
+...And now a word from our sponsors…  When you absolutely positively have to get there on time: A1 Carriage and Cab -- the safe and civilized way to travel…
+}
+I show Jewel the sketch I made of Mrs. Browning on the way into work.
+“You’re getting better,” says Jewel.  “But you didn’t quite capture her latent malevolence.”
+“She’s a client, Jewel, be good.”
+$gaintag(“doc.browningsketch”)
+I take another big swig of my cup.  “You’re going to have to tell me where you get this coffee from one of these days.” 
+“You’re the detective, figure it out.”
+“Jewel, don’t make me follow you home.”
+She rolls her eyes at me.  “Promises, promises.”
+Before I can say something stupid, a small white van pulls up with the word “SPEEDY” written on the side, and a young man in overalls hops out, bounds up the steps, and lays an envelope in front of our door.  “Mmm… the coffee smells good,” he says, and winks at Jewel. “I could do with a cup myself.”  And then he’s off. 
+I roll my eyes. “Good grief.”
+The writing on the envelope seems to match the hat box note from yesterday.  Again, no return address.
+“You know,” says Jewel, “Mrs. Browning has called twice this morning asking if we’ve made any progress finding her book.  Want me to ring her up and let her know about this note?”
+“Hmmm… I don’t know…  Maybe Mrs. Browning should sit this one out.”
+$gaintag(“doc.safenote”)
+$deadlineinfo(3, “pre”, 15, start=8, end=17, last=true)
+$remind(“allyHelp3pm”)
+$stop(“day”)
+
+## Day 3 End-of-shift Briefing
+**6 pm Wednesday, March 3rd, 1948**
+Back at the office, Jewel is as anxious as ever to talk about the case…
+$deadlineinfo(3, “post”, 15, start=8, end=17, last=true)
+---
+**After you finish this end-of-shift briefing you will be ready to begin wrapping up the case.** $golead(“Conclusion”).
+$stop(“questions”)
+
+
+
+
+# LEADS
+
+
+
+## 7-6051 “Central Park Precinct”
+The central park precinct isn’t much of a precinct at all, and looks like it’s mostly for show.  A place for tourists to stop in and file reports on park pickpockets or con artists.  I guess if I’m interested in a crime that occurred on the outskirts of the park It’s going to be handled by the closest neighborhood precinct next to the park.
+
+## 7-7572 “Carnegie District Precinct”
+$logicsuggestedby(“Day 3 Morning”)
+$beforeday(3), $time(2), then leave.
+$otherwise(), $inline(link=”after day 2”, time=6): {
+The Carnegie precinct looks like a cushy detail for cops wanting to enjoy the second half of their careers.  Back when I was a cop, I wouldn’t be caught dead working in such a sleepy neighborhood.  The decor looks like they aren’t hurting for money either.
+I look around on the off-chance that I recognize someone, but no such luck, so I tell the officer on duty that I’m a PI and may have some information about yesterday’s murder at the Engineer’s Gate in Central Park.  He directs me to the detectives’ room up the wide polished marble staircase.
+The detective in charge of the case has his own office, and not a small one.  He’s eating a sandwich with a knife and a fork.  He sees me staring at his plate.
+“My dentures are acting up,” he says, pointing to his mouth with his fork, as if that explained it. “What do you know about my murder?”
+“Was he a tall guy, tan suit, pencil-thin moustache?”
+“Yeah, what do you know about him?”
+I decide that he doesn’t need to know about Mrs. Browning and her book, and just tell him that I think it’s likely he was killed by the same guy who cut the throat of the subway attendant at 51st Street.
+“Did you identify the body?” I ask.
+Dentures pauses with the fork half-way in his mouth and peers up at me.  This guy’s going to make me work for it.
+“Was it by any chance a Walenty Gorski?” I ask.
+“No. Who’s Gorski?”
+I lean closer and give him my best “we’re on the same team” look.  “Tell you what: I’ll share what I know if you give me the name of the victim.  It’s going to be in the paper by tomorrow anyway.”
+After a bit more back-and-forth he tells me that the dead guy was Constantine Afanasyev, resident of East Village.  He was found face-down outside of Central Park, at the Engineer’s Gate entrance.  He had a large buck knife in his lower back, and was stabbed several times. Was probably dead within minutes.
+They think he was killed late last night.  He didn’t have Gorski’s mail on him, just a wallet with a few bucks, some change, a driver’s license, and some weird notes that they couldn’t make sense of -- written in a foreign language, they think.  I ask to see the notes and he tells me I’d have a better chance getting a date with Lana Turner.
+“We’re still waiting on an autopsy from the Chief Medical examiner, but it looks like this guy was dead within minutes of the attack -- didn’t even get a chance to run.”
+“Any idea what he was doing uptown?” I finally ask.
+“You tell me,” he says, forking in another square.
+$gaintag(“trophy.CarnegiePrecinct”)
+$logicsuggests(“4-5063”)
+}
+
+## 8-6591 “17th Precinct”
+$logicsuggestedby(“Day 3 Morning”)
+$beforeday(3), $inline(): {
+We ask around the 17th Precinct for any scuttlebut on the neighborhood.  We’re told it’s a quiet place with very little crime.
+}
+$otherwise(), $inline(link=”after day 2”): {
+At the precinct house we’re filled in on some details of the attack on the subway attendant, though there aren’t many.
+No witnesses, no apparent motive.  He wasn’t robbed, and the cash box was untouched.  The victim is being treated at Beth Israel hospital and is in critical but stable condition, scheduled for surgery tonight.  He hasn’t made a statement yet, but may be well enough to talk by Wednesday afternoon.
+}
+
+## 8-0109 “Beth Israel Teaching Hospital”
+$logicsuggestedby(“Day 3 Morning”)
+$missingtag(“check.subwaychase”), $inline(): {
+I walk around the hospital trying to remember what I was looking for but give up after a few minutes.
+}
+$beforeday(3), $inline(): {
+I ask about the subway attendant but I’m told he’s still in surgery and they expect him to be under anesthesia until morning.
+}
+$otherwise(), $hastag(“cond.compassion”), $golead(“bethIsrealCompassion”)
+$otherwise(), $hastag(“cond.ruthless”), $inline(): {
+I sweet-talk the receptionist at the check-in desk into letting me go up to the room of the subway attendant who was attacked on Tuesday, by telling her I’m a friend of the victim.  I try not to remember how I left him to bleed out in the station.
+In his hospital room, Mr. Kornacki looks grave.  He seems to think I saved his life.  I don’t tell him he’s wrong.
+He’s wheezing and struggling to talk, and I’m not sure I should even let him try.  But I lean in to hear what he has to say.
+“It’s only a dime…” he says, shaking his head, “All this over a dime?”
+“Just get some rest.” I say. “You’ll be OK.”
+Then I head back to the office for a drink and hope I’m right.
+$gaintag(“trophy.BethIsrael”)
+$image(“bethIsrael.png”, height=”4in”)
+}
+
+
+## MrsBrowning "Mr's Brownings Hotel Room" $(autoLead=true)
+We visit mrs. browning in her hotel
+
+
+
+## myhouse $(autoLead=true)
+We are in my house
+
+
+## myhouse2 "My Broken House" $(autoLead=true)
+We are in my broken house.
+How does it look?
+
+## bethIsrealCompassion "Back at Beth Israel" $(autoLead=true, continuedFrom=”8-0109”)
+I sweet-talk the receptionist at the check-in desk into letting me go up to the room of Mr. Kornacki, the subway attendant who was attacked on Tuesday, by telling her I’m a friend of the victim.  Eh. it’s not too far off from the truth.
+In his hospital room, Mr. Kornacki looks much improved from when I last saw him, and he grasps my hand weakly when he recognizes me.  He seems to think I saved his life.  I don’t tell him he’s wrong.
+I have to lean in close to hear his short, whispered words, but he does his best to tell me what he remembers.
+He was attacked by a large, swarthy man -- at least 6ft tall.  He doesn’t remember what he was wearing, but definitely not a full suit.  The man had tried to rush past him through the turnstile to the platform without paying, and the attendant had blocked his path.  The fee went up to a dime last year, he added, and some people were very unhappy about it.  Somehow I doubt that was the issue.  Then, before Kornacki knew what had happened, he saw a flash of a blade and felt his shirt covered in blood.  
+I ask him if he recalls any strange smell, but he can’t remember.  The man ran past him and onto the uptown platform.  “It’s only a dime…” he finally says, shaking his head.
+$gaintag(“trophy.BethIsrael”)
+
+
+
+## 5-6096 “Gorski, T.” $(time=1, copy="next")
+## 6-3528 “Gorski, I.” $(time=1, copy="next")
+## 8-9798 “Gorski, U.” $(time=1, render=false)
+Apparently Gorski is a pretty popular name.  Unfortunately after a brief talk with the resident I can see this isn’t the Gorski I’m looking for.  Still, knocking on doors is part of the job, and I’m bound to find him eventually.
+$logicirrelevant()
+$logicimpliedby(“Introduction”)
+
+
+
+
+
+# END
+## “Conclusion”
+**10 pm Wednesday, March 3rd, 1948**
+~
+When I get into the office, Jewel is sitting cross-legged on her desk eating Chinese take-out food, cold sesame noodles and dumplings.
+“Jack, I think it’s time to wrap this case up.  Mrs. Browning just called and she’s furious that you haven’t found the book yet.  She said she’s coming in bright and early tomorrow morning and you better have something for her.  You know what you’re going to tell her?”
+I pick up a dumpling with my chopsticks and dip it into the soy sauce, enjoying the salty ocean taste.  “I’m not sure…”
+~
+$box(): {
+$symbol(“exclamation”) You will have two more opportunities to resume searching for leads before the end of this case.  This is your first opportunity to do so, and your last opportunity to do so without acquiring demerits. If you do wish to resume searching for leads at this point, consider yourself to be in overtime on **day 3 (Wednesday)**.  Proceed to the next page to answer final questions only when you have finished searching for new leads.
+} // boxend
+

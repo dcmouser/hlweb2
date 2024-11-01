@@ -1,0 +1,1 @@
+If you delete the image in the docker app first it will build more compactly.

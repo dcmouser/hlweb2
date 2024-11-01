@@ -1,0 +1,983 @@
+<h1>GLOBAL DATA</h1>
+<br/>
+<h2>documentData</h2>
+<ul>
+<li>defaultLocation: back</li>
+<li>printLocation: inline</li>
+<li>printStyle: simple</li>
+</ul>
+
+<br/>
+<h2>info</h2>
+<ul>
+<li>name: None</li>
+<li>title: None</li>
+<li>subtitle: None</li>
+<li>authors: None</li>
+<li>version: None</li>
+<li>versionDate: None</li>
+<li>difficulty: None</li>
+<li>duration: None</li>
+<li>cautions: None</li>
+<li>summary: None</li>
+<li>extraCredits: None</li>
+<li>url: None</li>
+<li>keywords: None</li>
+<li>clockMode: True</li>
+</ul>
+
+<br/>
+<h2>leadDbData</h2>
+<ul>
+<li>version: None</li>
+<li>versionPrevious: None</li>
+</ul>
+
+<br/>
+<h2>parserData</h2>
+<ul>
+<li>DICT: EMPTY</li>
+</ul>
+
+<br/>
+<h2>rendererData</h2>
+<ul>
+<li>doubleSided: True</li>
+<li>latexPaperSize: 10</li>
+<li>latexFontSize: 10</li>
+<li>autoStyleQuotes: False</li>
+</ul>
+
+<br/>
+<h2>task</h2>
+<ul>
+<li>VALUE: NULL</li>
+</ul>
+
+<br/>
+
+<br/>
+<br/>
+<br/>
+<h1>BUILT-IN FUNCTION DEFINITIONS</h1>
+<br/>
+<h2>_entryApplyOptions</h2>
+<ul>
+<li>Internal function for applying options to entry</li>
+<li>Usage: _entryApplyOptions(_entry, autoLead="False", time="None", timePos="", sectionColumns="None", leadColumns="None", sectionBreak="None", leadBreak="None", heading="None", toc="None", childPlugins="None", tombstones="None", address="None", copy="None", render="True", blank="False", mStyle="None", sortIndex="-1", continuedFrom="None", deadline="-1")</li>
+<li>Parameters: <ul>
+<li>_entry: "Object pointer to entry whose options are being set"; required</li>
+
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool; default="False"</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']; default=""</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children (optional)"; type=AstValString</li>
+
+<li>tombstones: "Should we show tombstombs between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label (optional); set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool; default="True"</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool; default="False"</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing (optional)"; type=AstValString</li>
+
+<li>sortIndex: "Sort index"; type=AstValNumber; default="-1"</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>deadline: "Deadline day for a check"; type=AstValNumber; default="-1"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>advanceTime</h2>
+<ul>
+<li>Instruct player to advance clock by some clicks</li>
+<li>Usage: advanceTime(time="1", box="True")</li>
+<li>Parameters: <ul>
+<li>time: "Duration (in minutes)"; type=AstValNumber; default="1"</li>
+
+<li>box: "Put this text in a standalone box"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>afterday</h2>
+<ul>
+<li>Text saying if after day</li>
+<li>Usage: afterday(day)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>authorNote</h2>
+<ul>
+<li>An author note which is not shown in normal case book build only in author report</li>
+<li>Usage: authorNote(label=""): {targetblock}</li>
+<li>Parameters: <ul>
+<li>label: "label for note for author report"; type=AstValString; default=""</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>autohint</h2>
+<ul>
+<li>generate an autohint</li>
+<li>Usage: autohint(id="", demerits="3")</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; default=""</li>
+
+<li>demerits: "Demerits to mark"; type=AstValNumber; default="3"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>beforeday</h2>
+<ul>
+<li>Text saying if before day</li>
+<li>Usage: beforeday(day)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>blurbCoverPage</h2>
+<ul>
+<li>Creates a cover page blurb</li>
+<li>Usage: blurbCoverPage(): {targetblock}</li>
+</ul>
+
+<br/>
+<h2>blurbStop</h2>
+<ul>
+<li>Add some instructions to stop</li>
+<li>Usage: blurbStop(type, day="-1", rest="None")</li>
+<li>Parameters: <ul>
+<li>type: "The stop blurb type"; type=['dayStart', 'dayEnd', 'nextDay', 'nightStart', 'nightEnd', 'conclusion', 'questions', 'questionPause', 'resolvePause', 'solution', 'leads', 'documents', 'hints', 'end', 'begin', 'noMore']; required</li>
+
+<li>day: "Number of the day"; type=AstValNumber; default="-1"</li>
+
+<li>rest: "Suggest player takes a rest?"; type=AstValBool</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>break</h2>
+<ul>
+<li>Add a page/column break</li>
+<li>Usage: break(type="")</li>
+<li>Parameters: <ul>
+<li>type: "Break type"; type=['column', 'page']; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureClock</h2>
+<ul>
+<li>Configure game clock options</li>
+<li>Usage: configureClock(clockMode="True")</li>
+<li>Parameters: <ul>
+<li>clockMode: "True means that players will track how much time passes as they visit leads"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureDay</h2>
+<ul>
+<li>Configure a day</li>
+<li>Usage: configureDay(day, type="normal", start="9", end="18", hintAlly="financialPrecinct", allyFreeStart="-1", allyFreeEnd="-1")</li>
+<li>Parameters: <ul>
+<li>day: "Number of the day"; type=AstValNumber; required</li>
+
+<li>type: "Day type"; type=AstValString; default="normal"</li>
+
+<li>start: "24 hour clock hour"; type=AstValNumber; default="9"</li>
+
+<li>end: "24 hour clock hour"; type=AstValNumber; default="18"</li>
+
+<li>hintAlly: "is there an ally they can visit for more help"; type=['', 'financialPrecinct']; default="financialPrecinct"</li>
+
+<li>allyFreeStart: "tell the user this period is free"; type=AstValNumber; default="-1"</li>
+
+<li>allyFreeEnd: "tell the user this period is free"; type=AstValNumber; default="-1"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureDocuments</h2>
+<ul>
+<li>Configure document options</li>
+<li>Usage: configureDocuments(defaultLocation="back", printLocation="inline", printStyle="simple")</li>
+<li>Parameters: <ul>
+<li>defaultLocation: "Default location of documents [back,custom text]"; type=AstValString; default="back"</li>
+
+<li>printLocation: "Where to print documents [inline, end, pdf]"; type=['inline', 'end', 'pdf']; default="inline"</li>
+
+<li>printStyle: "Style to print documents [simple, triFold]"; type=['simple', 'triFold']; default="simple"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureGameInfo</h2>
+<ul>
+<li>Configure game options</li>
+<li>Usage: configureGameInfo(name, title, subtitle="", authors, version, versionDate, difficulty, duration)</li>
+<li>Parameters: <ul>
+<li>name: "Simple unique name of the case (used for filenames, etc.)"; type=AstValString; required</li>
+
+<li>title: "Case title"; type=AstValString; required</li>
+
+<li>subtitle: "Case subtitle"; type=AstValString; default=""</li>
+
+<li>authors: "Authors of the case (name <email> separated by commas)"; type=AstValString; required</li>
+
+<li>version: "Case version (dotted string like 1.0)"; type=AstValString; required</li>
+
+<li>versionDate: "Date of this version (day/month/year)"; type=AstValString; required</li>
+
+<li>difficulty: "From 1 to 5 (e.g. 3.5)"; type=AstValNumber; required</li>
+
+<li>duration: "Estimated play time in hours"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureGameInfoExtra</h2>
+<ul>
+<li>Configure game options</li>
+<li>Usage: configureGameInfoExtra(cautions="", url="", extraCredits="", keywords="")</li>
+<li>Parameters: <ul>
+<li>cautions: "Any cautions to players (eg. adult language)"; type=AstValString; default=""</li>
+
+<li>url: "Optional website url to learn more"; type=AstValString; default=""</li>
+
+<li>extraCredits: "Optional extra credits to show in listing and on cover page"; type=AstValString; default=""</li>
+
+<li>keywords: "Optional keywords"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureGameSummary</h2>
+<ul>
+<li>Configure game summary options</li>
+<li>Usage: configureGameSummary(summary="")</li>
+<li>Parameters: <ul>
+<li>summary: "Summary to show in listing and on cover page"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureLeadDb</h2>
+<ul>
+<li>Configure location data options (what database to use for looking up locations)</li>
+<li>Usage: configureLeadDb(version="v2", versionPrevious="")</li>
+<li>Parameters: <ul>
+<li>version: "Version of the location data"; type=AstValString; default="v2"</li>
+
+<li>versionPrevious: "Version of the previous location data (used to help check for migration problems)"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureParser</h2>
+<ul>
+<li>Configure parser options</li>
+<li>Usage: configureParser()</li>
+</ul>
+
+<br/>
+<h2>configureRenderer</h2>
+<ul>
+<li>Configure renderer options</li>
+<li>Usage: configureRenderer(doubleSided="True", latexPaperSize="10", latexFontSize="10", autoStyleQuotes="False")</li>
+<li>Parameters: <ul>
+<li>doubleSided: "Lay out page numbers for double sided printing (alternating corners)"; type=AstValBool; default="True"</li>
+
+<li>latexPaperSize: "Latex paper size"; type=['letter', 'A4', 'B6', 'A5']; default="10"</li>
+
+<li>latexFontSize: "Latex font size"; type=AstValNumber; default="10"</li>
+
+<li>autoStyleQuotes: "Auto style unicode left and right quote markers for more subtle font look (can cause hard-to-diagnose latex compilation errors)"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>dayInstructions</h2>
+<ul>
+<li>Generate instructions for the day</li>
+<li>Usage: dayInstructions(day, when)</li>
+<li>Parameters: <ul>
+<li>day: "Number of the day"; type=AstValNumber; required</li>
+
+<li>when: "From [start|end]"; type=['start', 'end']; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>debug</h2>
+<ul>
+<li>debug print value</li>
+<li>Usage: debug(expression)</li>
+<li>Parameters: <ul>
+<li>expression: "Expression to print in debug mode"; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>declareConst</h2>
+<ul>
+<li>Declarts a variable</li>
+<li>Usage: declareConst(var, val, desc="")</li>
+<li>Parameters: <ul>
+<li>var: "The variable name to set"; type=AstValIdentifier; required</li>
+
+<li>val: "Initial value for the variable"; required</li>
+
+<li>desc: "Description"; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>declareVar</h2>
+<ul>
+<li>Declarts a variable</li>
+<li>Usage: declareVar(var, val="None", desc="")</li>
+<li>Parameters: <ul>
+<li>var: "The variable name to set"; type=AstValIdentifier; required</li>
+
+<li>val: "Initial value for the variable"</li>
+
+<li>desc: "Description"; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>defineTag</h2>
+<ul>
+<li>Defines a tag</li>
+<li>Usage: defineTag(tagId, deadline="-1", label="", location="None", obfuscatedLabel="None")</li>
+<li>Parameters: <ul>
+<li>tagId: "The dotted identifier used to refer to the tag"; type=AstValString; required</li>
+
+<li>deadline: "Deadline label describing the tag"; type=AstValNumber; default="-1"</li>
+
+<li>label: "Longer label describing the tag"; type=AstValString; default=""</li>
+
+<li>location: "Override default (document) location; use 'back' for back of book"; type=AstValString</li>
+
+<li>obfuscatedLabel: "Override default (document) obfuscated label"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>dropcaps</h2>
+<ul>
+<li>Drop cap effect for some text (make first letter BIG)</li>
+<li>Usage: dropcaps(style="", lines="4", multi="wrap"): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "drop cap style"; type=AstValString; default=""</li>
+
+<li>lines: "height in lines"; type=AstValNumber; default="4"</li>
+
+<li>multi: "how to handle multiple paragraphs [none, wrap, gap]"; type=AstValString; default="wrap"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>embedFile</h2>
+<ul>
+<li>Embed another pdf/text file in output</li>
+<li>Usage: embedFile(path, pages="None", scale="None", pageStyle="")</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to file to embed"; type=AstValString; required</li>
+
+<li>pages: "Comma separated page list"; type=AstValString</li>
+
+<li>scale: "Scaled for embed"; type=AstValNumber</li>
+
+<li>pageStyle: "Page style to use for the page (use 'empty' to hide footer)"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>embedLead</h2>
+<ul>
+<li>Return inline</li>
+<li>Usage: embedLead(id="")</li>
+<li>Parameters: <ul>
+<li>id: "Lead id"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>form</h2>
+<ul>
+<li>Form field insert</li>
+<li>Usage: form(type, size="None", choices="None")</li>
+<li>Parameters: <ul>
+<li>type: "Form field type"; type=['short', 'mini', 'score', 'long', 'multiline', 'multipleChoice', 'checkAll']; required</li>
+
+<li>size: "Size of field"; type=AstValNumber</li>
+
+<li>choices: "List of choices, separated by | character"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>format</h2>
+<ul>
+<li>Format text</li>
+<li>Usage: format(style, box="None", symbol="None"): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "style type"; type=['', 'radio', 'handwriting', 'typewriter', 'choice', 'warning', 'culture', 'dayTest']; required</li>
+
+<li>box: "[true, false, stylename]"; type=[<class 'lib.casebook.jrastvals.AstValBool'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>gaintag</h2>
+<ul>
+<li>Mark a tag</li>
+<li>Usage: gaintag(id)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>golead</h2>
+<ul>
+<li>Add text to go to lead</li>
+<li>Usage: golead(id, page="True", href="True", showLabel="False", back="False")</li>
+<li>Parameters: <ul>
+<li>id: "ID of lead"; type=AstValString; required</li>
+
+<li>page: "Show page number?"; type=AstValBool; default="True"</li>
+
+<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
+
+<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+
+<li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>hastag</h2>
+<ul>
+<li>Check if user has tag</li>
+<li>Usage: hastag(id, check="all")</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>image</h2>
+<ul>
+<li>Insert an image</li>
+<li>Usage: image(path, width="", height="", borderWidth="0", padding="0")</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to file image"; type=AstValString; required</li>
+
+<li>width: "Width (e.g. 3in)"; type=AstValString; default=""</li>
+
+<li>height: "Height (e.g. 3in)"; type=AstValString; default=""</li>
+
+<li>borderWidth: "border width (in points; 0 for none)"; type=AstValNumber; default="0"</li>
+
+<li>padding: "padding width (in points; 0 for none)"; type=AstValNumber; default="0"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>inline</h2>
+<ul>
+<li>Create inline</li>
+<li>Usage: inline(link="", label="", time="None", timePos="", demerits="0", unless="", back="False", mLabel=""): {targetblock}</li>
+<li>Parameters: <ul>
+<li>link: "Text link"; type=AstValString; default=""</li>
+
+<li>label: "Label for new lead"; type=AstValString; default=""</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end']; default=""</li>
+
+<li>demerits: "Demerit checkboxes"; type=AstValNumber; default="0"</li>
+
+<li>unless: "Unless text"; type=AstValString; default=""</li>
+
+<li>back: "direct them to return after visiting inline lead?"; type=AstValBool; default="False"</li>
+
+<li>mLabel: "Label for mindmap link"; type=AstValString; default=""</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>inlineHint</h2>
+<ul>
+<li>Create inline</li>
+<li>Usage: inlineHint(link="", label="", time="None", timePos="", demerits="2", back="False", mLabel=""): {targetblock}</li>
+<li>Parameters: <ul>
+<li>link: "Text link"; type=AstValString; default=""</li>
+
+<li>label: "Label for new lead"; type=AstValString; default=""</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end']; default=""</li>
+
+<li>demerits: "Demerit checkboxes"; type=AstValNumber; default="2"</li>
+
+<li>back: "direct them to return after visiting inline lead?"; type=AstValBool; default="False"</li>
+
+<li>mLabel: "Label for mindmap link"; type=AstValString; default=""</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>lipsum</h2>
+<ul>
+<li>Add some test text</li>
+<li>Usage: lipsum(start="1", end="-1")</li>
+<li>Parameters: <ul>
+<li>start: "starting paragraph index"; type=AstValNumber; default="1"</li>
+
+<li>end: "ending paragraph index"; type=AstValNumber; default="-1"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicFollowedBy</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicFollowedBy(target, label="")</li>
+<li>Parameters: <ul>
+<li>target: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicFollows</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicFollows(target, label="")</li>
+<li>Parameters: <ul>
+<li>target: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicImpliedBy</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicImpliedBy(source, label="")</li>
+<li>Parameters: <ul>
+<li>source: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicImplies</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicImplies(target, label="")</li>
+<li>Parameters: <ul>
+<li>target: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicIrrelevant</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicIrrelevant(label="")</li>
+<li>Parameters: <ul>
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicSuggestedBy</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicSuggestedBy(source, label="")</li>
+<li>Parameters: <ul>
+<li>source: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicSuggests</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicSuggests(target, label="")</li>
+<li>Parameters: <ul>
+<li>target: "Lead id"; type=AstValString; required</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>marginNote</h2>
+<ul>
+<li>Add a short bit of text to the left or right margin; note that this doesn't seem to work right currently; left margins not showing?</li>
+<li>Usage: marginNote(position="left"): {targetblock}</li>
+<li>Parameters: <ul>
+<li>position: "position of note"; type=['left', 'right']; default="left"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>mark</h2>
+<ul>
+<li>Mark checkboxes</li>
+<li>Usage: mark(demerits="0", culture="0", extra="0", type="None", count="0")</li>
+<li>Parameters: <ul>
+<li>demerits: "Demerits to mark"; type=AstValNumber; default="0"</li>
+
+<li>culture: "Culture boxes to mark"; type=AstValNumber; default="0"</li>
+
+<li>extra: "Extra boxes to mark"; type=AstValNumber; default="0"</li>
+
+<li>type: "Mark type"; type=AstValString</li>
+
+<li>count: "How many to mark"; type=AstValNumber; default="0"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>mentiontags</h2>
+<ul>
+<li>Just list some tags by their obfuscated ids (e.g. used when listing tags available for completionists)</li>
+<li>Usage: mentiontags(tags="")</li>
+<li>Parameters: <ul>
+<li>tags: "list of tags"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>missingtag</h2>
+<ul>
+<li>Is player missing a tag</li>
+<li>Usage: missingtag(id, check="all")</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>onday</h2>
+<ul>
+<li>Text saying if on day</li>
+<li>Usage: onday(day)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>otherwise</h2>
+<ul>
+<li>Text saying otherwise</li>
+<li>Usage: otherwise()</li>
+</ul>
+
+<br/>
+<h2>pageBackground</h2>
+<ul>
+<li>Set the current page background (useful for covers, etc.)</li>
+<li>Usage: pageBackground(path, opacity="1.0")</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to image OR pdf file to use as the background image"; type=AstValString; required</li>
+
+<li>opacity: "Opacity of the background image"; type=AstValNumber; default="1.0"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>pageStyle</h2>
+<ul>
+<li>set the current page style</li>
+<li>Usage: pageStyle(style)</li>
+<li>Parameters: <ul>
+<li>style: "Page style to use for the page (use 'empty' to hide footer)"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>print</h2>
+<ul>
+<li>print value</li>
+<li>Usage: print(expression)</li>
+<li>Parameters: <ul>
+<li>expression: "Expression to print"; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>reflead</h2>
+<ul>
+<li>Add text to refer to lead</li>
+<li>Usage: reflead(id, page="True", href="True", showLabel="False", back="False")</li>
+<li>Parameters: <ul>
+<li>id: "ID of lead"; type=AstValString; required</li>
+
+<li>page: "Show page number?"; type=AstValBool; default="True"</li>
+
+<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
+
+<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+
+<li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>requiretag</h2>
+<ul>
+<li>Tell user they should leave if they dont have tag and come back when they do</li>
+<li>Usage: requiretag(id, check="all")</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>returnlead</h2>
+<ul>
+<li>Add text to go to lead</li>
+<li>Usage: returnlead(id="None", page="True", href="True", showLabel="False", back="False")</li>
+<li>Parameters: <ul>
+<li>id: "ID of lead"; type=AstValString</li>
+
+<li>page: "Show page number?"; type=AstValBool; default="True"</li>
+
+<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
+
+<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+
+<li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>separator</h2>
+<ul>
+<li>separator insert</li>
+<li>Usage: separator(style="None")</li>
+<li>Parameters: <ul>
+<li>style: "Separator style"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>set</h2>
+<ul>
+<li>Sets a variable to a value</li>
+<li>Usage: set(var, val)</li>
+<li>Parameters: <ul>
+<li>var: "The variable name to set"; type=AstValIdentifier; required</li>
+
+<li>val: "The new value for the variable"; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>symbol</h2>
+<ul>
+<li>Insert symbol (unicode/icon) text</li>
+<li>Usage: symbol(id, color="None", size="None")</li>
+<li>Parameters: <ul>
+<li>id: "Symbol id"; type=AstValString; required</li>
+
+<li>color: "color"; type=AstValString</li>
+
+<li>size: "size"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>timeHere</h2>
+<ul>
+<li>Show lead time here (instead of normally at start or end)</li>
+<li>Usage: timeHere()</li>
+</ul>
+
+<br/>
+<h2>toc</h2>
+<ul>
+<li>Generate and insert table of contents</li>
+<li>Usage: toc(columns="None")</li>
+<li>Parameters: <ul>
+<li>columns: "Number of columns for table of contents"; type=AstValNumber</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>

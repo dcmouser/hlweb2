@@ -8,7 +8,7 @@ set MIN=%TIMEZERO:~3,2%
 set mytime=%HOUR%%MIN%
 set zformat=zip
 
-set extraoptions=-xr!Library/Bee -xr!Library/Android -xr!Library/PackageCache -xr!Library/il2cpp_android_arm64-v8a  -xr!Library/Artifacts -xr!Library/Il2cppBuildCache -xr!Library/ShaderCache -xr!lib/jrnamer/data  -xr!node_modules
+set extraoptions=-xr!Library/Bee -xr!Library/Android -xr!Library/PackageCache -xr!Library/il2cpp_android_arm64-v8a  -xr!Library/Artifacts -xr!Library/Il2cppBuildCache -xr!Library/ShaderCache -xr!lib/jrnamer/data -xr!hldjango/media -xr!*.tar -xr!*.zip
 
 set zcmd="c:\program files\7-zip\7z" a -t%zformat% -r %extraoptions%
 set fname=%thedir%_%mydate%_%mytime%.%zformat%

@@ -1,0 +1,59 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+{% block title %}Game List{% endblock title %}
+
+
+{% block extra_head %}
+<script src="{% static "js/gameChangeReloader.js" %}" defer></script>
+{% endblock extra_head %}
+
+
+{% block content %}
+<script>
+    window.onload = async (event) => {await beginMonitoringForGameChanges("{% url 'gameApiModDateByPk' gamePkListStr='' %}");};
+</script>
+
+
+<h1>Game List</h1>
+
+
+<ul>
+{% for game in game_list %}
+    <li class="gameEntry">
+        <span class="monitor_game" id="monitor_game_{{ game.pk }}"  data-gameid="{{ game.pk }}" data-modified="{{ game.modified|date:'U' }}"></span>
+        <a href="{{ game.get_absolute_url }}">{{ game.title }} ({{ game.name }})</a>
+        <table class="gameListEntryTable">
+            <tr>
+                <td class="gameListEntryImage">
+                    {{ game|gameThumbnailForGameList }}
+                </td>
+                <td>
+                    <p>
+                        <b>Summary:</b> {{ game.summary }}<br/>
+                        <b>Owner:</b> {{ game.owner }}<br/>
+                        <b>Public:</b> {{ game.isPublic }}<br/>
+                        <b>Lead stats:</b> {{ game.leadStats }}<br/>
+                        <b>Published:</b> {% gamePublishInfoString game %}<br/>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+    </li>
+{% endfor %}
+</ul>
+
+
+{% if user.is_authenticated %}
+    <hr/>
+    <div>
+        <a href="{% url 'gameCreate' %}" class="btn btn-secondary" role="button">Create new game</a>
+    </div>
+{% endif %}
+
+{% endblock content %}

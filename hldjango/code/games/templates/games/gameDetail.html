@@ -1,0 +1,54 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+
+{% block title %}Game Details{% endblock title %}
+
+
+{% block extra_head %}
+<script src="{% static "js/gameChangeReloader.js" %}"></script>
+{% endblock extra_head %}
+
+
+
+
+
+{% block content %}
+<script>
+    window.onload = async (event) => {await beginMonitoringForGameChanges("{% url 'gameApiModDateByPk' gamePkListStr='' %}");};
+</script>
+
+
+
+<div class="gameEntry">
+    <span class="monitor_game" id="monitor_game_{{ game.pk }}" data-gameid="{{ game.pk }}" data-modified="{{ game.modified|date:'U' }}"></span>
+    <h2>{{ game.name }} ({{ game.title }})</h2>
+    <p>
+        <b>Summary:</b> {{ game.summary }}<br/>
+        <b>Owner:</b> {{ game.owner }}<br/>
+        <b>Lead stats:</b> {{ game.leadStats }}<br/>
+        <b>Published:</b> {% gamePublishInfoString game %}<br/>
+    </p>
+</div>
+
+
+<h3>Published Files:</h3>
+{% fileUrlList user game.pk "published" "noInfo" %}
+
+
+{% if game.owner.pk == request.user.pk %}
+    <a href="{% url 'gameEdit' game.slug %}" class="btn btn-info" role="button">Edit</a>
+    <a href="{% url 'gameGenerate' game.slug %}" class="btn btn-info" role="button">Generated files</a>
+    <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
+    <a href="{% url 'gameVersionFileList' game.slug %}" class="btn btn-info" role="button">Previous versions</a>
+    <!--
+    <a href="{% url 'gamePlay' game.slug %}" class="btn btn-info" role="button">Play</a>
+    -->
+    <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button">Delete</a>
+    {% endif %}
+
+{% endblock content %}

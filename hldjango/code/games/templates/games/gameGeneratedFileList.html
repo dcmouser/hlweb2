@@ -1,0 +1,72 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+{% block title %}Generated game files{% endblock title %}
+
+
+{% block extra_head %}
+<script src="{% static "js/gameChangeReloader.js" %}" defer></script>
+{% endblock extra_head %}
+
+
+
+{% block content %}
+<script>
+    window.onload = async (event) => {await beginMonitoringForGameChanges("{% url 'gameApiModDateByPk' gamePkListStr='' %}");};
+</script>
+
+
+<span class="monitor_game" id="monitor_game_{{ game.pk }}"  data-gameid="{{ game.pk }}" data-modified="{{ game.modified|date:'U' }}"></span>
+
+
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
+
+    {{ form|crispy }}
+
+    <h1>Generated game files for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>" (<a href="{% url 'gameEdit' object.slug %}">edit</a>)</h1>
+
+    <h3>Preferred Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildPreferred" value="Quick build single storybook PDF in preferred format" {% jrconfirmRebuildIfNotNeeded game "buildPreferred" %}> - {{game.get_preferredFormatPaperSize_display}} / {{game.get_preferredFormatLayout_display}}</div>
+    {% fileUrlList user game.pk "buildPreferred" "showDate" %}
+
+    <h3>Debug Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildDebug" value="Build debug files to check for problems" {% jrconfirmRebuildIfNotNeeded game "buildDebug" %}></div>
+    {% fileUrlList user game.pk "buildDebug" "showDate" %}
+
+    <h3>Draft Publication Files</h3>
+    <div><input class="btn btn-success" type="submit" name="buildDraft" value="Build complete set of *draft* Storybook PDFs in all formats (slow)" {% jrconfirmRebuildIfNotNeeded game "buildDraft" %}></div>
+    {% fileUrlList user game.pk "buildDraft" "showDate" %}
+
+</form>
+
+
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
+
+    <h3>Published Files</h3>
+    <div>
+        {% if game|isPublishedOutOfDateAndReady %}
+        <input class="btn btn-success" type="submit" name="publish" value="Publish the current draft PDF set as the new Official Release">
+        {% endif %}
+        {% if game|isPublished %}
+         <input class="btn btn-danger" type="submit" name="unpublish" value="Delete current published files (unpublish)" onclick="return confirm('Are you sure?');">
+        {% endif %}
+        {% if game|isNotPublishedOrOutOfDate %}
+         <p><b>Once the full DRAFT set of files above have been successfully built, you can choose to publish them.</b></p>
+        {% endif %}    
+    </div>
+    {% fileUrlList user game.pk "published" "" %}
+</form>
+
+
+
+<form action="{% url 'gameGenerate' object.slug %}" method="post"> {% csrf_token %}
+    <h3>Manage Queue</h3>
+    <div><input class="btn btn-info" type="submit" name="cancelBuildTasks" value="Cancel any currently queued builds." onclick="return confirm('Are you sure?');"></div>
+</form>
+<br/><br/>
+
+{% endblock content %}
