@@ -5,6 +5,7 @@ from mistletoe.latex_renderer import LaTeXRenderer
 
 from .pylatexrenderer import PyLaTeXRenderer
 from .jrhtmlrenderer import JrHtmlRenderer
+from .jrmistletoedoc import JrFixedMistletoeDocument
 
 # pylatex latex library
 import pylatex
@@ -13,6 +14,16 @@ from pylatex.utils import NoEscape
 # other python libs
 import json
 import re
+
+
+# 4/23/25 FUCKED KLUDGE
+# we were losing an occaional line starting with latex spaces ~~~~ it turns out the CodeFence token in mistletoe markdown parser is absorbing this as a CodeFence token with a comment
+# so we have to kill the token, which is very kludgey at least in this version of mistletoe (1.40)
+origAll = mistletoe.block_token.__all__
+#mistletoe.block_token.__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak', 'List', 'Table', 'Footnote', 'Paragraph']
+#mistletoe.block_token.__all__ = ['BlockCode', 'Heading', 'Quote', 'ThematicBreak', 'List', 'Table', 'Footnote', 'Paragraph']
+#mistletoe.block_token.reset_tokens()
+mistletoe.block_token.remove_token(mistletoe.block_token.CodeFence)
 
 
 class HlMarkdown:
@@ -27,6 +38,10 @@ class HlMarkdown:
         origText = text
         extras = {}
 
+        if ("ATTN FUCK OFF" in text):
+            print("DEBUG BREAK")
+
+
         if (self.options['forceLinebreaks']):
             text = text.replace('\n','\n\n')
 
@@ -36,6 +51,7 @@ class HlMarkdown:
             #renderer = JrHtmlRenderer()
             #text = renderer.render(mistletoe.Document(text))
             text = mistletoe.markdown(text, renderer=JrHtmlRenderer)
+            #text = Markdown(text, renderer=JrHtmlRenderer)
 
             # kludgey bugfix needed for newlines
             text = text.replace('<p>\\</p>','<p>&nbsp;</p>')
@@ -62,7 +78,7 @@ class HlMarkdown:
             renderer.addPackage('setspace')
             renderer.addPackage('graphicx')
             renderer.addPackage('amssymb')
-            # for proof qed tombstone
+            # for divider symbols, etc.
             renderer.addPackage('amsthm')
             renderer.addPackage('MnSymbol')
 
@@ -131,8 +147,15 @@ class HlMarkdown:
                     DefMidLineKludgePrefix = "MIDLINEKLUDGEPREFIX"
                     text = DefMidLineKludgePrefix + text
 
+
             #
-            text = renderer.render(mistletoe.Document(text))
+            if (False):
+                mdoc = JrFixedMistletoeDocument(text)
+                text = renderer.render(mdoc)
+            else:
+                # old way
+                mdoc = mistletoe.Document(text)
+                text = renderer.render(mdoc)
 
             # for normal rendering 
             if (flagSnippetVsWholeDocument):
@@ -294,8 +317,8 @@ class HlMarkdown:
         # escape text for latext markdown
         return self.escapeLatex(text)
 
-    def latexTombstone(self):
-        return '\n\\begin{center}{\\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\\end{center}%\n'
+    def latexDivider(self):
+        return '\n\\cbDividerlead\n'
         #return '\n$\\hfill\\blacksquare$%\n'
 # ---------------------------------------------------------------------------
     

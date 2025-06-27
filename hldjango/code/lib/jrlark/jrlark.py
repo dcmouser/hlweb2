@@ -1,5 +1,6 @@
 # lark
-from lark import Lark, tree, logger, UnexpectedInput
+import lark
+from lark import Lark, tree, UnexpectedInput
 
 # python
 import os
@@ -89,7 +90,8 @@ class JrParserEngineLark:
         larkDebug = self.options["larkDebug"]
         if (larkDebug):
             import logging
-            logger.setLevel(logging.DEBUG)
+            # tell LARK logger what level to log at
+            lark.logger.setLevel(logging.DEBUG)
         self.parser = Lark(self.grammarText, parser = self.options["parser"], start=self.options["start"], ambiguity=self.options["ambiguity"], lexer=self.options["lexer"], strict=self.options["strict"], debug=larkDebug, propagate_positions=self.options["propagate_positions"], regex=self.options["regex"])
         return self.parser
 
@@ -112,6 +114,13 @@ class JrParserEngineLark:
         try:
             parseResult = parser.parse(self.getFullText())
         except Exception as e:
+            if (True):
+                origE = e
+                e = self.improveParsingException(e)
+                if (origE == e):
+                    raise e
+                else:
+                    raise e from origE
             if (False):
                 startPos = e.pos_in_stream
                 msg = deepSource.extractHighlightedLineDebugMessageAtPos(startPos, startPos+1)
@@ -153,7 +162,9 @@ class JrParserEngineLark:
 
 
 
-
+    def improveParsingException(self, e):
+        # try to improve the exception if we can
+        return e
 
 
 

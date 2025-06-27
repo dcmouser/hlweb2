@@ -8,5 +8,21 @@ __pycache__/
 .env
 
 logs
-settings_secret.py
+*_secret.py
+*_secret.*
 *.log
+
+
+geotiffs
+OLD_v2
+newYorkNoir_materials_v3.zip
+newYorkNoir_materials_v3.zip
+NewYorkNoirV2DirectoriesForAuthors_032824.zip
+NewYorkNoirV2DirectoriesForAuthors_032824.zip
+newYorkNoir_authorMaterials_v3.zip
+newYorkNoir_authorMaterials_v3.zip
+MapAtlas85x11Interleaved.pdf
+ALL.tif
+newYorkNoir_materials_v2.zip
+directoryFingerprints.pdf
+v3/map

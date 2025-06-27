@@ -1,0 +1,172 @@
+
+% full page image used for cover pages, etc., which handles transparency properly
+
+\newcommand{\imageFullPage}[2]{
+\AddToHookNext{shipout/foreground}{
+  \begin{tikzpicture}[remember picture,overlay, blend mode=multiply]
+  \node[opacity=#2, black] at (current page.center) {
+   \includegraphics[width=\paperwidth,height=\paperheight]{#1}
+  };
+  \end{tikzpicture}
+}
+}
+
+
+
+
+
+
+% for torn page tcolorbox
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{shadows}
+% for image behind text drop shadow
+\tcbuselibrary{skins}
+
+
+
+
+% torn page 
+% see https://tex.stackexchange.com/questions/86150/torn-page-effect
+
+%
+\definecolor{cbYellowPaperColor}{RGB}{239,227,157}
+\definecolor{cbNewsPaperColorA}{RGB}{249,250,235}
+\definecolor{cbNewsPaperColorB}{RGB}{241,241,240}
+%
+\usepackage{lipsum}
+\newtcolorbox{tornpage}[1]{%
+    %enhanced jigsaw, breakable, % allow page breaks
+    enhanced jigsaw, % allow page breaks
+    % not sure breakable=false is doing anything...
+    %enforce breakable=false,
+    breakable=false,
+    frame hidden, % hide the default frame
+    overlay={%
+        \draw [
+            fill=#1, % fill paper
+            draw=#1!50!black, % boundary colour
+            decorate, % decoration
+            decoration={random steps,segment length=2pt,amplitude=1pt},
+            drop shadow, % shadow
+        ]
+        % top line
+        (frame.north west)--(frame.north east)--
+        % right line
+        (frame.north east)--(frame.south east)--
+        % bottom line
+        (frame.south east)--(frame.south west)--
+        % left line
+        (frame.south west)--(frame.north west);
+    },
+    % paragraph skips obeyed within tcolorbox
+    parbox=false,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% put an image behind some text (minipage)
+\newcommand{\imageBehindFull}[6]{%
+\begin{center}
+\begin{tcolorbox}[enhanced,
+                  width=#1,   % Set the width of the tcolorbox (should be fraction\linewidth)
+                  boxsep=#2\textwidth,         % Padding inside the box
+                  colback=white,      % Color behind the text
+                  colframe=white,     % Frame color
+                  sharp corners,      % Sharp corners of the box
+                  halign=center,      % Center-align the content horizontally (affects only the box content, not minipage)
+                  valign=#4,      % Center-align the content vertically
+                  opacityback=0.5,    % Opacity of the background color
+                  opacityframe=0,     % Frame opacity
+                  watermark opacity=#3,   % Opacity of the background image
+                  #5,
+                  ]
+    #6
+\end{tcolorbox}
+\end{center}
+}
+
+
+
+
+\newcommand{\imageOverlay}[6]{%
+\begin{tikzpicture}
+  % Define the text node with a specific name (e.g., 'textblock')
+  \node[inner sep=0pt, outer sep=0pt, text width=#3] (textblock) {
+    #1
+  };
+
+  % Overlay the image on top of the text node
+  \node[opacity=0.5, anchor=south west, inner sep=0pt] at (textblock.south west) {
+    \includegraphics[width=#3]{#2}
+  };
+\end{tikzpicture}
+}
+
+
+
+
+
+
+
+
+
+
+% Dithered background tcolorbox
+\newtcolorbox{ditheredBox}{
+    enhanced,
+    colback=white,      % Color behind the text
+    colframe=black,     % Frame color
+    % frame hidden,
+    sharp corners,
+    size=tight,
+    boxsep=5pt,
+    boxrule=1pt,
+    interior style={pattern=crosshatch dots,
+    pattern color=gray,
+    }
+}
+
+
+
+
+
+
+\newcommand{\imageWithSideRules}[1]{%
+\vspace{-1.65em}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{scope}[on background layer]
+      % Draw a horizontal line across the entire column width
+      \draw[line width=0.75pt] (0,0) -- (\linewidth,0);
+    \end{scope}
+    % Place the image centered horizontally at half the column width
+    \node[inner sep=0pt] at (0.5*\columnwidth,0) {#1};
+  \end{tikzpicture}
+\end{figure}
+\vspace{-1.5em}
+}
+
+
+
+
+
+
+
+
+% custom numbered lists
+% THIS CURRENTLY UNUSED
+\newlist{cbNumberedItemList}{itemize}{1}
+\setlist[cbNumberedItemList]{beginpenalty=10000, midpenalty=10000}

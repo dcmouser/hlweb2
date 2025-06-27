@@ -101,6 +101,7 @@ class JrSourceLocation:
 # Idea is to try to detect problems with double quotes or unicode quotes and try to give the author location information to find them
 class QuoteBalance:
     def __init__(self):
+        self.textLines = []
         self.inDoubleQuote = False
         self.unicodeQuoteDepth = 0
         self.doubleQuoteList = []
@@ -115,24 +116,65 @@ class QuoteBalance:
         msgList = []
         if (self.inDoubleQuote):
             msgList.append( {"msg": "Unbalanced/improper double quotes", "locs": self.doubleQuoteList} )
+            # now warnings about lines that have an unueven number of double quotes on them, which may not be an error, but good likelihood
+            self.buildOddLineWarnings("doublequotes", msgList, self.doubleQuoteList)
         if (self.unicodeQuoteDepth!=0):
             msgList.append( {"msg": "Unbalanced/improper unicode left-vs-right quotes", "locs": self.unicodeQuoteList} )
+            self.buildOddLineWarnings("unicode quotes", msgList, self.unicodeQuoteList)
         if (self.errorList is not None):
             for err in self.errorList:
                 msgList.append(err)
         return msgList
 
 
-    def addError(self, msg, sourceName, realLineCount, realLinePos):
+
+    def buildOddLineWarnings(self, typeStr, msgList, quoteList):
+        ldict = {}
+        for q in quoteList:
+            source = q["source"]
+            line = q["line"]
+            linePos = q["linepos"]
+            if (source not in ldict):
+                ldict[source] = {}
+            if (line not in ldict[source]):
+                ldict[source][line] = 1
+            else:
+                ldict[source][line] += 1
+        #
+        for source, sourceDict in ldict.items():
+            for line, quoteCount in sourceDict.items():
+                if (quoteCount%2 == 1):
+                    # odd quote count on line
+                    lineText = self.textLines[line]
+                    msgList.append( {"msg": "Odd number ({}) of {} in source '{}' on line {}: {}".format(quoteCount, typeStr, source, line, lineText)})
+            
+
+
+
+    def addError(self, text, msg, sourceName, realLineCount, realLinePos, offsetLineCount, offsetLinePos):
         if (self.errorList is None):
             self.errorList = []
-        locString = "In '{}' at line {} pos {}".format(sourceName, realLineCount, realLinePos)
-        errDict = {"msg": msg, "locString": locString}
+        locString = "In [{}] at line {} pos {}".format(sourceName, realLineCount, realLinePos)
+        # show them where
+        lines = text.split("\n")
+        eline = lines[offsetLineCount]
+        highlightDist = 20
+        startp = offsetLinePos - highlightDist
+        endp = offsetLinePos + highlightDist
+        if (startp<0):
+            startp = 0
+        if (endp>len(eline)):
+            endp = len(eline)
+        errorLine = eline[startp:endp]
+        epos = offsetLinePos-startp
+
+        errDict = {"msg": msg, "locString": locString, "errorLine": errorLine, "epos": epos}
         self.errorList.append(errDict)
 
 
     def scanAndAdjustCounts(self, text, sourceName, sourceOffsetLine, sourceOffsetLinePos):
         # adjust counters based on text
+        self.textLines = text.split("\n")
         offset = -1
         offsetLinePos = -1
         offsetLineCount = 0
@@ -144,7 +186,7 @@ class QuoteBalance:
                 offsetLinePos = 0
             #
             realLineCount = sourceOffsetLine + offsetLineCount
-            realLinePos = sourceOffsetLine + offsetLineCount
+            realLinePos = sourceOffsetLinePos + offsetLinePos
             #
             if (c=='"'):
                 # for double quotes
@@ -155,28 +197,28 @@ class QuoteBalance:
                     self.startingUnicodeQuoteDepth = self.unicodeQuoteDepth
                 else:
                     if (self.startingUnicodeQuoteDepth != self.unicodeQuoteDepth):
-                        self.addError("Double quote string contains imbalanced unicode quotes", sourceName, realLineCount, realLinePos)
+                        self.addError(text, "Double quote string contains imbalanced unicode quotes", sourceName, realLineCount, realLinePos, offsetLineCount, offsetLinePos)
             #
             if (c=='“'):
                 # for unicode quotes, most of what we do is keep track of balance, and occurences
                 self.unicodeQuoteDepth += 1
-                cpos = {"source": sourceName, "line": realLineCount, "pos": realLinePos}
+                cpos = {"source": sourceName, "line": realLineCount, "linepos": realLinePos}
                 self.unicodeLeftQuoteList.append(cpos)
                 self.unicodeQuoteList.append(cpos)
                 if (self.unicodeQuoteDepth>1):
-                    self.addError("Nested unicode left quote", sourceName, realLineCount, realLinePos)
+                    self.addError(text, "Nested unicode left quote", sourceName, realLineCount, realLinePos, offsetLineCount, offsetLinePos)
             #
             if (c=='”'):
                 # for unicode quotes, most of what we do is keep track of balance, and occurences
                 self.unicodeQuoteDepth -= 1
-                cpos = {"source": sourceName, "line": realLineCount, "pos": realLinePos}
+                cpos = {"source": sourceName, "line": realLineCount, "linepos": realLinePos}
                 self.unicodeRightQuoteList.append(cpos)
                 self.unicodeQuoteList.append(cpos)
                 if (self.unicodeQuoteDepth<0):
-                    self.addError("Unbalanced extra unicode right quote", sourceName, realLineCount, realLinePos)
+                    self.addError(text, "Unbalanced extra unicode right quote", sourceName, realLineCount, realLinePos, offsetLineCount, offsetLinePos)
                 if (self.unicodeQuoteDepth==0):
                     if (self.inDoubleQuote):
-                        self.addError("Unicode quote string contains imbalanced double quotes", sourceName, realLineCount, realLinePos)
+                        self.addError(text, "Unicode quote string contains imbalanced double quotes", sourceName, realLineCount, realLinePos, offsetLineCount, offsetLinePos)
 
 
 
@@ -199,5 +241,7 @@ class JrINote:
         return self.lead
     def getExtras(self):
         return self.extras
+    def getTypeStr(self):
+        return self.typeStr
 
 

@@ -1,0 +1,232 @@
+% LEAD LOOKUP TABLE TEMPLATE PREAMBLE START
+
+
+
+\documentclass[twoside=semi, openany, 10pt, paper=letter, DIV=22]{scrbook}%
+
+\usepackage{scrlayer-scrpage} % main document class
+\usepackage{tocloft} % table of contents support
+\usepackage{multicol} % multi-column support
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{FiraSans} % font
+\usepackage{librebaskerville} % font
+\usepackage{setspace}
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=black,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
+\usepackage{graphicx} % for graphics
+\usepackage[english]{babel}
+\usepackage{tocloft}
+\usepackage[left=1cm, right=1cm, bottom=1cm, top=1cm]{geometry}
+\usepackage{xstring}
+\usepackage[x11names,table]{xcolor}
+\usepackage{tikz}
+\usepackage{fontspec}
+\usepackage{array}  % Enables the m column type for vertical centering
+\usepackage{calc}  % For calculating text width
+\usepackage{graphicx}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{soul}
+
+%\documentclass[10pt]{article}
+%\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+
+% Needed to make the footer nice and short
+\KOMAoptions{footheight=1cm}
+\setlength{\footskip}{0.7cm}  % Decrease footskip to move the footer up
+\renewcommand*{\pagemark}{\thepage}  % Customizes the page marker
+
+% footers get page numbers and a "continued on next page" line if appropriate
+%\rofoot*{{\pagemark}}
+%\lefoot*{{\pagemark}}
+
+\setmainfont{WhitneyCondensed-Medium}
+
+\setlength{\columnsep}{1cm}%
+%\setlength{\columnseprule}{2pt}
+\setlength{\parindent}{0pt}%
+
+% without this we can get latex trying to tweak spacing of headers and other weird stuff
+\raggedbottom
+\raggedcolumns
+
+\linespread{1.2}\selectfont
+
+%FONTS
+\newfontfamily\fontsEntryNormal{BellGothicStd-Light}
+\newfontfamily\fontsEntryBold{BellGothicStd-Bold}
+\newfontfamily\fontsEntryBlack{BellGothicStd-Black}
+
+
+\newcommand{\textFontHead}[1] {\textbf{#1}}
+\newcommand{\textFontInner}[1] {\texttt{\fontsEntryNormal #1}}
+
+% no page numbers
+\clearpairofpagestyles
+
+\newcommand\cbsubheadingOld[2]{
+\begin{singlespace}\begin{center}\textbf{#2}\end{center}\end{singlespace}
+\vspace{-2em}
+\addcontentsline{toc}{section}{#1}
+}
+
+
+\newcommand\cbsubheading[3]{
+\begin{textblock*}{0.75cm}[0.5,0.5](0.5\paperwidth,0.5\paperheight) % Centers the block on the page
+  \rotatebox{90}{\Huge \so{#2} #3}
+\end{textblock*}
+%\addcontentsline{toc}{section}{#1}
+}
+
+
+\newcommand\cbsubheadingInline[3]{
+{\Huge \textbf{{#2} #3}}\vspace*{1em}
+%\addcontentsline{toc}{section}{#1}
+}
+
+
+
+\rowcolors{1}{}{lightgray}
+
+
+
+% LEAD LOOKUP TABLE TEMPLATE PREAMBLE END
+
+% EXTRA PREAMBLE START
+
+
+
+% EXTRA PREAMBLE END
+
+
+\begin{document}
+
+
+
+
+
+
+\cbsubheading{Paragraph Lookup Table}{SHCD - LOOKUP TABLE}{}%
+\begin{multicols*}{2}
+\begin{center}
+\begin{tabular}{r|cccccc}
+& \textFontHead{EC} & \textFontHead{NW} & \textFontHead{SE} & \textFontHead{SW} & \textFontHead{WC} & \textFontHead{X} \\ 
+\hline
+\textFontHead{1} & \textFontInner{126} & \textFontInner{352} & \textFontInner{825} & \textFontInner{403} & \textFontInner{256} & \textFontInner{491} \\ 
+\textFontHead{2} & \textFontInner{325} & \textFontInner{425} & \textFontInner{269} & \textFontInner{171} & \textFontInner{820} & \textFontInner{654} \\ 
+\textFontHead{3} & \textFontInner{793} & \textFontInner{178} & \textFontInner{565} & \textFontInner{733} & \textFontInner{426} & \textFontInner{154} \\ 
+\textFontHead{4} & \textFontInner{318} & \textFontInner{241} & \textFontInner{174} & \textFontInner{949} & \textFontInner{185} & \textFontInner{915} \\ 
+\textFontHead{5} & \textFontInner{943} & \textFontInner{387} & \textFontInner{179} & \textFontInner{650} & \textFontInner{203} & \textFontInner{342} \\ 
+\textFontHead{6} & \textFontInner{272} & \textFontInner{567} & \textFontInner{578} & \textFontInner{267} & \textFontInner{404} & \textFontInner{371} \\ 
+\textFontHead{7} & \textFontInner{722} & \textFontInner{356} & \textFontInner{669} & \textFontInner{792} & \textFontInner{530} & \textFontInner{808} \\ 
+\textFontHead{8} & \textFontInner{500} & \textFontInner{779} & \textFontInner{935} & \textFontInner{765} & \textFontInner{140} & \textFontInner{795} \\ 
+\textFontHead{9} & \textFontInner{625} & \textFontInner{571} & \textFontInner{468} & \textFontInner{349} & \textFontInner{762} & \textFontInner{248} \\ 
+\textFontHead{10} & \textFontInner{726} & \textFontInner{761} & \textFontInner{686} & \textFontInner{501} & \textFontInner{542} & \textFontInner{156} \\ 
+\textFontHead{11} & \textFontInner{969} & \textFontInner{505} & \textFontInner{884} & \textFontInner{284} & \textFontInner{469} & \textFontInner{660} \\ 
+\textFontHead{12} & \textFontInner{590} & \textFontInner{752} & \textFontInner{379} & \textFontInner{400} & \textFontInner{970} & \textFontInner{692} \\ 
+\textFontHead{13} & \textFontInner{277} & \textFontInner{828} & \textFontInner{690} & \textFontInner{458} & \textFontInner{138} & \textFontInner{744} \\ 
+\textFontHead{14} & \textFontInner{301} & \textFontInner{656} & \textFontInner{972} & \textFontInner{891} & \textFontInner{739} & \textFontInner{823} \\ 
+\textFontHead{15} & \textFontInner{446} & \textFontInner{876} & \textFontInner{338} & \textFontInner{460} & \textFontInner{848} & \textFontInner{494} \\ 
+\textFontHead{16} & \textFontInner{278} & \textFontInner{104} & \textFontInner{454} & \textFontInner{436} & \textFontInner{845} & \textFontInner{381} \\ 
+\textFontHead{17} & \textFontInner{580} & \textFontInner{516} & \textFontInner{814} & \textFontInner{966} & \textFontInner{346} & \textFontInner{602} \\ 
+\textFontHead{18} & \textFontInner{133} & \textFontInner{490} & \textFontInner{773} & \textFontInner{512} & \textFontInner{482} & \textFontInner{169} \\ 
+\textFontHead{19} & \textFontInner{693} & \textFontInner{377} & \textFontInner{111} & \textFontInner{181} & \textFontInner{513} & \textFontInner{360} \\ 
+\textFontHead{20} & \textFontInner{866} & \textFontInner{579} & \textFontInner{741} & \textFontInner{982} & \textFontInner{412} & \textFontInner{107} \\ 
+\textFontHead{21} & \textFontInner{858} & \textFontInner{974} & \textFontInner{819} & \textFontInner{574} & \textFontInner{224} & \textFontInner{938} \\ 
+\textFontHead{22} & \textFontInner{910} & \textFontInner{612} & \textFontInner{520} & \textFontInner{708} & \textFontInner{749} & \textFontInner{350} \\ 
+\textFontHead{23} & \textFontInner{131} & \textFontInner{120} & \textFontInner{276} & \textFontInner{300} & \textFontInner{946} & \textFontInner{791} \\ 
+\textFontHead{24} & \textFontInner{261} & \textFontInner{275} & \textFontInner{255} & \textFontInner{633} & \textFontInner{457} & \textFontInner{857} \\ 
+\textFontHead{25} & \textFontInner{367} & \textFontInner{129} & \textFontInner{756} & \textFontInner{296} & \textFontInner{555} & \textFontInner{697} \\ 
+\textFontHead{26} & \textFontInner{916} & \textFontInner{337} & \textFontInner{615} & \textFontInner{227} & \textFontInner{430} & \textFontInner{790} \\ 
+\textFontHead{27} & \textFontInner{528} & \textFontInner{497} & \textFontInner{651} & \textFontInner{850} & \textFontInner{631} & \textFontInner{285} \\ 
+\textFontHead{28} & \textFontInner{136} & \textFontInner{854} & \textFontInner{681} & \textFontInner{122} & \textFontInner{760} & \textFontInner{629} \\ 
+\textFontHead{29} & \textFontInner{566} & \textFontInner{737} & \textFontInner{897} & \textFontInner{907} & \textFontInner{909} & \textFontInner{173} \\ 
+\textFontHead{30} & \textFontInner{197} & \textFontInner{595} & \textFontInner{758} & \textFontInner{281} & \textFontInner{365} & \textFontInner{503} \\ 
+\textFontHead{31} & \textFontInner{647} & \textFontInner{448} & \textFontInner{327} & \textFontInner{463} & \textFontInner{711} & \textFontInner{496} \\ 
+\textFontHead{32} & \textFontInner{225} & \textFontInner{515} & \textFontInner{577} & \textFontInner{568} & \textFontInner{536} & \textFontInner{253} \\ 
+\textFontHead{33} & \textFontInner{193} & \textFontInner{912} & \textFontInner{472} & \textFontInner{217} & \textFontInner{617} & \textFontInner{439} \\ 
+\textFontHead{34} & \textFontInner{488} & \textFontInner{317} & \textFontInner{818} & \textFontInner{862} & \textFontInner{321} & \textFontInner{834} \\ 
+\textFontHead{35} & \textFontInner{324} & \textFontInner{956} & \textFontInner{280} & \textFontInner{466} & \textFontInner{831} & \textFontInner{184} \\ 
+\textFontHead{36} & \textFontInner{954} & \textFontInner{461} & \textFontInner{643} & \textFontInner{134} & \textFontInner{114} & \textFontInner{552} \\ 
+\textFontHead{37} & \textFontInner{603} & \textFontInner{776} & \textFontInner{263} & \textFontInner{707} & \textFontInner{614} & \textFontInner{394} \\ 
+\textFontHead{38} & \textFontInner{260} & \textFontInner{289} & \textFontInner{593} & \textFontInner{961} & \textFontInner{149} & \textFontInner{508} \\ 
+\textFontHead{39} & \textFontInner{167} & \textFontInner{809} & \textFontInner{144} & \textFontInner{937} & \textFontInner{313} & \textFontInner{995} \\ 
+\textFontHead{40} & \textFontInner{839} & \textFontInner{801} & \textFontInner{222} & \textFontInner{805} & \textFontInner{618} & \textFontInner{710} \\ 
+\textFontHead{41} & \textFontInner{535} & \textFontInner{807} & \textFontInner{630} & \textFontInner{510} & \textFontInner{441} & \textFontInner{802} \\ 
+\textFontHead{42} & \textFontInner{717} & \textFontInner{311} & \textFontInner{358} & \textFontInner{619} & \textFontInner{539} & \textFontInner{785} \\ 
+\textFontHead{43} & \textFontInner{609} & \textFontInner{202} & \textFontInner{309} & \textFontInner{232} & \textFontInner{386} & \textFontInner{139} \\ 
+\textFontHead{44} & \textFontInner{911} & \textFontInner{282} & \textFontInner{428} & \textFontInner{598} & \textFontInner{557} & \textFontInner{674} \\ 
+\textFontHead{45} & \textFontInner{837} & \textFontInner{908} & \textFontInner{143} & \textFontInner{368} & \textFontInner{218} & \textFontInner{475} \\ 
+\textFontHead{46} & \textFontInner{771} & \textFontInner{852} & \textFontInner{682} & \textFontInner{895} & \textFontInner{364} & \textFontInner{299} \\ 
+\textFontHead{47} & \textFontInner{142} & \textFontInner{751} & \textFontInner{375} & \textFontInner{354} & \textFontInner{605} & \textFontInner{621} \\ 
+\textFontHead{48} & \textFontInner{622} & \textFontInner{600} & \textFontInner{898} & \textFontInner{471} & \textFontInner{588} & \textFontInner{221} \\ 
+\textFontHead{49} & \textFontInner{270} & \textFontInner{925} & \textFontInner{859} & \textFontInner{521} & \textFontInner{842} & \textFontInner{247} \\ 
+\textFontHead{50} & \textFontInner{283} & \textFontInner{526} & \textFontInner{877} & \textFontInner{102} & \textFontInner{396} & \textFontInner{905} \\ 
+\end{tabular}
+\end{center}
+\columnbreak
+\begin{center}
+\begin{tabular}{r|cccccc}
+& \textFontHead{EC} & \textFontHead{NW} & \textFontHead{SE} & \textFontHead{SW} & \textFontHead{WC} & \textFontHead{X} \\ 
+\hline
+\textFontHead{51} & \textFontInner{641} & \textFontInner{836} & \textFontInner{611} & \textFontInner{152} & \textFontInner{648} & \textFontInner{747} \\ 
+\textFontHead{52} & \textFontInner{106} & \textFontInner{100} & \textFontInner{930} & \textFontInner{989} & \textFontInner{575} & \textFontInner{636} \\ 
+\textFontHead{53} & \textFontInner{981} & \textFontInner{992} & \textFontInner{652} & \textFontInner{492} & \textFontInner{664} & \textFontInner{132} \\ 
+\textFontHead{54} & \textFontInner{262} & \textFontInner{109} & \textFontInner{585} & \textFontInner{474} & \textFontInner{939} & \textFontInner{485} \\ 
+\textFontHead{55} & \textFontInner{832} & \textFontInner{676} & \textFontInner{883} & \textFontInner{990} & \textFontInner{560} & \textFontInner{817} \\ 
+\textFontHead{56} & \textFontInner{361} & \textFontInner{549} & \textFontInner{998} & \textFontInner{878} & \textFontInner{380} & \textFontInner{727} \\ 
+\textFontHead{57} & \textFontInner{341} & \textFontInner{242} & \textFontInner{382} & \textFontInner{865} & \textFontInner{955} & \textFontInner{712} \\ 
+\textFontHead{58} & \textFontInner{165} & \textFontInner{728} & \textFontInner{958} & \textFontInner{957} & \textFontInner{673} & \textFontInner{235} \\ 
+\textFontHead{59} & \textFontInner{409} & \textFontInner{489} & \textFontInner{158} & \textFontInner{198} & \textFontInner{265} & \textFontInner{584} \\ 
+\textFontHead{60} & \textFontInner{363} & \textFontInner{493} & \textFontInner{594} & \textFontInner{168} & \textFontInner{703} & \textFontInner{547} \\ 
+\textFontHead{61} & \textFontInner{683} & \textFontInner{455} & \textFontInner{195} & \textFontInner{980} & \textFontInner{208} & \textFontInner{821} \\ 
+\textFontHead{62} & \textFontInner{716} & \textFontInner{456} & \textFontInner{662} & \textFontInner{151} & \textFontInner{444} & \textFontInner{331} \\ 
+\textFontHead{63} & \textFontInner{924} & \textFontInner{498} & \textFontInner{445} & \textFontInner{994} & \textFontInner{477} & \textFontInner{407} \\ 
+\textFontHead{64} & \textFontInner{177} & \textFontInner{476} & \textFontInner{228} & \textFontInner{926} & \textFontInner{117} & \textFontInner{119} \\ 
+\textFontHead{65} & \textFontInner{127} & \textFontInner{753} & \textFontInner{164} & \textFontInner{524} & \textFontInner{287} & \textFontInner{624} \\ 
+\textFontHead{66} & \textFontInner{189} & \textFontInner{216} & \textFontInner{702} & \textFontInner{678} & \textFontInner{502} & \textFontInner{432} \\ 
+\textFontHead{67} & \textFontInner{527} & \textFontInner{135} & \textFontInner{847} & \textFontInner{419} & \textFontInner{214} & \textFontInner{249} \\ 
+\textFontHead{68} & \textFontInner{416} & \textFontInner{731} & \textFontInner{745} & \textFontInner{657} & \textFontInner{840} & \textFontInner{559} \\ 
+\textFontHead{69} & \textFontInner{616} & \textFontInner{827} & \textFontInner{979} & \textFontInner{246} & \textFontInner{176} & \textFontInner{308} \\ 
+\textFontHead{70} & \textFontInner{125} & \textFontInner{668} & \textFontInner{538} & \textFontInner{735} & \textFontInner{402} & \textFontInner{421} \\ 
+\textFontHead{71} & \textFontInner{293} & \textFontInner{435} & \textFontInner{251} & \textFontInner{554} & \textFontInner{252} & \textFontInner{988} \\ 
+\textFontHead{72} & \textFontInner{315} & \textFontInner{608} & \textFontInner{294} & \textFontInner{754} & \textFontInner{355} & \textFontInner{984} \\ 
+\textFontHead{73} & \textFontInner{486} & \textFontInner{332} & \textFontInner{292} & \textFontInner{105} & \textFontInner{944} & \textFontInner{243} \\ 
+\textFontHead{74} & \textFontInner{155} & \textFontInner{401} & \textFontInner{205} & \textFontInner{599} & \textFontInner{348} & \textFontInner{157} \\ 
+\textFontHead{75} & \textFontInner{268} & \textFontInner{254} & \textFontInner{467} & \textFontInner{452} & \textFontInner{685} & \textFontInner{551} \\ 
+\textFontHead{76} & \textFontInner{767} & \textFontInner{952} & \textFontInner{415} & \textFontInner{719} & \textFontInner{543} & \textFontInner{899} \\ 
+\textFontHead{77} & \textFontInner{153} & \textFontInner{234} & \textFontInner{297} & \textFontInner{626} & \textFontInner{786} & \textFontInner{333} \\ 
+\textFontHead{78} & \textFontInner{997} & \textFontInner{305} & \textFontInner{833} & \textFontInner{714} & \textFontInner{569} & \textFontInner{794} \\ 
+\textFontHead{79} & \textFontInner{487} & \textFontInner{778} & \textFontInner{328} & \textFontInner{764} & \textFontInner{724} & \textFontInner{740} \\ 
+\textFontHead{80} & \textFontInner{642} & \textFontInner{766} & \textFontInner{271} & \textFontInner{923} & \textFontInner{610} & \textFontInner{518} \\ 
+\textFontHead{81} & \textFontInner{183} & \textFontInner{322} & \textFontInner{506} & \textFontInner{187} & \textFontInner{757} & \textFontInner{772} \\ 
+\textFontHead{82} & \textFontInner{237} & \textFontInner{701} & \textFontInner{644} & \textFontInner{748} & \textFontInner{166} & \textFontInner{238} \\ 
+\textFontHead{83} & \textFontInner{846} & \textFontInner{659} & \textFontInner{800} & \textFontInner{226} & \textFontInner{213} & \textFontInner{351} \\ 
+\textFontHead{84} & \textFontInner{983} & \textFontInner{353} & \textFontInner{103} & \textFontInner{330} & \textFontInner{699} & \textFontInner{433} \\ 
+\textFontHead{85} & \textFontInner{443} & \textFontInner{558} & \textFontInner{968} & \textFontInner{437} & \textFontInner{688} & \textFontInner{929} \\ 
+\textFontHead{86} & \textFontInner{481} & \textFontInner{362} & \textFontInner{312} & \textFontInner{291} & \textFontInner{192} & \textFontInner{928} \\ 
+\textFontHead{87} & \textFontInner{784} & \textFontInner{442} & \textFontInner{160} & \textFontInner{774} & \textFontInner{861} & \textFontInner{889} \\ 
+\textFontHead{88} & \textFontInner{587} & \textFontInner{750} & \textFontInner{769} & \textFontInner{671} & \textFontInner{522} & \textFontInner{573} \\ 
+\textFontHead{89} & \textFontInner{913} & \textFontInner{257} & \textFontInner{632} & \textFontInner{170} & \textFontInner{434} & \textFontInner{623} \\ 
+\textFontHead{90} & \textFontInner{484} & \textFontInner{788} & \textFontInner{210} & \textFontInner{290} & \textFontInner{725} & \textFontInner{967} \\ 
+\textFontHead{91} & \textFontInner{150} & \textFontInner{787} & \textFontInner{977} & \textFontInner{873} & \textFontInner{570} & \textFontInner{196} \\ 
+\textFontHead{92} & \textFontInner{672} & \textFontInner{927} & \textFontInner{431} & \textFontInner{190} & \textFontInner{329} & \textFontInner{948} \\ 
+\textFontHead{93} & \textFontInner{245} & \textFontInner{509} & \textFontInner{359} & \textFontInner{646} & \textFontInner{799} & \textFontInner{546} \\ 
+\textFontHead{94} & \textFontInner{511} & \textFontInner{110} & \textFontInner{473} & \textFontInner{886} & \textFontInner{406} & \textFontInner{370} \\ 
+\textFontHead{95} & \textFontInner{835} & \textFontInner{316} & \textFontInner{639} & \textFontInner{504} & \textFontInner{335} & \textFontInner{684} \\ 
+\textFontHead{96} & \textFontInner{302} & \textFontInner{207} & \textFontInner{108} & \textFontInner{112} & \textFontInner{540} & \textFontInner{931} \\ 
+\textFontHead{97} & \textFontInner{933} & \textFontInner{116} & \textFontInner{917} & \textFontInner{962} & \textFontInner{244} & \textFontInner{405} \\ 
+\textFontHead{98} & \textFontInner{806} & \textFontInner{220} & \textFontInner{759} & \textFontInner{274} & \textFontInner{438} & \textFontInner{541} \\ 
+\textFontHead{99} & \textFontInner{229} & \textFontInner{803} & \textFontInner{901} & \textFontInner{770} & \textFontInner{783} & \textFontInner{259} \\ 
+\textFontHead{100} & \textFontInner{964} & \textFontInner{582} & \textFontInner{709} & \textFontInner{326} & \textFontInner{680} & \textFontInner{388} \\ 
+\end{tabular}
+\end{center}
+\columnbreak
+\end{multicols*}
+
+
+
+
+\end{document}
+

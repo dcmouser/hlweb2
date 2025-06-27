@@ -1,0 +1,496 @@
+
+% for blank paragraphs
+\def\fakepar{\hfill\mbox{}\vspace{\parskip}\newline\mbox{}\hspace{\parindent}}
+
+
+
+% without this we can get latex trying to tweak spacing of headers and other weird stuff
+\raggedbottom
+\raggedcolumns
+
+
+% footer page numbers
+\newcommand{\mySetFooters}{
+% into margin to leave more space see same command below
+\rofoot*{\vspace{-1.2cm}{\pagemark}\hspace{-0.3cm}\scriptsize\mycontdfoot\textbf}%
+\lefoot*{\vspace{-1.2cm}\hspace{-0.3cm}{\pagemark}\scriptsize\mycontdfoot\textbf}%
+}
+
+
+% For intentionally blank facing pages
+\newpairofpagestyles{specialfooter}{
+  \cfoot{This page intentionally left blank.} % Set custom center footer
+\mySetFooters
+}
+
+\KOMAoptions{cleardoublepage=specialfooter}
+
+% default footer height/position
+\KOMAoptions{footheight=1cm}
+\setlength{\footskip}{1.75cm}
+
+
+% section and chapter name formatting part 1
+\let\origaddcontentsline\addcontentsline
+\let\origcftaddtitleline\cftaddtitleline
+\setlength{\columnsep}{2em}%
+\onehalfspacing%
+\setlength{\parindent}{0pt}%
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=0.5cm]{chapter}
+\renewcommand*{\chapterheadstartvskip}{\vspace*{-1.0cm}}
+\renewcommand*{\chapterheadendvskip}{\vspace*{0.5cm}}
+\renewcommand{\cftsecfont}{\ttfamily}
+\renewcommand{\cftsubsecfont}{\ttfamily}
+\renewcommand{\cftsubsubsecfont}{\ttfamily}
+\renewcommand{\cftchappagefont}{\ttfamily}
+\renewcommand{\cftsecpagefont}{\ttfamily}
+\renewcommand{\cfttoctitlefont}{\fontsize{25}{30}\selectfont\bfseries\scshape}
+\newenvironment{cb_quoteenv}{\hyphenpenalty=10000\exhyphenpenalty=10000}{} % quote environment for when we need one
+
+
+
+
+\DeclareTOCStyleEntries[entryformat=\ttfamily, pagenumberformat=\ttfamily]{tocline}{subsection, subsubsection}
+
+
+
+% section and chapter name formatting part 2
+\renewcommand\cftchapafterpnum{\vskip-2pt}
+\renewcommand\cftsecafterpnum{\vskip-2pt}
+
+% new subheading in italics not bold
+\newcommand\cbsubheadingOLD[1]{\vskip-0.75em\begin{singlespace}\bfseries #1\end{singlespace}}
+\newcommand\cbsubheading[1]{\vskip-0.75em\begin{singlespace}\small\itshape #1\end{singlespace}}
+
+
+%\newcommand\cbsubheadingTime[1]{\vskip-0.75em\begin{singlespace}\small\bfseries\itshape #1\end{singlespace}}
+\newcommand\cbsubheadingTime[1]{\vskip-0.75em\begin{singlespace}\small\itshape #1\end{singlespace}}
+
+
+\renewcommand\contentsname{}
+\defcaptionname{\languagename}{\contentsname}{}
+\addtokomafont{chapter}{\singlespacing\fontsize{40}{50}\selectfont}\renewcommand{\cftchapfont}{\ttfamily}
+\addtokomafont{subsection}{\singlespacing\Huge}
+\setkomafont{disposition}{\bfseries}
+\setlength{\cftbeforetoctitleskip}{-2em}
+\setlength{\cftaftertoctitleskip}{-2em}
+
+
+
+% checkbox lists, etc (uses package enumitem)
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=\openbox}
+\newlist{nobulletlist}{itemize}{2}
+\setlist[nobulletlist]{label=}
+
+
+
+% kludge fix for longfbox (see code comments)
+\makeatletter
+\newdimen\@tempdimd
+\makeatother
+
+
+
+% calendar support
+\usetikzlibrary{calendar,shapes.misc}
+\makeatletter%
+\tikzoption{day headings}{\tikzstyle{day heading}=[#1]}
+\tikzstyle{day heading}=[]
+\tikzstyle{day letter headings}=[
+    execute before day scope={ \ifdate{day of month=1}{%
+      \pgfmathsetlength{\pgf@ya}{\tikz@lib@cal@yshift}%
+      \pgfmathsetlength\pgf@xa{\tikz@lib@cal@xshift}%
+      \pgftransformyshift{-\pgf@ya}
+      \foreach \d/\l in {0/M,1/T,2/W,3/T,4/F,5/S,6/S} {
+        \pgf@xa=\d\pgf@xa%
+        \pgftransformxshift{\pgf@xa}%
+        \pgftransformyshift{\pgf@ya}%
+        \node[every day,day heading]{\l};%
+      } 
+    }{}%
+  }%
+]
+\makeatother%
+
+
+
+
+
+
+% For forcing text to very very top or very very bottom as part of footer
+% OVERLAY ON HEADER
+\newcommand{\overlayHeadText}[1]{
+\AddToShipoutPictureBG*{%
+  \AtPageUpperLeft{%
+    % Adjust the positioning: xshift and yshift to place text exactly where you need it
+    \raisebox{-\height-2.5mm}[0pt][0pt]{%
+      \hspace{2.5mm} % Horizontal position (20mm from the left)
+      \makebox[\textwidth][l]{#1} % The text to display
+    }
+  }
+}
+}
+%
+% OVERLAY ON FOOTER
+\newcommand{\overlayFootText}[1]{
+% Add a line of text to the bottom center of the first page
+\AddToShipoutPictureBG*{%
+  \AtPageLowerLeft{%
+    % Raise the text slightly above the bottom of the page
+    \raisebox{0.5cm}[0pt][0pt]{%
+      % Center the text horizontally
+      \hspace{0.5\paperwidth} % Moves the starting point to half the width of the paper
+			% force standard small font size
+			\fontsize{8.0}{8.0}\selectfont
+      \makebox[0pt][c]{#1} % Centers the text at this point
+    }
+  }
+}
+}
+%
+
+
+
+
+% Reseting to normal geometry
+\newcommand{\cbResetNormalGeometry}{
+% koma script can be finicky in twosided=semi mode about having different left and right margins which we dont want, hence the oddness about how we call this
+\newgeometry{top=\mygeometryMargin, left=\mygeometryMargin, right=\mygeometryMargin, bottom=\mygeometryBottom, inner=\mygeometryMargin, outer=\mygeometryMargin}
+%\restoregeometry
+\recalctypearea % without this we can lose page number after a newspaper sometimes (weird!!)
+% and now we need to REAPPLY again?
+\newgeometry{top=\mygeometryMargin, left=\mygeometryMargin, right=\mygeometryMargin, bottom=\mygeometryBottom, inner=\mygeometryMargin, outer=\mygeometryMargin}
+}
+
+
+
+% LAYOUTS THAT CAN BE SELECTED FOR LEADS/DOCUMENTS/ENTRIES
+% REPLACE MIN MARGINS WITH TIGHT BELOW?
+% NOT SURE THIS ONE IS USED
+\newcommand{\mylayoutMinMarginsBegin}{
+\newgeometry{margin=3em, top=2em, bottom=3em}\setlength{\footskip}{0.6cm}
+% do we need recalctypearea here and reapply geometry here like we do in reset? it doesnt SEEM so...
+% \recalctypearea % without this we can lose page number after a newspaper sometimes (weird!!)
+% \newgeometry{margin=3em, top=2em, bottom=3em}
+}
+
+
+
+% AUTO SET WHEN USING HEADINGSTYLE=FOOTER on document entries
+% For very tight geometry margins when doing full page documents, based on whether page size is narrow or wide
+% THIS ONE *IS* USED
+\newcommand{\mylayoutTightNarrowMarginsBegin}{
+%\newgeometry{margin=.6cm, top=.45cm, bottom=1.2cm}\setlength{\footskip}{0.6cm}
+\newgeometry{margin=.6cm, top=.45cm, bottom=1.5cm}\setlength{\footskip}{0.6cm}
+}
+%
+\newcommand{\mylayoutTightNarrowMarginsEnd}{
+\cbResetNormalGeometry
+}
+
+\newcommand{\mylayoutTightWideMarginsBegin}{
+%\newgeometry{margin=.9cm, top=.45cm, bottom=1.2cm}\setlength{\footskip}{0.6cm}
+\newgeometry{margin=.9cm, top=.45cm, bottom=1.5cm}\setlength{\footskip}{0.6cm}
+}
+%
+\newcommand{\mylayoutTightWideMarginsEnd}{
+\cbResetNormalGeometry
+}
+
+
+
+
+\newcommand{\mylayoutMinMarginsEnd}{
+\cbResetNormalGeometry
+}
+
+
+
+
+
+
+
+
+
+
+% length variable used in custom tombstones
+\newlength{\remainingwidthDivider}
+
+% dividers (these can be overwritten later with \renewcommand)
+\newcommand{\cbDividerlead}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}
+}
+%
+\newcommand{\cbDividerdefault}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{80}}\end{center}
+}
+%
+\newcommand{\cbDividerfinal}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{80}}\end{center}
+}
+%
+\newcommand{\cbDividersquare}{
+\begin{center}{\footnotesize\faSquare}\end{center}
+}
+%
+\newcommand{\cbDividercircle}{
+\begin{center}{\footnotesize\faCircle}\end{center}
+}
+%
+\newcommand{\cbDividerday}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=5cm]{80}}\end{center}
+}
+%
+\newcommand{\cbDividerotherwise}{
+\begin{center}{\footnotesize\itshape - otherwise - }\end{center}
+}
+
+
+
+
+
+% misc
+\newcommand{\mySpaceAfterSymbol}{
+\hspace{0.1cm}%
+}
+
+
+
+% cblrender calls for kludge embedding header after quote (mid page)
+\newcommand{\myKludgeForMidPageHeader}[1]{%
+\begingroup \let\clearpage\relax\vspace{3em}{#1} \endgroup
+}
+
+%
+\newcommand{\myHugeHeaderFontSelect}{
+\fontsize{96}{128}\selectfont
+}
+%
+\newcommand{\myLargeHeaderFontSelect}{
+\fontsize{48}{64}\selectfont
+}
+%
+\newcommand{\mySmallHeaderFontSelect}{
+\fontsize{24}{32}\selectfont
+}
+
+
+
+
+
+% replace \underline with soul version
+\let\underline\ul
+
+% replace \sout with soul version
+\let\sout\st
+
+% thicker underlines by default?
+\setul{}{.2ex}
+\setuldepth{abc}
+
+
+
+
+% helper for centering captions under images even when not centered on page
+\newsavebox{\myfigbox} % box register to hold the image before rendering
+
+
+
+
+% remove default label in captions
+\captionsetup[figure]{labelformat=empty, skip=0em} % Removes the label from figure captions
+\captionsetup[subfloat]{labelformat=empty, skip=0em} % Removes the label from subfigure captions
+
+
+% captions, attempting to fix spacing above below
+\newcommand{\captionCbTop}[1]{
+  \caption{#1}
+}
+%
+\newcommand{\captionCbTopMargin}[1]{
+  \caption{#1}
+  \vspace*{-0.75em}
+}
+
+\newcommand{\captionCbBottom}[1]{
+%\vspace*{0.5em}%
+% kludge to avoid it rubber growing the space if we make it possitive, we use a blank line and negative vspace
+~
+\vspace*{-1em}
+\caption{#1}%
+\vspace*{-.75em}%
+}
+%
+\newcommand{\captionCbBottomMargin}[1]{
+  \vspace*{-.25em}
+  \caption{#1}
+  \vspace*{-1.25em}
+}
+
+% no lower caption we need to remove space?
+\newcommand{\captionCbEmptyBelow}{
+\vspace{-1.45em}
+}
+
+
+
+
+
+
+
+% new helper to align caption centered under image not on page
+\newcommand{\captionCbFigBoxTopWrap}[1]{
+%\vspace*{-.25em}
+\noindent\parbox{\wd\myfigbox}{\noindent\captionof{figure}{#1}}
+%
+\noindent}
+
+\newcommand{\captionCbFigBoxTopBelowWrap}{
+\vspace*{.25em}
+}
+
+
+\newcommand{\captionCbFigBoxBottomWrap}[1]{
+\vspace*{-.25em}
+\noindent\parbox{\wd\myfigbox}{\noindent\captionof{figure}{#1}}
+\vspace*{-1.25em}
+}
+
+\newcommand{\captionCbFigBoxBottomAboveWrap}{
+}
+
+
+
+\newcommand{\captionCbFigBoxTopNoWrap}[1]{
+\vspace*{-1em}
+\noindent\captionof{figure}{#1}
+%
+\noindent}
+
+\newcommand{\captionCbFigBoxTopBelowNoWrap}{
+\vspace*{-1em}
+}
+
+
+\newcommand{\captionCbFigBoxBottomNoWrap}[1]{
+\vspace*{.5em}
+\noindent\captionof{figure}{#1}
+\vspace*{-1.25em}
+}
+
+\newcommand{\captionCbFigBoxBottomAboveNoWrap}{
+\vspace*{-1em}
+}
+
+
+
+
+
+
+
+
+
+
+
+\newcommand{\cbBlockStart}[1]{
+\begin{minipage}[#1]{\columnwidth}
+}
+\newcommand{\cbBlockEnd}{
+\end{minipage}
+}
+
+
+
+
+
+\newif\ifwarnpgbrk
+\warnpgbrkfalse
+\newcounter{question}
+
+\newcommand\mycontdfootLabelMethodUnused{\ifnum\getpagerefnumber{question-start-\thequestion}<\getpagerefnumber{question-end-\thequestion} \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
+
+\newenvironment{breakwarnsec}{\warnpgbrktrue}{}
+
+
+% new "continued on next page" text; we show a blank space if not, to preserve spacing
+\newcommand\mycontdfoot{
+  \ifwarnpgbrk
+    \begin{center}
+      CONTINUED ON NEXT PAGE
+    \end{center}
+  \else
+    \begin{center}
+      ~
+    \end{center}
+  \fi
+}
+
+
+
+
+
+% 4/13/25 NEEDSPACE DOES NOT WORK CURRENTLY, I CAN'T GET IT TO WORK IN MULTICOLS
+
+% go to next column/page if we only have a tiny bit more space in this column
+\makeatletter
+\newcommand{\MCneedspace}[1]{%
+  % #1 represents the required space (e.g., "3\baselineskip")
+  \ifdim\@colroom<#1\relax
+    \vfill\columnbreak
+  \fi}
+\makeatother
+
+% go to next column/page if we only have a tiny bit more space in this column
+\newcommand{\myNeedSpaceEntry}{
+%\needspace{6\baselineskip}
+}
+
+
+
+
+% 5/15/25 compact small text and items
+\newenvironment{mycompact}{
+\begingroup
+  \scriptsize
+  \setlist[itemize]{nosep, leftmargin=*, itemsep=0pt, topsep=0pt, parsep=0pt}
+  \setlist[enumerate]{nosep, leftmargin=*, itemsep=0pt, topsep=0pt, parsep=0pt}
+}{
+  \endgroup
+}
+
+\newenvironment{myttcompact}{
+\begingroup
+  \texttt
+  \scriptsize
+  \setlist[itemize]{nosep, leftmargin=*, itemsep=0pt, topsep=0pt, parsep=0pt}
+  \setlist[enumerate]{nosep, leftmargin=*, itemsep=0pt, topsep=0pt, parsep=0pt}
+}{
+  \endgroup
+}
+
+
+
+
+
+% new for text image wrapping
+\newcount\imageheightsp   % will hold image height in sp
+\newcount\lineheightsp    % will hold one line’s height in sp
+\newcount\wraplines       % result = number of lines
+
+
+
+% testing monospaced fix
+%\setmonofont{Courier New} % or Courier New
+%\setmonofont{cmtt}
+
+
+
+
+\newcommand{\jrledline}[2]{%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}Xr@{}}
+    #1 \dotfill & #2
+  \end{tabularx}%
+}
+

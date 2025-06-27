@@ -81,7 +81,7 @@ JrCbLarkRule_Atom_number = "number"
 JrCbLarkRule_Atom_boolean = "boolean"
 JrCbLarkRule_Atom_string = "string"
 JrCbLarkRule_Atom_identifier = "identifier"
-JrCbLarkRule_Atom_null = "null"
+JrCbLarkRule_Atom_null = "None"
 JrCbLarkRule_Atom_AllList = [JrCbLarkRule_Atom_number, JrCbLarkRule_Atom_boolean, JrCbLarkRule_Atom_string, JrCbLarkRule_Atom_identifier, JrCbLarkRule_Atom_null]
 JrCbLarkRule_Collection_list = "collection_list"
 JrCbLarkRule_Collection_dict = "collection_dict"
@@ -90,4 +90,7 @@ JrCbLarkRule_Collection_AllList = [JrCbLarkRule_Collection_list, JrCbLarkRule_Co
 JrCbLarkRule_boolean_true = "boolean_true"
 JrCbLarkRule_boolean_false = "boolean_false"
 
+# newly added for handling ## and ### sections with generic text labels
+JrCbLarkRule_nonstringtextline = "nonstringtextline"
+JrCbLarkRule_entry_linelabel = "entry_linelabel"
 

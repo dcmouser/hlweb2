@@ -11,15 +11,14 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from lib.jr.jrfuncs import jrprint
+from lib.jr import jrdloghelpers
 
 from pathlib import Path
 import os
 
 
 
-# version info
-JR_VERSION_NUMBER = 2.1
-JR_VERSION_DATE_STR = "Oct 30, 2024"
+# version info; NOTE: we now use a shared version for casebook, defined from DefCbVersionString in casebookDefines
 
 
 
@@ -41,10 +40,28 @@ from lib.jr.jrglobalenv import jrGlobalEnv
 DEBUG = jrGlobalEnv.getValue("JR_DJANGO_DEBUG", False)
 if (DEBUG):
     print("\n\nNOTE: Django running with debug mode enabled..")
+#
+# get base location of log files ending with / and default to the BASE_DIR base of django
+JRBASELOGDIR = jrGlobalEnv.getValue("JRBASELOGDIR", str(BASE_DIR) + "/")
 
 
 
-ALLOWED_HOSTS = ["*", "nycnoir.org"]
+
+# misc. server config
+ALLOWED_HOSTS = ["*", "nynoir.org", "nycnoir.org"]
+
+
+
+
+
+# crispy forms 3rd party addon
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
+
+
+
 
 
 # Application definition
@@ -52,7 +69,7 @@ ALLOWED_HOSTS = ["*", "nycnoir.org"]
 INSTALLED_APPS = [
     "django_extensions",
     "django.contrib.admin",
-    # django-allauth
+
     "django.contrib.sites",
     #
     "django.contrib.auth",
@@ -61,28 +78,45 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+
     # 3rd party addons
     "huey.contrib.djhuey",  # huey task manager
     "active_link",  # for active link highlighting
     "crispy_forms",  # better forms
     "crispy_bootstrap5",  # better forms
+    #"import_export", # import and export data -- not what we wanted
+
+    "dbbackup",  # django-dbbackup
+    "dbbackup_ui", #djnango-dbbackup user interface 
+
+    # debug toolbar creating errors in log?
     "debug_toolbar",  # debug toolbar on each view
+
     # allauth contd.
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.google",
+
     # our apps
     "accounts",
     "core",
-    "games",
     "gadmin",
-    # 
+    "games",
+
+    # widget for editing game file text on game edit view
     "django_ace",
+
+    # sendgrid for email sending
+    "sendgrid_backend",
 ]
 
 
+
+# DB Backup App (see also )
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_STORAGE_OPTIONS = {"location": BASE_DIR / "backup"}
 
 
 
@@ -90,8 +124,8 @@ INSTALLED_APPS = [
 # we do this so that we can avoid using whitenoise unless we need to
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 if (jrGlobalEnv.getValue("JR_DJANGO_WHITENOISE",False)):
@@ -103,6 +137,7 @@ if (jrGlobalEnv.getValue("JR_DJANGO_WHITENOISE",False)):
 MIDDLEWARE.extend([
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+
 
 # see https://github.com/bugsink/verbose_csrf_middleware/blob/main/README.md
 # for diagnosing CSRF problems
@@ -125,7 +160,6 @@ AUTHENTICATION_BACKENDS = [
     # allauth
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
-
 
 ROOT_URLCONF = "hldjango.urls"
 
@@ -151,7 +185,7 @@ WSGI_APPLICATION = "hldjango.wsgi.application"
 
 
 # Database
-# ATTN: SEE SUB SETTINGS
+# ATTN: SEE deployment/server specific SUB SETTINGS
 
 
 
@@ -188,9 +222,11 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+
+# must we set timezone manually?
+# TIME_ZONE = "America/Chicago"
 
 
 # Static files (CSS, JavaScript, Images)
@@ -203,12 +239,6 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-# ATTN: HUEY SETUP is in sub settings
-
-
-
 
 
 
@@ -224,10 +254,28 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 
 
+
+# social account return redirects should use https
+# see https://stackoverflow.com/questions/56129708/how-to-force-redirect-uri-to-use-https-with-python-social-app
+# ATTN: some of these are also set now in production_docker.py
+
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+USE_X_FORWARDED_HOST = True
+
+# Allauth; Controls the life time of the session. Set to None to ask the user (“Remember me?”), False to not remember, and True to always remember.
+ACCOUNT_SESSION_REMEMBER = True
+
+# see production_docker.py
+# if we set this to true without forcing redirect to https then i think it might fail to log us in?
+# SESSION_COOKIE_SECURE = True
+# ATTN: could this block login from http?
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+
 # can be configured in the admin/ area dynamically AND/OR here (though both for same provider is problematic)
 # see https://docs.allauth.org/en/latest/socialaccount/provider_configuration.html
-# set in settings_secret
-#SOCIALACCOUNT_PROVIDERS = {}
+# now set in settings_secret
 
 
 # allauth settings
@@ -235,10 +283,20 @@ SITE_ID = 1
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_NOTIFICATIONS = True
 
+# custom 
+# ATTN: THIS DOESNT SEEM TO BE USED
+ACCOUNT_USERNAME_VALIDATORS = 'accounts.models.myCustomUserUsernameValidators'
+# ACCOUNT_SIGNUP_FIELDS = ['username*', 'email', 'password1*', 'password2*', 'bggname']
+
 # other email settings set in secure or insecure derived settings
 # EMAIL_HOST, etc.
 
 
+# NOT CURRENTLY USED
+#ACCOUNT_FORMS = {
+#  "signup": "accounts.forms.MyCustomAllAuthSignupForm"
+#}
+#ACCOUNT_ADAPTER = 'accounts.forms.AccountAdapter'
 
 
 
@@ -252,8 +310,7 @@ LOGOUT_REDIRECT_URL = "coreHome"
 # custom user model
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-# crispy forms 3rd party addon
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+
 
 
 # media
@@ -281,6 +338,251 @@ MESSAGE_TAGS = {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# LOGGING CONFIGURATION
+
+LOGGING = {
+    'version': 1,
+    # ATTN: django documentation says we probably do NOT want to set disable_existing_loggers true
+    'disable_existing_loggers': False,
+    #'disable_existing_loggers': True,
+
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        # for when we are logging ip etc
+        'request_formatter': {
+            #'format': '%(asctime)s  - %(name)s - %(ip)s - %(levelname)s -  %(message)s',
+            #'format': '%(levelname)s - %(asctime)s  - %(name)s - %(ip)s - %(message)s',
+            #'datefmt': '%Y-%m-%d %H:%M:%S'
+            'format': '{levelname} - {asctime} - {module} - {ip} - {message}',
+            'style': '{',
+        },
+    },
+
+    'filters': {
+        # a filter if we want to log the ip of requests
+        'jrAddClientIpFilter': {
+            '()': 'lib.jr.jrdloghelpers.JrAddClientIpFilter',
+            },
+        'jrRejectIgnorableRequestsFilter': {
+            '()': 'lib.jr.jrdloghelpers.jrRejectIgnorableRequestsFilter',
+            },
+        #'jrProcessGunicornFilterKludgeFixMessage': {
+        #    '()': 'lib.jr.jrdloghelpers.jrProcessGunicornFilterKludgeFixMessage',
+        #    },
+        },
+
+    'handlers': {
+        # if we want to send to the console
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+        # here we split django logs into 3 possibilities, one for serious errors, and one for requests (INCLUDING serious errors, duplicated), and one for "other" which im not sure ever trigger
+        'django_requests': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/cbDjango_requests.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'request_formatter',
+            #'filters': ['jrProcessGunicornFilterKludgeFixMessage', 'jrAddClientIpFilter', 'jrRejectIgnorableRequestsFilter'],
+            'filters': ['jrAddClientIpFilter', 'jrRejectIgnorableRequestsFilter'],
+        },
+        'django_errors': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/cbDjango_errors.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'request_formatter',
+            #'filters': ['jrProcessGunicornFilterKludgeFixMessage', 'jrAddClientIpFilter'],
+            'filters': ['jrAddClientIpFilter'],
+        },
+        'django_other': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/cbDjango_other.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        # huey log
+        'huey': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/app/huey.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        # custom logging of my app
+        'app': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/app/cbApp.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'filters': ['jrAddClientIpFilter'],
+        },
+        # console errors
+        'errors_console': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+
+
+        # Testing (normally we let request handler get gunicorn and wsgi messages)
+        'gunicorn': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/cbDjango_gunicorn.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'request_formatter',
+            #'filters': ['jrProcessGunicornFilterKludgeFixMessage', 'jrAddClientIpFilter'],
+            'filters': ['jrAddClientIpFilter'],
+        },
+        'wsgi': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/cbDjango_wsgi.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'request_formatter',
+            'filters': ['jrAddClientIpFilter'],
+        },
+
+
+        # catchall for anything not yet caught?
+        'catchallHandler': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': JRBASELOGDIR + 'jrlogs/django/catchall.log',
+            'maxBytes': 1024*1024*1,  # 1 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+
+
+    'loggers': {
+        # we can put catchall here if we want to try to catch EVERYTHING?
+#        '': {
+#            'handlers': ['catchallHandler'],
+#            'level': 'DEBUG',
+#        },
+
+        # we use these to log errors and requests; it looks like sometimes django.request is called and sometimes django.server is called depending on how the built-in server is run
+        'django.request': {
+            'handlers': ['django_errors', 'django_requests', 'errors_console'],
+            'level': 'INFO',
+            'propagate': False, # don't propagate into higher log
+        },
+        'django.server': {
+            'handlers': ['django_errors', 'django_requests', 'errors_console'],
+            'level': 'INFO',
+            'propagate': False, # don't propagate into higher log
+        },
+
+
+
+        # Attempt to catch gunicorn/wsgi requests
+        #
+        # ATTN: A problem i think here is that the gunicorn logger does NOT attach a request object so we can't get request from the gunicorn log event so we can get the ip
+        # our remote production server gets requests in from gunicorn logger
+        'gunicorn': {
+            'handlers': ['gunicorn'],            
+            #'handlers': ['django_errors', 'django_requests', 'errors_console'],
+            'level': 'INFO',
+            'propagate': False, # don't propagate into higher log
+        },
+        # wsgi should be the logger setup by Translogger when serving via waitress/gunicorn in production server
+        'wsgi': {
+            'handlers': ['wsgi'],  
+            #'handlers': ['django_errors', 'django_requests', 'errors_console'],
+            'level': 'INFO',
+            'propagate': False, # don't propagate into higher log
+        },
+
+
+
+        #
+        # other django errors when NOT serving a request? (im not sure this ever gets triggered but maybe maintenance operations?)
+        'django': {
+            'handlers': ['django_other', 'errors_console'],
+            'level': 'INFO',
+        },
+        #
+        # and this is for my custom logging of activity
+        'app': {
+            'handlers': ['app', 'errors_console'],
+            'level': 'DEBUG',
+            'propagate': False, # don't propagate into higher log
+        },
+        # and this is for my custom logging of activity
+        'huey': {
+            'handlers': ['huey', 'errors_console'],
+            'level': 'INFO',
+            'propagate': False, # don't propagate into higher log
+        },
+        # enable for catching everything for testing
+        '': {
+            'handlers': ['catchallHandler'],
+            'level': 'INFO',
+        },
+    },
+}
+
+
+# ensure logging directories are created
+os.makedirs(JRBASELOGDIR + 'jrlogs/django', exist_ok=True)
+os.makedirs(JRBASELOGDIR + 'jrlogs/app', exist_ok=True)
+os.makedirs(JRBASELOGDIR + 'jrlogs/casebook', exist_ok=True)
+os.makedirs(JRBASELOGDIR + 'jrlogs/nginx', exist_ok=True)
+# on a linux server if we actually try DELETING in use files the logging just goes into black hole, so we need to truncate these instead
+JRLOGVIEWER_DONTDELETE_LIST = ['django/cbDjango_requests.log', 'django/cbDjango_errors.log','django/cbDjango_other.log', 'app/huey.log', 'app/cbApp.log', 'django/catchall.log', 'nginx/nginx_access.log', 'nginx/nginx_error.log', 'django/cbDjango_gunicorn.log', 'django/cbDjango_wsgi.log']
+
+
+
+
+
+
+
+
+
+# ATTN: HUEY SETUP is in deployment/server-specific sub settings
+
+
+
+
+
+
+
+
+# MY SETTINGS
+
+
 # for when a game is deleted, what to do with game folder
 DELETE_USER_GAMEFOLDER_METHOD = "rename"
 
@@ -302,3 +604,5 @@ JR_GROUPNAME_GAMEAUTHOR = "GameAuthor"
 JR_GROUPNAME_SITEGADMIN = "SiteGadmin"
 JR_PERMISSIONNAME_CANPUBLISHGAMES = "canPublishGames"
 JR_PERMISSIONNAME_CANGADMINSITE = "canGadminSite"
+
+

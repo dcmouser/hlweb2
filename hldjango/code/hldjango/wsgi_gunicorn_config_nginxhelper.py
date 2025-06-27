@@ -3,7 +3,6 @@
 # see https://github.com/benoitc/gunicorn/blob/master/examples/example_config.py
 # see https://azureossd.github.io/2023/01/27/Configuring-Gunicorn-worker-classes-and-other-general-settings/
 
-import multiprocessing
 
 
 # see nginx_config.conf and run_mainservices.sh for use of this file
@@ -26,7 +25,17 @@ worker_class = "gthread"
 
 
 
-# log to stdout/stderr
-accesslog = "-"
-errorlog = "-"
+# logs
+# ATTN: ALSO SEE nginx_config.conf for a bit of duplication
+#
 #loglevel = "debug"
+#accesslog = "-"
+#accesslog = None
+#accesslog = "/dev/null"
+#errorlog = "-"
+accesslog = "/jrlogs/nginx/nginx_access.log"
+errorlog = "/jrlogs/nginx/nginx_error.log"
+
+
+# let's try to log the proper ip coming from nginx, which we will then parse out in our logging filter; see jrdloghelpers.py
+access_log_format = '%({X-Forwarded-For}i)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'

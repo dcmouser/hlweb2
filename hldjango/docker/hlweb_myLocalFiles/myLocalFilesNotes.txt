@@ -1,0 +1,6 @@
+I believe this build (production_local) is just a web interface to my EXISTING REAL normal local windows apps and files.
+It does not create new containers it uses our real windows files.
+
+for this compose build we bind to our real directory for easier changing of code and reloading
+
+Default initial superuser is: admin / admin

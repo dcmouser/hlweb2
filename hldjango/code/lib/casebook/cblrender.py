@@ -1,13 +1,18 @@
 from .cbrender import CbRenderDoc, CbRenderSection, CbRenderLead, outChunkManager
 
 # ast
-from .jrastvals import AstValString
-from .jrastfuncs import getUnsafeDictValueAsString, getUnsafeDictValueAsNumber, convertEscapeUnsafePlainTextToLatex, makeLatexLabelFromRid, DefLatexVouchedPrefix, isTextLatexVouched, isTextLatexVouchedEmbeddable, removeLatexVouch, convertEscapeVouchedOrUnsafePlainTextToLatex, makeLatexLinkToRid, DefContdStr, DefInlineLeadPlaceHolder, vouchForLatexString
+from .jrastvals import AstValString, AstValNull
+from .jrast import ResultAtomLatex, ResultAtomMarkdownString, ResultAtomPlainString, ResultAtomNote
+from .jrastfuncs import getUnsafeDictValueAsString, getUnsafeDictValueAsNumber, convertEscapeUnsafePlainTextToLatex, makeLatexLabelFromRid, isTextLatexVouched, isTextLatexVouchedEmbeddable, removeLatexVouch, convertEscapeVouchedOrUnsafePlainTextToLatex, makeLatexLinkToRid, DefContdStr, vouchForLatexString, convertIdToSafeLatexId
 #
 from .cbdeferblock import CbDeferredBlock, CbDef_SkipNextNewline, CbDeferredBlockPotentialEndLeadTime
 #
-from .cbfuncs_core_support import wrapTextInLatexBox
+from .cbfuncs_core_support import wrapInLatexBox, makeLatexSafeFilePath, calcLatexSizeKeywordFromBaseAndMod, parseFontSizeStringToLatexCommand, calculateLatexForItemTimeBoxStyle, calculateLatexForItemTimeHeaderStyle
+from .cbfuncs_core_support import makeLatexReferenceToLeadById, makeLatexReferenceToLead
 from .casebookDefines import *
+
+# translation
+from .cblocale import _
 
 # my libs
 from lib.jr import jrfuncs
@@ -23,6 +28,10 @@ import re
 
 #
 from lib.jr import jrpdf
+
+# python modules
+import os
+
 
 
 
@@ -50,7 +59,6 @@ class CblRenderDoc(CbRenderDoc):
     def __init__(self, jrinterp):
         super().__init__(jrinterp)
         #
-        self.options = None
         self.chunks = outChunkManager()
         self.setCurrentColumnCount(1)
         self.setLastEntryHadPageBreakAfter(True)
@@ -67,17 +75,22 @@ class CblRenderDoc(CbRenderDoc):
         self.jrp = jrpdf.JrPdf()
         #
         #self.tocTopLabels = []
-
-    def taskSetOptions(self, options):
-        # start with user configured options
-        env = self.getEnvironment()
-        renderOptions = env.getEnvValueUnwrapped(None, "rendererData", None)
-        self.options = jrfuncs.deepCopyListDict(renderOptions)
-        # now overwrite with any passed in
-        jrfuncs.deepMergeOverwriteA(self.options, options)
         #
-        # FORCE option to make sure user cannot change it
-        self.options["latexExeFullPath"] = DefCbDefine_latexExeFullPath
+        # font support
+        self.latexAdds = []
+        self.fontDictionary = {}
+        # default font
+        self.fontDictionary["default"] = {"command": "\\normalfont", "size": "normal", "scale": 1.0, "color": None}
+        #
+        # predefined dividers, defined in latex)
+        self.dividers = {}
+        self.setDividerCommand("lead","cbDividerlead")
+        self.setDividerCommand("default","cbDividerdefault")
+        self.setDividerCommand("day","cbDividerday")
+        self.setDividerCommand("final","cbDividerfinal")
+        self.setDividerCommand("circle","cbDividercircle")
+        self.setDividerCommand("square","cbDividersquare")
+        self.setDividerCommand("otherwise","cbDividerotherwise")
 
 
     def setCurrentColumnCount(self, val):
@@ -90,8 +103,7 @@ class CblRenderDoc(CbRenderDoc):
     def setLastEntryHadPageBreakAfter(self, val):
         self.lastEntryHadPageBreakAfter = val
 
-    def getOption(self, keyName, defaultVal):
-        return jrfuncs.getDictValueOrDefault(self.options, keyName, defaultVal)
+
 
 
     def printDebug(self, env):
@@ -99,6 +111,8 @@ class CblRenderDoc(CbRenderDoc):
         jrprint("Debug rendering from CbRenderDoc ({} sections):".format(len(self.children)))
         for section in self.children.getList():
             section.printDebug(env)
+
+
 
 
     def renderToPdf(self, suffixedOutputPath, suffixedBaseFileName, flagDebug, renderSectionName):
@@ -126,10 +140,10 @@ class CblRenderDoc(CbRenderDoc):
         jrfuncs.saveTxtToFile(filePath, documentText, "utf-8")
         #
         #
-        retv = self.generatePdf(filePath, flagDebug)
+        success = self.generatePdf(filePath, flagDebug)
         #
         # build list of created files
-        retv = jrfuncs.pathExists(expectedPdfFilePath)
+        pdfExists = jrfuncs.pathExists(expectedPdfFilePath)
         if (jrfuncs.pathExists(filePath)):
             fileList.append(filePath)
         if (jrfuncs.pathExists(expectedPdfFilePath)):
@@ -137,7 +151,8 @@ class CblRenderDoc(CbRenderDoc):
         if (jrfuncs.pathExists(expectedLogFilePath)):
             fileList.append(expectedLogFilePath)
         #
-        return [retv, fileList]
+        success = (success and pdfExists)
+        return [success, fileList]
 
 
 
@@ -152,7 +167,6 @@ class CblRenderDoc(CbRenderDoc):
         #
         retv = self.jrp.generatePdflatex(filePath, flagDebug, cleanExtras)
 
-
         return retv
 
  
@@ -162,27 +176,58 @@ class CblRenderDoc(CbRenderDoc):
 
 
 
-    def convertMarkdownOrVouchedTextToLatex(self, text):
+    def convertMarkdownOrVouchedTextToLatex(self, text, flagProtectStartingSpace, flagConvertNewlinesToLatexSpecialNewline):
+        if ("ATTN FUCK OFF" in text):
+            jrprint("DEBUG BREAK")
         if (isTextLatexVouched(text)):
             # do NOT markdown strings that are vouched latex
             latexText = removeLatexVouch(text)
             return latexText
-        return self.convertMarkdownToLatexDontVouch(text)
+        return self.convertMarkdownToLatexDontVouch(text, flagProtectStartingSpace, flagConvertNewlinesToLatexSpecialNewline)
 
-    def convertMarkdownToLatexDontVouch(self, text):
+
+    def convertMarkdownToLatexDontVouch(self, text, flagProtectStartingSpace, flagConvertNewlinesToLatexSpecialNewline):
         # convert to latex using mistletoe library
         [latexText, extras] = self.hlMarkdown.renderMarkdown(text, "latex", True)
+        if (flagProtectStartingSpace) and (len(latexText)>0) and (latexText[0]==" "):
+            latexText = "~" + latexText[1:]
+
+        if (flagConvertNewlinesToLatexSpecialNewline):
+            # this is useful when we are passing text to a function
+            #latexText = latexText.replace("\n", "\\newline ")
+            latexText = latexText.replace("\n", " \\\\ ")
+
+        return latexText
+    
+
+    def convertMarkdownToLatexDontVouchDoEscapeNewlines(self, text, flagProtectStartingSpace, flagRunUserEscapes, flagRemoveDoubleLineBreaks):
+        # this has use replacing newlines but not doubling them as normal
+        # this will be false if its already run
+        if (flagRunUserEscapes):
+            text = jrfuncs.expandUserEscapeChars(text)
+        # THIS IS EVIL KLUDGE - the problem is that when we have a newline and convert to markdown, it DOUBLES the newlines, but in this context we dont want double
+        latexText = self.convertMarkdownToLatexDontVouch(text, flagProtectStartingSpace, True)
+        # now UNDO double newlines.. kludgey ugly i know
+        if (flagRemoveDoubleLineBreaks):
+            #latexText = latexText.replace("\\newline \\newline", "\\newline")
+            latexText = latexText.replace(" \\\\  \\\\ ", " \\\\ ")
+        else:
+            latexText = latexText.replace(" \\\\  \\\\ ", " \\\\~\\\\ ")
+
+        # clean up line break spaces
+        latexText = latexText.replace(" \\\\ ", "\\\\")
+
         return latexText
 
 
 
     # rendering code taken from hlparser start by searching for "def renderLeads(...)"
 
-    def renderMarkdownToLatex(self, markdownStr):
+    def renderMarkdownToLatex_UNUSEDWTF(self, markdownStr):
         # convert markdown to latex
         return str
     
-    def buildPdfFromLatex(self, latexStr, outFilePath):
+    def buildPdfFromLatex_UNUSEDWTF(self, latexStr, outFilePath):
         # build a pdf from a latex str
         return False
 
@@ -204,17 +249,23 @@ class CblRenderDoc(CbRenderDoc):
         self.mergeQueuedInlineLeadToRenderSectionWithId(env, self.getMainLeadsSectionName())
 
         # now impose and OVERWRITE any task-set options onto sections
-        self.imposeTaskOptionsOnSections()
+        self.imposeTaskOptionsOnSections(env)
 
         # any generic post rendering steps?
         # walk leads, do any final steps (for example this adds deferred time blocks to leads)
-        leadList = self.calcFlatLeadList()
+        leadList = self.calcFlatLeadList(False)
         for lead in leadList:
             self.postProcessLeadRenderRun(lead, task, rmode, env)
 
         # debug author report generation?
         reportMode = task.getReportMode()
         if (reportMode):
+            # ATTN: 11/14/24 this is not helping
+            # we need mind manager nodes for reports? 
+            if (False):
+                interp = self.getInterp()
+                interp.mindManager.buildAndResolveNodesAndLinks(env)
+            # build reports
             self.generateReportSections(env, self.getReportSectionName())
         else:
             self.hideReportSections(env, self.getReportSectionName())
@@ -223,11 +274,22 @@ class CblRenderDoc(CbRenderDoc):
         self.sort()
 
 
-    def imposeTaskOptionsOnSections(self):
+
+
+
+    def imposeTaskOptionsOnSections(self, env):
         # there are options that the user can configure in their casebook file, which we can OVERWRITE in task options
+        leadSection = self.getMainLeadsSection()
+        #
+        sectionBreak = self.getOption("sectionBreak", None)
+        sectionColumns = self.getOption("sectionColumns", None)
         leadBreak = self.getOption("leadBreak", None)
         leadColumns = self.getOption("leadColumns", None)
-        leadSection = self.getMainLeadsSection()
+        #
+        if (sectionBreak is not None):
+            leadSection.setSectionBreak(sectionBreak)
+        if (sectionColumns is not None):
+            leadSection.setSectionColumns(sectionColumns)
         if (leadBreak is not None):
             leadSection.setLeadBreak(leadBreak)
         if (leadColumns is not None):
@@ -236,6 +298,7 @@ class CblRenderDoc(CbRenderDoc):
 
     def postProcessLeadRenderRun(self, lead, task, run, env):
         # executed after building all leads
+
         endTimeBlock = CbDeferredBlockPotentialEndLeadTime(None, None, self)
         lead.addBlocks(endTimeBlock)
 
@@ -325,45 +388,63 @@ class CblRenderDoc(CbRenderDoc):
 
     def renderItem(self, env, item, parentSection):
         optionSkipDebugText = True
+        optionExceptionOnNullBlockRender = False
         #
 
         # items can be marked as not to be rendered
         visible = item.getVisibility()
         if (not visible):
             return
+        
+        # start
+        allLatexText = ""
+
+        # add any start layouts
+        allLatexText += self.layoutsLatex(env, item, True)
 
         # generate header text toc, etc.
         # NEW: we have the option to defer this until later
         if (item.getAutoHeaderRender()):
-            allLatexText = self.calcHeaderLatexForLead(item)
+            allLatexText += self.calcHeaderLatexForLead(env, item, parentSection, False)
         else:
-            allLatexText = ""
+            allLatexText += ""
 
         isLead = isinstance(item, CbRenderLead)
         if (isLead):
-            useTombstones = item.calcLeadTombstones()
+            useDividers = item.calcLeadDividers()
         else:
-            useTombstones = False
+            useDividers = False
 
         # new "continued on next page" stuff
         flagCloseBreakwarnsec = False
-        # test
-        if (isLead):
-            # whenever we use tombstones, add latex to show a Continued on next page footer if its is continues onto the next page
-            if (useTombstones):
-                allLatexText += self.breakWarnSecStart()
-                flagCloseBreakwarnsec = True
+        addBreakWarn = False
 
+        if (item.getNeedsPageBreakWarning(env)):
+            addBreakWarn = True
+        elif (isLead):
+            # whenever we use Dividers, add latex to show a Continued on next page footer if its is continues onto the next page
+            if (useDividers):
+                addBreakWarn = True
+        else:
+            # new try, if NOT a lead then always do a break
+            addBreakWarn = True
+
+        if (addBreakWarn):
+            allLatexText += self.breakWarnSecStart()
+            flagCloseBreakwarnsec = True
+
+        # new compact time option
+        optionTimeStyle = self.getOptionTimeStyle()
 
         # TIME LATEX to be added later
         # we only show time IF: this case is configured to use a clock AND we are in the proper LEADS section AND this is a "lead" (as opposed to a section) AND time!=0
         # if time = none then we use DEFAULT time, otherwise we use a multiple of clock ticks
-        timeLatex = self.calculateItemTimeLatex(env, item, parentSection)
-        itemTimePos = item.getTimePos()
-
-        if (timeLatex is not None) and (itemTimePos=="start"):
-            # TIME at start
-            allLatexText += timeLatex
+        if ((optionTimeStyle=="box") or (optionTimeStyle is None)):
+            timeLatex = self.calculateItemTimeLatexBoxStyle(env, item, parentSection)
+            itemTimePos = item.getTimePos()
+            if (timeLatex is not None) and (itemTimePos=="start"):
+                # TIME at start
+                allLatexText += timeLatex
 
         # item text contents
         resultList = item.blockList.getList()
@@ -397,10 +478,20 @@ class CblRenderDoc(CbRenderDoc):
                 text = block
             elif (isinstance(block, AstValString)):
                 text = block.getUnWrappedExpect(AstValString)
+            elif (isinstance(block, ResultAtomNote) or isinstance(block, ResultAtomMarkdownString)):
+                # just plain text (or blank)
+                text = str(block)
+            elif (isinstance(block, ResultAtomLatex)):
+                # temporary workaround
+                text = vouchForLatexString(str(block), block.getIsLatexEmbeddable())
+            elif (isinstance(block, AstValNull)):
+                continue
             elif (block is None):
                 jrprint("RENDER WARNING: Null block in render.")
-                raise Exception ("Internal Runtime error: Null block in render.")
-                continue
+                if (optionExceptionOnNullBlockRender):
+                    raise Exception ("Internal Runtime error: Null block in render.")
+                else:
+                    continue
             else:
                 # UNKNOWN WARNING/ERROR
                 jrprint("RENDER WARNING: UNKNOWN RESULT BLOCK IN RENDER CONTENTS: {}".format(type(block)))
@@ -409,6 +500,7 @@ class CblRenderDoc(CbRenderDoc):
             # skip if it starts with "DEBUG:"
             if (optionSkipDebugText) and (text.startswith("DEBUG:")):
                 continue
+
             # convert to markdown IFF appropriate
             if (isTextLatexVouched(text)):
                 # there are TWO options here for combining some latex with mardown -- we can EITHER embed the latex as if it were a word that could be wrapped in markdown tags
@@ -417,25 +509,25 @@ class CblRenderDoc(CbRenderDoc):
                 if (isLatexEmbeddable):
                     # we EMBED this latex into the markdown where we will unpack it later; in this way it can be put inside markdown annotations; this can be use for word and phrase-like latex short snipped
                     markdownText += self.embedTempLatexBlockRef(len(latexBlocks))
-                    latexBlockText = self.convertMarkdownOrVouchedTextToLatex(text)
+                    latexBlockText = self.convertMarkdownOrVouchedTextToLatex(text, False, False)
                     latexBlocks.append(latexBlockText)
                 else:
                     # we force markdown to complete then add latex; this should be used for sections of latex that need to be self containted and cannot be INSIDE the middle of a markdown thing
                     if (markdownText!=""):
-                        markdownTextAsLatex = self.convertMarkdownOrVouchedTextToLatex(markdownText)
+                        markdownTextAsLatex = self.convertMarkdownOrVouchedTextToLatex(markdownText, False, False)
                         # ok now we need to REPLACE the blocks
                         markdownTextAsLatex = self.unembedTempLatexBlockRefs(markdownTextAsLatex, latexBlocks)
                         allLatexText += markdownTextAsLatex
                         markdownText = ""
                     # add latex
-                    allLatexText += self.convertMarkdownOrVouchedTextToLatex(text)
+                    allLatexText += self.convertMarkdownOrVouchedTextToLatex(text, False, False)
             else:
                 # accumulate markdown text into one big block
                 markdownText += text
 
         # pending markdown
         if (markdownText!=""):
-            markdownTextAsLatex = self.convertMarkdownOrVouchedTextToLatex(markdownText)
+            markdownTextAsLatex = self.convertMarkdownOrVouchedTextToLatex(markdownText, False, False)
 
             # ok now we need to REPLACE the blocks
             markdownTextAsLatex = self.unembedTempLatexBlockRefs(markdownTextAsLatex, latexBlocks)
@@ -444,10 +536,14 @@ class CblRenderDoc(CbRenderDoc):
             markdownText = ""
 
 
+
+        # add any end layouts
+        allLatexText += self.layoutsLatex(env, item, False)
+
+
         # now we have the entire text
         # strip it
         allLatexText = allLatexText.strip()
-
 
         # contents break beforehand (note this runs even if our "contents" are blank)
         self.addChunkForBreakBefore(item, parentSection)
@@ -458,16 +554,17 @@ class CblRenderDoc(CbRenderDoc):
 
             # contents text
             self.chunks.append(allLatexText)
+
             # add linebreak since we stripped text of end linebreaks
             self.chunks.append("\n")
 
 
-        # add tombstone if its a lead (as opposed to a section)
+        # add Dividers if its a lead (as opposed to a section)
         if (isLead):
-            # if we have an explicit tombstones value use it
-            if (useTombstones):
-                # ATTN: new add a nopagebreak for tombstone so it doesnt end up alone
-                text = "\\nopagebreak" + self.hlMarkdown.latexTombstone()
+            # if we have an explicit Dividers value use it
+            if (useDividers):
+                # ATTN: new add a nopagebreak for Divider so it doesnt end up alone
+                text = "\\nopagebreak" + self.hlMarkdown.latexDivider()
                 self.chunks.append(text)
 
         # close any "continued on next page stuff that we started"
@@ -488,7 +585,56 @@ class CblRenderDoc(CbRenderDoc):
 
 
 
-    def calcHeaderLatexForLead(self, item):
+
+
+
+
+
+
+
+
+    def layoutsLatex(self, env, item, flagBeginVsEnd):
+        layoutNames = ["minMargins", "tight", "tightNarrowMargins", "tightWideMargins"]
+
+        layout = item.getLayout()
+        if (layout is None):
+            # should we set layout based on heading style?
+            headingStyle = item.calcResolvedHeadingStyle()
+            if (headingStyle == "footer"):
+                # use a dynamic tight margin which is based on paper size
+                layout = "tight"
+                # drop down
+            else:
+                return ""
+
+        latex = ""
+        layouts = layout.split("|")
+        for layout in layouts:
+            if (layout not in layoutNames):
+                raise Exception("unknown layout name '{}'.".format(layout))
+            if (layout == "tight"):
+                # use a dynamic tight margin which is based on paper size
+                if (self.isNarrowPaperSize()):
+                    layout = "tightNarrowMargins"
+                else:
+                    layout = "tightWideMargins"
+            #
+            layout = jrfuncs.uppercaseFirstLetter(layout.strip())
+            #
+            if (flagBeginVsEnd):
+                placeStr = "Begin"
+            else:
+                placeStr = "End"
+            latex += "\\mylayout" + layout + placeStr + "\n"
+        return latex
+
+
+
+
+
+
+
+    def calcHeaderLatexForLead(self, env, item, parentSection, flagEmbeddingMidPage):
         # build the header subheading etc text for lead
         optionMaxLevel = 3
         level = item.getLevel()
@@ -505,57 +651,145 @@ class CblRenderDoc(CbRenderDoc):
         heading = item.getHeading()
         if (heading is not None):
             title = heading
+        # id
+        itemId = item.getId()
         #
         allLatexText = ""
+        tocLatex = ""
+        #
+        entry = item.getEntry()
 
-        titleLatex = convertEscapeVouchedOrUnsafePlainTextToLatex(title)
-        tocLatex = convertEscapeVouchedOrUnsafePlainTextToLatex(toc)
+        # for debug stuff
+        reportMode = env.getReportMode()
+        if (reportMode):
+            subheading = None
+            if (toc!="") and (toc is not None):
+                if (itemId is not None) and (itemId!="") and (not itemId in toc) and (not itemId in ["FRONT","REPORT"]):
+                    # ADD itemid to toc
+                    toc = toc + " [" + itemId + "]"
+                    if ("inline" in itemId):
+                        # add subheading also
+                        subheading = item.getSubHeading()
+                        if (subheading is not None) and (subheading!="") and (not subheading in toc):
+                            toc = toc + " - "+ subheading
+                else:
+                    subheading = item.getSubHeading()
+                    if (subheading is not None) and (subheading!="") and (not subheading in toc):
+                        toc = toc + " - "+ subheading
+
+            # add dName from hlapi if there is no custom label
+            if (subheading is None) and ((item.label is None) or (item.label=="") or (item.id==item.label)):
+                dName = item.getDName()
+                if (dName is not None) and (not dName.lower() in toc.lower()) and (toc is not None) and (toc!=""):
+                    toc += " (" + dName + ")"
+
+
+            # kludge replace to remove stuff we don't nee
+            if (toc is not None):
+                toc = toc.replace(DefInlineLeadPlaceHolder, "")
+            #
+            # add item id to title when its an autoid lead
+            if (title!="") and (itemId is not None) and (itemId!="") and (not itemId in title) and (not itemId in ["FRONT","REPORT"]):
+                title = title + " [" + itemId +"]"
+
+        if (title is not None):
+            titleLatex = convertEscapeVouchedOrUnsafePlainTextToLatex(title)
+        if (toc is not None) and (toc!=""):
+            tocLatex = convertEscapeVouchedOrUnsafePlainTextToLatex(toc)
 
         # modifying section font details
         komaHeaderModifier = None
-        headingStyle = item.getHeadingStyle()
+        #headingsWrap = False
+        #headingsWrapText = ""
+        headingShowNormal = True
+        headingShowCompact = False
+        headingCompactText = ""
+        headingStyle = item.calcResolvedHeadingStyle()
         if (headingStyle is not None):
-            #jrprint("DEBUG BREAK")
             if (headingStyle=="huge"):
-                komaHeaderModifier = r"{\fontsize{96}{128}\selectfont}"
+                komaHeaderModifier = r"{\myHugeHeaderFontSelect}"
+            elif (headingStyle=="large"):
+                komaHeaderModifier = r"{\myLargeHeaderFontSelect}"
+            elif (headingStyle=="smell"):
+                komaHeaderModifier = r"{\mySmallHeaderFontSelect}"
+            elif (headingStyle in ["header", "footer"]):
+                headingShowNormal = False
+                headingShowCompact = True
+            elif (headingStyle in ["alsoFooter"]):
+                headingShowCompact = True
             else:
-                raise makeJriException("Unknown headingStyle: {}.".format(headingStyle), None)
-                #komaHeaderModifier = r"\addtokomafont{section}{\fontsize{64}{80}\selectfont}"
+                raise makeJriException("Unknown headingStyle: {}.".format(headingStyle), entry.getSourceLoc())
 
         # some items may want to disable their heading and toc entry
         blankHead = item.getBlankHead()
+        hasTitle = (title is not None) and (title!="")
+
+        isLead = isinstance(item, CbRenderLead)
+
 
         # TOC and title lines
+        showingTitle = False
         if (not blankHead):
+            showingTitle = True
             # the TOC entry
             ltext = ""
+
+            # insist on a certain amount of space
+            ltext += r"\myNeedSpaceEntry"
+
             if (level==1):
-                if (title is not None) and (title!=""):
-                    ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("chapter", komaHeaderModifier, "\\chapter*{{{}}}%\n\n".format(titleLatex))
+                if (hasTitle):
+                    chapterLine = "\\chapter*{{{}}}".format(titleLatex)
+                    if (flagEmbeddingMidPage):
+                        # kludge to not force a page break at start of chapter
+                        chapterLine = r"\myKludgeForMidPageHeader{" + chapterLine + "}" + "\n\n"
+                    ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("chapter", komaHeaderModifier, chapterLine + "\n\n")
                 if (toc is not None) and (toc!=""):
+                    if (not hasTitle):
+                        ltext += "\\phantomsection\n"
                     ltext += r"\addcontentsline{toc}{chapter}{~~" + tocLatex + "}\n"
             elif (level==2):
-                if (title is not None) and (title!=""):
-                    ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("section", komaHeaderModifier, "\\section*{{{}}}%\n\n".format(titleLatex))
+                if (hasTitle):
+                    headingCompactText += titleLatex
+                    if (headingShowNormal):
+                        ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("section", komaHeaderModifier, "\\section*{{{}}}%\n\n".format(titleLatex))
                 if (toc is not None) and (toc!=""):
+                    if (not hasTitle):
+                        ltext += "\\phantomsection\n"
+                    if (tocLatex=="") or (toc==""):
+                        jrprint("ATTN: DEBUG BREAK")
                     ltext += r"\addcontentsline{toc}{section}{~~" + tocLatex + "}\n"
             elif (level==3) and (optionMaxLevel>=3):
-                if (title is not None) and (title!=""):
+                if (hasTitle):
                     ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("subsection", komaHeaderModifier, "\\subsection*{{{}}}%\n\n".format(titleLatex))
                 if (toc is not None) and (toc!=""):
+                    if (not hasTitle):
+                        ltext += "\\phantomsection\n"
                     ltext += r"\addcontentsline{toc}{subsection}{~~" + tocLatex + "}\n"
+            elif (level==4) and (isLead):
+                if (hasTitle):
+                    ltext += "\n" + self.wrapInKomaSectionModifierIfNeeded("subsection", komaHeaderModifier, "\\subsection*{{{}}}%\n\n".format(titleLatex))
+                if (toc is not None) and (toc!=""):
+                    if (not hasTitle):
+                        ltext += "\\phantomsection\n"
+                    ltext += r"\addcontentsline{toc}{subsection}{~~~" + tocLatex + "}\n"
             else:
                 # higher level toc headings just get shown bold
-                if (title is not None) and (title!=""):
+                if (hasTitle):
                     ltext += "\\textbf{{{}}}%\n\n".format(titleLatex)
 
             # the label that is target of hyperlink above in toc
-            if (level <= optionMaxLevel):
-                # add label that can be target of hyperref (needs to be unique?)
-                if (toc is not None) and (toc!=""):
-                    if (level>1):
-                        if (True):
-                            ltext += makeLatexLabelFromRid(item.getRid())
+            if (True):
+                # new more permissive use of labels
+                if ((toc is not None) and (toc!="")):
+                    ltext += makeLatexLabelFromRid(item.getRid())
+            else:
+                if (level <= optionMaxLevel):
+                    # add label that can be target of hyperref (needs to be unique?)
+                    if ((toc is not None) and (toc!="")):
+                        if (level>1):
+                            if (True):
+                                ltext += makeLatexLabelFromRid(item.getRid())
 
             # build latex
             allLatexText += ltext
@@ -564,16 +798,21 @@ class CblRenderDoc(CbRenderDoc):
         # subheading
         subheading = item.getSubHeading()
         if (subheading is not None) and (subheading!=""):
-            subheadingLatex = convertEscapeUnsafePlainTextToLatex(subheading)
+            if (showingTitle) and (title is not None) and (subheading in title):
+                # no point having a subheading that is SAME as title, so clear subheading
+                subheadingLatex = ""
+            else:
+                subheadingLatex = convertEscapeUnsafePlainTextToLatex(subheading)
         else:
             subheadingLatex = ""
+
 
         # add inlinedFromLead info to subheading
         inlinedFromLead = item.getInlinedFromLead()
         if (inlinedFromLead is not None):
             inlinedFromAddLatex = self.calcInlinedFromLatex(subheading, inlinedFromLead)
             if (subheadingLatex==""):
-                subheadingLatex = "From {}".format(inlinedFromAddLatex)
+                subheadingLatex = _("From") + " {}".format(inlinedFromAddLatex)
             else:
                 repStr = "(" + inlinedFromAddLatex + ")"
                 # replace only the first
@@ -582,37 +821,114 @@ class CblRenderDoc(CbRenderDoc):
         # add continued from, which is like inlinedFrom but set on non-inline
         continuedFromStr = item.getContinuedFromLead()
         if (continuedFromStr is not None):
-            continuedFromLead = self.findLeadByIdPath(continuedFromStr, item.getEntry())
+            continuedFromLead = self.findLeadByIdPath(continuedFromStr, entry)
             if (continuedFromLead is None):
-                raise JriException("Could not find lead id specified in 'continued from' ({})".format(continuedFromStr, item))
+                failedFindTrace = self.generateIdTreeTrace()
+                raise JriException("Could not find lead id specified in 'continued from' ({}); trace = {}.".format(continuedFromStr, item, failedFindTrace), entry.getSourceLoc())
             continedFromLatex = self.calcInlinedFromLatex(subheading, continuedFromLead)
-            continedFromLatex = " from {}".format(continedFromLatex)
+            continedFromLatex = " " + _("from") + " {}".format(continedFromLatex)
             if (subheadingLatex==""):
                 subheadingLatex = str(DefContdStr).title() + continedFromLatex
             else:
-                subheadingLatex = subheadingLatex + " (" + str(DefContdStr) + continedFromLatex + ")"
+                subheadingLatex += " (" + str(DefContdStr) + continedFromLatex + ")"
 
+        # document link back to where it is gained from;
+        # we can only do this when not in special headingstyle, AND where there is only one place the document could be gained from
+        # see if this entry matches a tag name
+        tagManager = env.getTagManager()
+        tag = tagManager.findTagById(itemId)
+        if (tag is not None) and (tag.getIsTagTypeDoc()):
+            gainList = tag.getGainList(True)
+            if (len(gainList)==1):
+                # we can only do this if there is one and only one place where this doc is gained
+                gainedLead = gainList[0]
+                targetLead = gainedLead["lead"]
+                targetLeadId = targetLead.getId()
+                #leadRefLatex = makeLatexReferenceToLeadById(entry.getSourceLoc(), entry, item, self, targetLeadId, "full", False)
+                leadRefLatex = makeLatexReferenceToLead(targetLead, "label", False)
+                if (True):
+                    # compact add without a linebreak
+                    # we might just skip this on compact since it may be too long
+                    fromLatex = _("From") + " " + leadRefLatex
+                    if (True):
+                        if (subheadingLatex==""):
+                            subheadingLatex = fromLatex
+                        else:
+                            subheadingLatex += ", " + _("from") + " " + leadRefLatex
+                else:
+                    # add with newline
+                    fromLatex = _("From") + " " + leadRefLatex
+                    if (subheadingLatex==""):
+                        subheadingLatex = fromLatex
+                    else:
+                        subheadingLatex += r"\par " + fromLatex
+
+
+
+        subheadingLatexCompact = subheadingLatex
         if (True):
             # address as part of subheadingLatex
             address = item.calcLeadAddress()
             if (address is not None) and (address !="") and (address!="auto"):
-                addressLatex = "\\newline\\small{{{}}}%\n".format(convertEscapeUnsafePlainTextToLatex(address))
+                addressLatexCompact = convertEscapeUnsafePlainTextToLatex(address) + "\n"
+                addressLatex = "\\small{{{}}}\n".format(convertEscapeUnsafePlainTextToLatex(address))
                 if (subheadingLatex!=""):
-                    subheadingLatex += "\n" + addressLatex
+                    subheadingLatexCompact += "\\newline" + addressLatexCompact
+                    subheadingLatex += "\\newline" + addressLatex
                 else:
+                    subheadingLatexCompact = addressLatexCompact
                     subheadingLatex = addressLatex
 
-        # display subheading
-        if (not blankHead) and (subheadingLatex != ""):
-            ltext = "\\cbsubheading{{{}}}%\n\n".format(subheadingLatex)
-            allLatexText += ltext
+        # SUBHEADING
 
-        # address
-        if (False):
-            address = item.calcLeadAddress()
-            if (address is not None) and (address !="") and (address!="auto"):
-                ltext = "\\textsc{{{}}}%\n\n".format(convertEscapeUnsafePlainTextToLatex(address))
+        # add subheading
+        newlineNeeded = False
+        subheadingLatex = subheadingLatex.strip()
+        if (not blankHead) and (subheadingLatex != ""):
+            headingCompactText += " - " + subheadingLatexCompact.replace("\n", " - ")
+            if (headingShowNormal):
+                ltext = "\\cbsubheading{{{}}}\n".format(subheadingLatex)
                 allLatexText += ltext
+                newlineNeeded = True
+
+        # NEW, time style in header
+        optionTimeStyle = self.getOptionTimeStyle()
+        
+        # default section time; this is used for deciding whether to color a non-default time
+        #defaultTime = self.getOptionDefaultTime()
+        if (parentSection is not None):
+            defaultTime = parentSection.getTime()
+        else:
+            defaultTime = None
+        
+        defaultTimeStyle = self.getOptionDefaultTimeStyle()
+        zeroTimeStyle = self.getOptionZeroTimeStyle()
+        if (optionTimeStyle=="header"):
+            # add it to heading?
+            itemTimePos = item.getTimePos()
+            if (itemTimePos=="start") or (itemTimePos is None) or (itemTimePos==""):
+                ltext = self.calculateItemTimeLatexHeaderStyle(env, item, parentSection, defaultTime, defaultTimeStyle, zeroTimeStyle)
+                if (ltext is not None):
+                    allLatexText += ltext
+                    newlineNeeded = True
+
+        #
+        if (newlineNeeded):
+            allLatexText += "\n"
+
+
+        if (True):
+            # this is used to show the heading text as part of footer or header, useful when we have full page documents like newspapers, etc.
+            lcommand = None
+            if (headingStyle in ["footer", "alsoFooter"]):
+                lcommand = r"\overlayFootText"
+            elif (headingStyle=="header"):
+                lcommand = r"\overlayHeadText"
+            #
+            if (lcommand is not None):
+                # add phantom section so links to this page will work right
+                lcommand = "\\phantomsection\n" + lcommand
+                allLatexText = lcommand + "{" + r"\normalfont " + headingCompactText +"}\n" + allLatexText
 
         return allLatexText
 
@@ -657,47 +973,30 @@ class CblRenderDoc(CbRenderDoc):
 
 
 
-    # ATTN: move this to RenderBase eventually
-    def calculateItemTime(self, env, item, parentSection):
-        # an item is times IFF: this case is configured to use a clock AND we are in the proper LEADS section AND this is a "lead" (as opposed to a section) AND time!=0
-        itemTime = item.getTime()
-        if (itemTime==0):
-            return False
-        if (not isinstance(item, CbRenderLead)):
-            return False
-        if (item.getLevel()==1) or (parentSection is None):
-            # top level is not elligble
-            return False
-        # section time tells us the DEFAULT time for all entries in it; this is the LEADS section, etc
-        defaultSectionTime = parentSection.getTime()
-        if (defaultSectionTime is None):
-            return False
-        if (itemTime is None) or (itemTime==-1):
-            # no time specified, or -1, then we use default
-            itemTime = defaultSectionTime
-        # now return time
-        return itemTime
 
-    def calculateItemTimeLatex(self, env, item, parentSection):
+    def calculateItemTimeLatexBoxStyle(self, env, item, parentSection):
         itemTime = self.calculateItemTime(env, item, parentSection)
-        if (itemTime is not None) and (itemTime != False) and (itemTime>0):
-            timeText = "Time advances {} minutes.".format(int(itemTime))
-            timeLatex = "\n" + wrapTextInLatexBox("default", timeText, False, "clock", "red", None)
-            return timeLatex
-        # no time statement
-        return None
+        return calculateLatexForItemTimeBoxStyle(itemTime)
+
+    def calculateItemTimeLatexHeaderStyle(self, env, item, parentSection, defaultTime, defaultTimeStyle, zeroTimeStyle):
+        itemTime = self.calculateItemTime(env, item, parentSection)
+        return calculateLatexForItemTimeHeaderStyle(itemTime, defaultTime, defaultTimeStyle, zeroTimeStyle)
 
 
 
+
+    # ATTN: 6/14/25 - this is kludgey and the : around this are important to convince the CbDeferredBlockFollowCase case matching block
 
     def embedTempLatexBlockRef(self, blockIndex):
-        text = "XYZZYBLOCKREF{}XYZZY".format(blockIndex)
+        text = ":XYZZYBLOCKREF{}XYZZY:".format(blockIndex)
         return text
 
     def unembedTempLatexBlockRefs(self, text, latexBlocks):
-        blockRefRegex = r"XYZZYBLOCKREF(\d+)XYZZY"
+        blockRefRegex = r":XYZZYBLOCKREF(\d+)XYZZY:"
         text = re.sub(blockRefRegex, lambda m: self.unembedTempLatexBlockRef(m.group(1), latexBlocks), text)
         return text
+
+
 
     def unembedTempLatexBlockRef(self, numberStr, latexBlocks):
         try:
@@ -718,8 +1017,18 @@ class CblRenderDoc(CbRenderDoc):
 
     def addChunkForBreakBeforeUsingStyle(self, breakStyleYesNo, positionBefore):
         # the tricky part here is when we have the previous item with a forced break AFTER and next item with a forced break BEFORE, we dont want to do it twice
+        optionOneColumnBreakTriggersNewPage = True
+        #
         newPageLatex = "\\newpage\n"
         clearDoublePageLatex = "\\cleardoublepage\n"
+        if (self.getCurrentColumnCount()>1):
+            newColumnLatex = "\\columnbreak\n"
+        else:
+            # there is only one column, should we break page or do nothing?
+            if (optionOneColumnBreakTriggersNewPage):
+                newColumnLatex = newPageLatex
+            else:
+                newColumnLatex = "\n"
         #
         if (breakStyleYesNo == "no"):
             return False
@@ -731,6 +1040,16 @@ class CblRenderDoc(CbRenderDoc):
                     self.chunks.append(self.breakWarnSecEnd())
                 #
                 text = newPageLatex
+                self.chunks.append(text)
+            return True
+        elif (breakStyleYesNo == "column"):
+            if (not self.getLastEntryHadPageBreakAfter()) or (not positionBefore):
+                # do we want to turn off any "continued on the next page" stuff when we have a manual break? this only works if we are not using the environment-based style (otherwise we would not have matching begin end)
+                if (DefExtraBreakWarnSecEnd):
+                    # i don't think it's very important
+                    self.chunks.append(self.breakWarnSecEnd())
+                #
+                text = newColumnLatex
                 self.chunks.append(text)
             return True
         elif (breakStyleYesNo == "facing"):
@@ -747,7 +1066,8 @@ class CblRenderDoc(CbRenderDoc):
             self.chunks.append(text)
             return True
         else:
-            raise makeJriException("Internal Render Error: Uknnown breakstyle in addChunkForBreakBeforeUsingStyle: {}".format(breakStyleYesNo))
+            raise makeJriException("Internal Render Error: Uknnown breakstyle in addChunkForBreakBeforeUsingStyle: {}".format(breakStyleYesNo), None)
+
 
     def calcBreakForSectionOrLead(self, item, parentSection, positionBefore):
         # from "yes", "no", "facing"
@@ -759,7 +1079,9 @@ class CblRenderDoc(CbRenderDoc):
             breakStyle = item.calcSectionBreak()
         #
         if (positionBefore):
-            if (breakStyle in ["before", "solo"]):
+            if (breakStyle in ["column"]):
+                return "column"
+            elif (breakStyle in ["before", "solo"]):
                 return "yes"
             elif (breakStyle in ["beforeFacing", "soloFacing"]):
                 return "facing"
@@ -846,16 +1168,56 @@ class CblRenderDoc(CbRenderDoc):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def loadFileFromLatexDir(self, fname):
+        sourcePath = os.path.dirname(__file__)
+        fullPath = sourcePath + "/latexCode/" + fname
+        text = jrfuncs.loadTxtFromFile(fullPath, True, encoding="utf-8")
+        return text
+
+
     def generateDocumentStart(self, env):
         self.generateDocumentStartDocClass(env)
-        self.generateDocumentStartPackages(env)
-        self.generateDocumentStartExtras(env)
+        self.generateDocumentStartPreambles(env)
         self.generateDocumentStartMetaInfo(env)
         self.generateDocumentStartBeginDoc(env)
-
-
-
-
 
 
 
@@ -888,213 +1250,80 @@ class CblRenderDoc(CbRenderDoc):
             sidedLatex = "oneside"
 
 
-
-
         # document class; sets:
         #  whether it is double sided (page numbers alternate sides) or not (always in same corner)
         #  the base font size (in points)
         #  the paper size ["letter", "A4", "A5", etc.]
         # for KOMA script, the DIV value is: DIV=15 means that the page height is divided into 15 units. The top margin is one unit, the bottom gets two units and the remaining units go to the text height
+        text = self.makeLatexBoldCommentBlock("START OF CASEBOOK LATEX - DOCUMENT CLASS SETUP")
+        self.chunks.append(text)
+
         text = r"\documentclass[" + sidedLatex + ", openany, " + str(latexFontSize) + "pt, paper=" + latexPaperSize +", DIV=15" + extra + "]{scrbook}%" + "\n"
-        self.chunks.append(text)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def generateDocumentStartPackages(self, env):
-
-
-        # packages
-        text = r"""
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usepackage{textcomp}
-\usepackage{lastpage}
-\usepackage{FiraSans} % font
-\usepackage{librebaskerville} % font
-\usepackage{setspace}
-\usepackage{graphicx} % for graphics
-\usepackage{amssymb} % symbols
-\usepackage{amsthm} % symbols
-\usepackage{amsmath} % symbols
-\usepackage{wasysym} % symbols
-\usepackage{MnSymbol} % symbols
-\usepackage{parskip}
-\usepackage{scrlayer-scrpage} % main document class
-\usepackage{tocloft} % table of contents support
-\usepackage{multicol} % multi-column support
-\usepackage[pdfusetitle,colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
-\usepackage{tikz}
-\usepackage{clock} % clock symbols
-\usepackage[clock]{ifsym} % clock symbols
-\usepackage{fontawesome5} % various symbols
-\usepackage{pgfornament} % ornaments like tombstones between leads
-\usepackage{fancybox} % fancy boxed blocks of text
-
-\usepackage{aurical}
-\usepackage{listings} % checkbox lists
-\usepackage{pdfpages} % embedding pdf files?
-\usepackage{enumitem} % lists of items
-\usepackage{refcount} % new ContinuedOnNextPage Stuff
-\usepackage{tabularray} % autosizing tables (tabulary seemed broken)
-\usepackage[export]{adjustbox} % for image alignment in table cells
-\usepackage{printlen} % for reporting image sizes
-
-\usepackage{options} % needed by others? see https://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/longfbox/longfbox.sty
-\usepackage{pict2e} % see above (longbox needs?)
-\usepackage[most]{tcolorbox} % more fancy boxed blocks
-\usepackage{longfbox} % more fancy boxed blocks
-\usepackage{lettrine} % first big character drop caps
-\usepackage{lipsum} % for testing blocks of text
-\usepackage{marginnote} % margin notes
-%\usepackage{epigraph} % for nice looking quotes
-"""
-        self.chunks.append(text)
-
-
-        # fakepar is use for kludge lettrine workaround
-        text = ""
-        text += r"\def\fakepar{\hfill\mbox{}\vspace{\parskip}\newline\mbox{}\hspace{\parindent}}" + "\n"
-        self.chunks.append(text)
-
-        # % \usepackage{printlen} % for reporting image sizes and converting - UNUSED
-
-        # auto quote packages
-        text = ""
-        autoStyleQuotes = self.getOption("autoStyleQuotes", False)
-        # ATTN: csquotes needs more setting
-        if True and (autoStyleQuotes) :
-            text += r"\usepackage[english]{babel}" + "\n"
-            text += r"\usepackage[autostyle, english = american, debug=true]{csquotes}" + "\n"
+        #
+        if (self.isNarrowPaperSize()):
+            # narrow margins
+            text += r"\def\mygeometryMargin{1.25cm}" + "\n"
+            text += r"\def\mygeometryBottom{1.75cm}" + "\n"
         else:
-            text += r"\usepackage[]{csquotes}" + "\n"
+            # normal margins
+            text += r"\def\mygeometryMargin{2cm}" + "\n"
+            text += r"\def\mygeometryBottom{2.5cm}" + "\n"
+        #
+        self.chunks.append(text)
+        #
+        text = self.makeLatexBoldCommentBlock("END OF CASEBOOK LATEX - DOCUMENT CLASS SETUP")
         self.chunks.append(text)
 
 
 
 
-    def generateDocumentStartExtras(self, env):
-        # see https://tex.stackexchange.com/questions/656716/changing-contentsname-in-scrartcl for how to change contentsname to blank
-        # auto quote packages
-        autoStyleQuotes = self.getOption("autoStyleQuotes", False)
-        optionUseCalendar = True
-
-        text = r"""
-\raggedbottom
-\raggedcolumns
-"""
-
-        # section formatting and toc
-        text += r"""
-% section and chapter name formatting part 1
-\let\origaddcontentsline\addcontentsline
-\let\origcftaddtitleline\cftaddtitleline
-\setlength{\columnsep}{1cm}%
-\onehalfspacing%
-\setlength{\parindent}{0pt}%
-\RedeclareSectionCommand[beforeskip=0pt,afterskip=0.5cm]{chapter}
-\renewcommand*{\chapterheadstartvskip}{\vspace*{-1.0cm}}
-\renewcommand*{\chapterheadendvskip}{\vspace*{0.5cm}}
-\renewcommand{\cftsecfont}{\ttfamily}
-\renewcommand{\cftsubsecfont}{\ttfamily}
-\renewcommand{\cftsubsubsecfont}{\ttfamily}
-\renewcommand{\cftchappagefont}{\ttfamily}
-\renewcommand{\cftsecpagefont}{\ttfamily}
-\renewcommand{\cfttoctitlefont}{\fontsize{25}{30}\selectfont\bfseries\scshape}
-\newenvironment{cb_quoteenv}{}{} % quote environment for when we need one
-"""
-
-        # more section formatting
-        # fix for table of contents SUB section not getting proper font of ttfamily set above
-        text += "\\DeclareTOCStyleEntries[entryformat=\\ttfamily, pagenumberformat=\\ttfamily]{tocline}{subsection, subsubsection}\n"
-        # text += "\\DeclareTOCStyleEntries[entryformat=\ttfamily, pagenumberformat=\ttfamily]{tocline}{chapter, section, subsection, subsubsection}\n"
-
-        # more section formatting
-        text += r"""
-% section and chapter name formatting part 2
-\renewcommand\cftchapafterpnum{\vskip-2pt}
-\renewcommand\cftsecafterpnum{\vskip-2pt}
-\newcommand\cbsubheading[1]{\vskip-0.35cm\textbf{#1}}
-\renewcommand\contentsname{}
-\defcaptionname{\languagename}{\contentsname}{}
-\addtokomafont{chapter}{\fontsize{50}{60}\selectfont}\renewcommand{\cftchapfont}{\ttfamily}
-\setkomafont{disposition}{\bfseries}
-\setlength{\cftbeforetoctitleskip}{-2em}
-\setlength{\cftaftertoctitleskip}{-2em}
-"""
-
-        # custom checkbox lists (uses \usepackage{enumitem} above)
-        if (True):
-            text += r"""
-% checkbox lists, etc (uses package enumitem)
-\newlist{todolist}{itemize}{2}
-\setlist[todolist]{label=\openbox}
-\newlist{nobulletlist}{itemize}{2}
-\setlist[nobulletlist]{label=}
-"""
-
-        # kludge fix for longfbox (known bug workaround see https://tex.stackexchange.com/questions/571207/error-with-longfbox-package)
-        if (True):
-            text += r"""
-% kludge fix for longfbox (see code comments)
-\makeatletter
-\newdimen\@tempdimd
-\makeatother
-"""
 
 
-        # calendar
-        if (optionUseCalendar):
-            text += r"""
-% calendar support
-\usetikzlibrary{calendar,shapes.misc}
-\makeatletter%
-\tikzoption{day headings}{\tikzstyle{day heading}=[#1]}
-\tikzstyle{day heading}=[]
-\tikzstyle{day letter headings}=[
-    execute before day scope={ \ifdate{day of month=1}{%
-      \pgfmathsetlength{\pgf@ya}{\tikz@lib@cal@yshift}%
-      \pgfmathsetlength\pgf@xa{\tikz@lib@cal@xshift}%
-      \pgftransformyshift{-\pgf@ya}
-      \foreach \d/\l in {0/M,1/T,2/W,3/T,4/F,5/S,6/S} {
-        \pgf@xa=\d\pgf@xa%
-        \pgftransformxshift{\pgf@xa}%
-        \pgftransformyshift{\pgf@ya}%
-        \node[every day,day heading]{\l};%
-      } 
-    }{}%
-  }%
-]
-\makeatother%
-"""
 
 
-        # auto quotes makes nicer left and right quote marks that look different
-        # ATTN: this can cause errors that are hard to find and diagnose on unbalanced quotes
-        # if you find a weird error you can't diagnose try disabling this
-        if (autoStyleQuotes):
-            text += "\\MakeOuterQuote{\"} % Automatically use different left and right quote mark symbols (WARNING: This can lead to hard to diagnose errors on imbalanced double quotes!!)\n"
 
-        # add text
+
+
+
+
+
+
+
+
+
+    def generateDocumentStartPreambles(self, env):
+        # include preamble files
+        preambleList = ["Packages", "Main", "News", "Fingerprint", "Effects", "Forms"]
+        if (self.getOption("autoStyleQuotes", False)):
+            preambleList.append("AutoQuotesOn")
+        else:
+            preambleList.append("AutoQuotesOff")
+        #
+        for preamble in preambleList:
+            fname = "casebookPreamble{}.latex".format(preamble)
+            text = self.loadFileFromLatexDir(fname)
+            startLine = self.makeLatexBoldCommentBlock("START of CASEBOOK LATEX PREAMBLE: {}".format(preamble))
+            endLine = self.makeLatexBoldCommentBlock("END of CASEBOOK LATEX PREAMBLE: {}".format(preamble))
+            self.chunks.append(startLine + text + endLine)
+    
+
+        # custom preambles
+        text = self.makeLatexBoldCommentBlock("START OF CASEBOOK LATEX PREAMBLE - LATE DYNAMIC")
+        self.chunks.append(text)
+        for latexAdd in self.latexAdds:
+            self.chunks.append(latexAdd)
+        text = self.makeLatexBoldCommentBlock("END OF CASEBOOK LATEX PREAMBLE - LATE DYNAMIC")
         self.chunks.append(text)
 
+
+
+
+    def makeLatexBoldCommentBlock(self, text):
+        blockText = "\n\n\n\n" + "% ----------------------------------------------\n" + "% " + text + "\n" + "% ----------------------------------------------\n\n\n\n"
+        return blockText
+
+    def addToPreambleLatex(self, latex):
+        self.latexAdds.append(latex)
 
 
 
@@ -1117,6 +1346,9 @@ class CblRenderDoc(CbRenderDoc):
         #
         # see https://www.karlrupp.net/2016/01/pdf-metadata-in-latex-documents/
         #
+        text = self.makeLatexBoldCommentBlock("START OF CASEBOOK LATEX PREAMBLE - DOCUMENT INFO")
+        self.chunks.append(text)
+
         text = "\n"
         text += "% embed info into generated pdf\n"
         text += "\\hypersetup{\n"
@@ -1131,7 +1363,8 @@ class CblRenderDoc(CbRenderDoc):
         # add text
         self.chunks.append(text)
 
-
+        text = self.makeLatexBoldCommentBlock("END OF CASEBOOK LATEX PREAMBLE - DOCUMENT INFO")
+        self.chunks.append(text)
 
 
 
@@ -1144,36 +1377,16 @@ class CblRenderDoc(CbRenderDoc):
 
     def generateDocumentStartBeginDoc(self, env):
         # start doc
-        text = "\n\n"
-        text += "\\begin{document}\n\n"
+
+        text = self.makeLatexBoldCommentBlock("START OF CASEBOOK LATEX - DOCUMENT START")
         self.chunks.append(text)
 
-
-        # other startup stuff
-        text = r"""
-\normalsize%
-\clearpairofpagestyles
-"""
-
-        # latex support code to help issue a "Continued on the next page" line in footer if we break a lead between pages
-        # see also breakWarnSecStart(), breakWarnSecEnd()
-        text += r"""
-% footers get page numbers and a "continued on next page" line if appropriate
-\rofoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
-\lefoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
-\newif\ifwarnpgbrk
-\warnpgbrkfalse
-\newcounter{question}
-\newcommand\mycontdfoot{\ifwarnpgbrk \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
-\newcommand\mycontdfootLabelMethodUnused{\ifnum\getpagerefnumber{question-start-\thequestion}<\getpagerefnumber{question-end-\thequestion} \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
-\newenvironment{breakwarnsec}{\warnpgbrktrue}{}
-"""
-
-
-
-
-        # add text
+        text = self.loadFileFromLatexDir("casebookDocStart.latex")
         self.chunks.append(text)
+
+        text = self.makeLatexBoldCommentBlock("END OF CASEBOOK LATEX - DOCUMENT START")
+        self.chunks.append(text)
+
 
 
 
@@ -1185,10 +1398,125 @@ class CblRenderDoc(CbRenderDoc):
 
 
     def generateDocumentEnd(self, env):
-        buildStr = env.getBuildString()
-        currentDateStr = jrfuncs.getNiceCurrentDateTime()
-        text = "\n\\end{{document}}\n\n% Generated by casebook tool {} on {}\n\n".format(buildStr, currentDateStr)
+        buildStr = convertEscapeUnsafePlainTextToLatex(env.getBuildString())
+        typesetStr = convertEscapeUnsafePlainTextToLatex(env.getTypesetString(False))
+        currentDateStr = convertEscapeUnsafePlainTextToLatex(jrfuncs.getNiceCurrentDateTime())
+
+        text = self.makeLatexBoldCommentBlock("START OF CASEBOOK LATEX - DOCUMENT END")
+        self.chunks.append(text)
+
+        text = "\n\\end{{document}}\n\n% Generated by casebook tool {} [{}] on {}\n".format(buildStr, typesetStr, currentDateStr)
         # add text
         self.chunks.append(text)
 
+        text = self.makeLatexBoldCommentBlock("END OF CASEBOOK LATEX - DOCUMENT END")
+        self.chunks.append(text)
 
+
+
+
+
+    def defineFont(self, id, path, size, scale, color, hyphenate, monoSpace, ignoreDupe, env, astloc):
+        optionTexLigatures = False
+        #
+        if (id in self.fontDictionary):
+            if (ignoreDupe):
+                # do nothing one already exists with this id
+                return
+            raise makeJriException("Font with that id ({}) has already been defined (use defineFont with ignoreDupe=true to bypass error).".format(id), astloc)
+        #
+        safeId = convertIdToSafeLatexId(id)
+
+        # find the known font reject if not known
+        [fontPath, warningText] = env.locateManagerFileWithUseNote(env.calcManagerIdListFont(), path, "Font", "font", None, env, astloc, False)
+    
+        # split off filename from path
+        [dirPath, fileName] = jrfuncs.splitFilePathToPathAndFile(fontPath)
+
+        # path needs to end in /
+        safePath = makeLatexSafeFilePath(dirPath)
+        safeFontName = fileName
+        fontCommand = "\\cbFont" + safeId
+        #
+        features = {"Path": safePath}
+
+        if (monoSpace):
+            # some of these are overridden below by other options
+            features["Scale"] = "MatchLowercase"
+            features["Ligatures"]="NoCommon"
+            features["CharacterVariant"]="0"
+
+        if (optionTexLigatures):
+            features["Ligatures"]="TeX"
+        if (scale is not None):
+            features["Scale"] = str(scale)
+        if (color is not None):
+            features["Color"] = convertEscapeUnsafePlainTextToLatex(color)
+
+        #
+        latex = "\\newfontfamily{" + fontCommand + "}{" + safeFontName + "}[" + jrfuncs.dictToCommaString(features) + "]\n"
+        self.addToPreambleLatex(latex)
+        self.fontDictionary[id] = {"command": fontCommand, "size": size, "scale": scale, "color": color, "hyphenate": hyphenate, "monoSpace": monoSpace}
+
+
+
+    def setFontWithSize(self, id, sizeMod, env, astloc):
+        optionSoulColorUnderline = True
+        optionThickUnderline = True
+        optionShallowUnderlineDepth = True
+        #
+        if (id is None) and (sizeMod is None):
+            raise makeJriException("No font id or size specified; use $defineFont() to add fonts.", astloc)
+        if (id is None):
+            # dont change font (just size)
+            font = None
+            fontSize = convertEscapeUnsafePlainTextToLatex(sizeMod)
+            latex = ""
+        else:
+            if (id not in self.fontDictionary):
+                raise makeJriException("No font with that id has been defined; use $defineFont() to add fonts.", astloc)
+            font = self.fontDictionary[id]
+            safeId = convertIdToSafeLatexId(id)
+            fontCommand = "\\cbFont" + safeId
+            fontSize = jrfuncs.getDictValueOrDefault(font, "size", None)
+            monoSpace = jrfuncs.getDictValueOrDefault(font, "monoSpace", False)
+            latex = fontCommand
+            if (not font["hyphenate"]):
+                latex += " \\hyphenpenalty=10000 \\exhyphenpenalty=10000 "
+            color = jrfuncs.getDictValueOrDefault(font, "color", None)
+            if (color is not None):
+                # set explicit colors for underline, strikethrough, etc. assuming we are using soul pacakge
+                if (optionSoulColorUnderline):
+                    latex += "\\setulcolor{" + color + "}\\setstcolor{" + color + "}\\sethlcolor{" + color + "}"
+            if (optionThickUnderline):
+                latex += "\\setul{}{.2ex}"
+            if (optionShallowUnderlineDepth):
+                latex += "\\setuldepth{abc}"
+            if (monoSpace):
+                # ATTN: Unfinished
+                pass
+
+        # size modifier?
+        #finalSizeLatex = calcLatexSizeKeywordFromBaseAndMod(fontSize, sizeMod, env, astloc)
+        finalSizeLatex = parseFontSizeStringToLatexCommand(fontSize, True, astloc)
+        latex += finalSizeLatex
+
+        return latex
+
+
+    def getFontDict(self, id, env, astloc):
+        if (id not in self.fontDictionary):
+            raise makeJriException("No font with that id has been defined; use $defineFont() to add fonts.", astloc)
+        return self.fontDictionary[id]
+
+
+
+    def setDividerCommand(self, id, command):
+        self.dividers[id] = command
+    #
+    def generateLatexForDivider(self, id, astloc):
+        if (id=="none"):
+            return ""
+        if (id not in self.dividers):
+            raise makeJriException("No divider with that id has been defined; id should be from [{}] or user defined with $configureDivider().".format(self.dividers.keys()), astloc)
+        return "\\" + self.dividers[id]

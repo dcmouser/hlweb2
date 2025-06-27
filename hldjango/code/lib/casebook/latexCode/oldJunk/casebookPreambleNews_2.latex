@@ -1,0 +1,173 @@
+% CASEBOOK LATEX PREAMBLE - NEWSPAPER FUNCS
+
+
+
+% HELPER COMMANDS
+%
+% NEWSPAPER
+\newcommand{\npNewsPaperBegin}[0]{
+%\newpage % Recommended to start changes on a new page
+\begingroup
+\newgeometry{margin=3em, top=2em, bottom=5em} % Sets all margins to 1 cm starting from this page
+}
+%
+\newcommand{\npNewsPaperEnd}[0]{
+\restoregeometry
+\endgroup
+}
+
+
+%
+% BANNER
+\newcommand{\npBanner}[1]{
+  % Include the image so it fills the text width
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{#1}
+\par
+\vspace{1mm}
+\end{minipage}
+}
+%
+% UNDER BANNER LINES
+\newcommand{\npBannerLines}[0]{
+\begin{minipage}{\linewidth}
+  \noindent\rule{\linewidth}{0.5pt}\\[-\baselineskip]
+  \vspace{1mm} \\[-\baselineskip]
+  \noindent\rule{\linewidth}{0.5pt}
+\end{minipage}
+}
+%
+% UNDER BANNER
+\newcommand{\npUnderBanner}[3]{
+\begingroup
+ \setstretch{0.8}
+\npBannerLines
+\noindent\makebox[0pt][l]{~~~#1}%
+\hfill%
+\makebox[0pt]{#2}%
+\hfill%
+\makebox[0pt][r]{#3~~~}
+\par\vspace*{-.8em}\par
+\npBannerLines
+  \par\vspace*{-0.05em}\par
+\endgroup
+}
+
+
+
+
+%
+% HEADLINE
+\newcommand{\npHeadline}[1]{
+\begin{center}
+\setstretch{1.4} %
+\noindent\textbf{#1}
+\par \nopagebreak[4] 
+\end{center}
+}
+%
+% BYLINE
+\newcommand{\npByLine}[1]{
+ \begin{center}
+ \scriptsize
+ \textbf{\emph{#1}}
+ \end{center}
+ \nopagebreak[4] 
+}
+%
+% SEPARATORS
+\newcommand{\npSeparatorHalf}[0]{%
+\par\vspace*{-0.5em}\par %
+ \begin{center}%
+ \noindent\rule{0.5\columnwidth}{0.75pt}%
+ \end{center}%
+\hspace{0.2cm}
+\nopagebreak[4] 
+}
+%
+\newcommand{\npSeparatorFull}[0]{%
+\nopagebreak[4] \noindent\rule{\columnwidth}{0.75pt}%
+\par\vspace*{-0.5em}\par \nopagebreak[4] %
+}
+
+
+
+%
+%
+% ARTICLE GROUP
+\newcommand{\npArticleGroupBegin}[1]{
+ \begingroup
+ %\setlength{\columnsep}{20pt}
+ \setlength{\columnseprule}{0.5pt}
+ \begin{multicols}{#1}
+ \raggedcolumns
+}
+\newcommand{\npArticleGroupEnd}{
+ \end{multicols}
+ \endgroup
+}
+% ARTICLES
+\newcommand{\npArticleBegin}[0]{
+\begingroup
+\setlength{\parindent}{0.2cm}
+%\hspace{0.2cm}
+}
+\newcommand{\npArticleEnd}[0]{
+\par
+\npSeparatorFull
+\endgroup
+\vspace{1em}
+}
+%
+% IMAGES
+\newcommand{\npImage}[2]{
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\columnwidth]{#1}
+    \captionsetup{labelformat=empty, skip=0.2cm}
+    \caption{#2}
+\end{figure}
+}
+% IMAGES
+\newcommand{\npImageBordered}[2]{
+\begin{figure}[H]
+\setlength{\fboxsep}{1pt} % Padding between the image and the border
+\setlength{\fboxrule}{1pt} % Thickness of the border
+\noindent
+\captionsetup{labelformat=empty, skip=0.0cm}
+    \centering
+    \tcbox[sharp corners, size=tight, colframe=black, colback=white, boxsep=2pt, boxrule=1pt] {
+    \includegraphics[width=0.95\columnwidth]{#1}
+    }
+    \caption{#2}
+\end{figure}
+}
+%
+
+% WEATHER BOX AT UPPER RIGHT
+% banner box puts text in a box on right side of banner
+\newcommand{\npBannerBox}[1]{
+\begingroup
+% We place the floating box
+\begin{tikzpicture}[remember picture, overlay]
+%\node at (\linewidth-1.25in, 3cm) {\Huge Text here};
+  % Positioning the node at top right of the page minus 1in shift upwards and rightwards.
+%\node at (current page.center) {\Huge Here!};
+ \setstretch{0.8}
+%  \node[anchor=north east, xshift=-1cm, yshift=-.80cm] at (current page.north east) {
+\node at (\linewidth-2.2cm, 2.20cm) {
+    \tcbox[width=1.1in, sharp corners, size=tight, colframe=black, colback=white, boxsep=3pt, boxrule=0.75pt, box align=bottom, halign=center, valign=center, nobeforeafter, enhanced]{
+     \parbox{1.1in}{\tiny \textbf{#1}}
+    }
+  };
+\end{tikzpicture}
+\vspace{-.80cm} % this should not be needed but it is
+\endgroup
+}
+%
+%
+
+
+
+

@@ -4,15 +4,16 @@
 
 # jr libs
 from lib.jr import jrfuncs
+from lib.jr.jrfuncs import jrprint
 
 
 
 
 # defines
 DefPluginDomainEntryLeadProcessor = "leadEntryProcessor"
-
-
-
+# for section title sizes (we need to set these to avoid a long section title (e.g. "Other") being too large on the page)
+optionMaxLenHuge = 5
+optionMaxLenLarge = 14
 
 
 
@@ -37,8 +38,7 @@ class CbPluginManager:
         return None
 
     def preBuildPreRender(self, env):
-        # run the post build for all plugins
-        # ATTN: this is not implemented yet
+        # run the pre build for all plugins
         for pluginTypeKey, pluginTypeGroup in self.plugins.items():
             for pluginIdLey, plugin in pluginTypeGroup.items():
                 plugin.preBuildPreRender(env)
@@ -74,6 +74,7 @@ class CbPluginManager:
 # and we should let the parent section entry be responsible for creating output rendering sections
 class CbPlugin:
     def __init__(self):
+        self.shouldSortIntoHierarchicalSections = True
         pass
 
 
@@ -81,10 +82,8 @@ class CbPlugin:
     # main functions that should be implemented
     # processEntry(), processLead() and fileLead()
 
-
-
-
-
+    def getShouldSortIntoHierarchicalSections(self):
+        return self.shouldSortIntoHierarchicalSections
 
 
     # THESE ARE THE MAIN FUNCTIONS THAT A PROCESSOR PROVIDES
@@ -99,15 +98,22 @@ class CbPlugin:
     def processLead(self, env, lead, parentSection, renderDoc):
         # standardize lead labels to be of the form "CHARACTER-####""
         #
+        # is this a problem when we call preferAutoId?
         id = lead.getIdPreferAutoId()
+
+        # by default set all lead items that are managed by plugins to show by defualt in mind map; so we can see when we fail to connect them
+        lead.setMindMapShowDefault(True)
+
         label = lead.getLabel()
         isAutoId = lead.hasAutoId()
         [autoSectionName, canonicalLabel, subheading] = self.parseHumanLabel(env, renderDoc, lead, id, label, isAutoId, True)
+        lead.setParsedLabelInfo([autoSectionName, canonicalLabel, subheading])
         #
         if (subheading is not None):
             lead.setSubHeading(subheading)
         #
         # update label
+        # ATTN: 2/1/25 - is this what is causing problems for some of our labeled leads
         if (canonicalLabel is not None) and (canonicalLabel!="") and (canonicalLabel != label):
             lead.setLabel(canonicalLabel)
 
@@ -120,6 +126,7 @@ class CbPlugin:
         subSection = self.findOrMakeSubsectionForLead(env, lead, parentSection, renderDoc)
         if (subSection is not None):
             subSection.addChild(lead)
+            self.postProcessNewSubSection(env, renderDoc, parentSection, subSection)
             return True
         else:
             return False
@@ -136,9 +143,6 @@ class CbPlugin:
     def findOrMakeSubsectionForLead(self, env, lead, parentSection, renderDoc):
         # instead of subclassing this you can subclass 
 
-        # cb modules
-        from .cbrender import CbRenderSection, DefSortMethodAlphaNumeric
-
         # find the lead sub-section where to file this lead
         # return None to just put it in normal section
         # get neighborhood code that we set during processLead
@@ -148,39 +152,55 @@ class CbPlugin:
         id = lead.getIdPreferAutoId()
         label = lead.getLabel()
         isAutoId = lead.hasAutoId()
-        [autoSectionName, canonicalLabel, subheading] = self.parseHumanLabel(env, renderDoc, lead, id, label, isAutoId, False)
+
+        # this is really evil that we call parseHumanLabel twice with last parameter True vs False
+        # TEST
+        #[autoSectionName, canonicalLabel, subheading] = self.parseHumanLabel(env, renderDoc, lead, id, label, isAutoId, False)
+        [autoSectionName, canonicalLabel, subheading] = lead.getParsedLabelInfo()
 
         # if not autoSectionName then nothing to do
-        if (autoSectionName is None):
+        if (autoSectionName is None) or (autoSectionName==""):
             return None
 
         # we are going to use a subsection        
         autoSectionLabel = autoSectionName
 
-        if (optionBumpLevel):
-            # bump lead indent once
-            lead.setLevel(lead.getLevel()+1)
-
         # create section for the neighborhoodcode
-        subSection = parentSection.findChildById(autoSectionName)
-        if (subSection is not None):
-            # already there; found it; nothing more to do
-            return subSection
-        #
+        sectionHierarchy = autoSectionName.split(">")
+        psection = parentSection
+        for csection in sectionHierarchy:
+            if (optionBumpLevel):
+                # bump lead indent once
+                lead.setLevel(lead.getLevel()+1)
+            subSection = psection.findChildById(csection)
+            if (subSection is not None):
+                # already there; found it; nothing more to do
+                psection = subSection
+            else:
+                # it was not found, so we need to create it
+                psection = self.makeNewAutoSubsectionInParent(psection, csection, renderDoc, optionBumpLevel, csection)
+        # return it
+        return psection
+
+
+    def makeNewAutoSubsectionInParent(self, psection, csection, renderDoc, optionBumpLevel, csectionLabel):
         # make the new auto section
+        # cb modules
+        from .cbrender import CbRenderSection, DefSortMethodAlphaNumeric
         #
         # should we bump in levels?
         subheading = None
-        subSection = CbRenderSection(renderDoc, parentSection.getLevel()+optionBumpLevel, parentSection, parentSection.getEntry(), autoSectionName, autoSectionLabel, subheading, None)
+        subSection = CbRenderSection(renderDoc, psection.getLevel()+optionBumpLevel, psection, psection.getEntry(), csection, csectionLabel, subheading, None, False)
         # propagate parent section time value to autosection for LEADS with default time
-        subSection.setTime(parentSection.getTime())
-        subSection.setTimePos(parentSection.getTimePos())
-        #
+        subSection.setTime(psection.getTime())
+        subSection.setTimePos(psection.getTimePos())
+        subSection.setChildToc(psection.getChildToc())
+
         # any overrides from parent entry options?
-        self.customizeAutoSection(subSection, parentSection)
+        self.customizeAutoSection(subSection, psection)
 
         # add it
-        parentSection.children.add(subSection)
+        psection.children.add(subSection)
         # return it
         return subSection
 
@@ -194,7 +214,8 @@ class CbPlugin:
         return self.interp
     def getTagManager(self):
         return self.getInterp().getTagManager()
-
+    def getConceptManager(self):
+        return self.getInterp().getConcepManager()
 
     def generateOtherSubsectionId(self):
         return "Other"
@@ -207,7 +228,15 @@ class CbPlugin:
         autoSection.setSortMethodAlphaNumeric()
         parentSection.setSortMethodAlphaNumeric()
         # font size
-        autoSection.setHeadingStyle("huge")
+        autoSectionLabel = autoSection.getLabel()
+        autoSectionLabelLen = len(autoSectionLabel)
+        if (autoSectionLabelLen<optionMaxLenHuge):
+            autoSection.setHeadingStyle("huge")
+        elif (autoSectionLabelLen<optionMaxLenLarge):
+            autoSection.setHeadingStyle("large")
+        # hide mindmap nodes
+        autoSection.setMStyleHide()
+
 
 
 
@@ -270,7 +299,7 @@ class CbPlugin:
 
 
 
-    def compareProposedLeadIdLabelWithDatabase(self, env, renderDoc, lead, leadIdNumberText, label, subheading):
+    def compareProposedLeadIdLabelWithDatabase(self, env, renderDoc, lead, leadIdNumberText, label, subheading, flagNotAlreadyBeInUsedList):
         # this function will look up the lead id in the lead database and compare the database label with user casebook label
         # it will generate a warning if the lead has a label that does not seem compatible/similar with database label
         # it could also SET our display label if the user has asked for it
@@ -295,9 +324,13 @@ class CbPlugin:
             # provide info about PREV LEAD
             if (leadRowPrev is None):
                 # generate warning that we have a previous lead id# specified but it doesn't exist in db
-                msg = 'Lead was ALSO NOT found in PREVIOUS leadDb ({})'.format(hlApiPrev.getVersion())
-                note = JrINote("leadDbWarning", lead, msg, None, None)
-                env.addNote(note)
+                if (hlApiPrev.isEnabled()):
+                    msg = 'Lead was ALSO NOT found in PREVIOUS leadDb ({})'.format(hlApiPrev.getVersion())
+                    note = JrINote("leadDbWarning", lead, msg, None, None)
+                    env.addNote(note)
+                else:
+                    # nothing to complain about
+                    pass
             else:
                 # generate warning that about what it was in PREVIOUS db
                 prevDbLabel = hlApiPrev.getNiceFullLabelWithAddress(leadRowPrev)
@@ -305,11 +338,17 @@ class CbPlugin:
                 note = JrINote("leadDbWarning", lead, msg, None, None)
                 env.addNote(note)
 
+            # record that we used it
+            hlApi.addUsedLeadSimpleId(leadIdNumberText, flagNotAlreadyBeInUsedList)
+
             return [label, subheading]
 
         # ok we got a row
         leadRowProperties = leadRow["properties"]
         dName = leadRowProperties["dName"]
+        if (dName==""):
+            # no dName?? is it a special op?
+            dName = "n/a"
 
         # warn on volatility
         isLeadRowFromVolatileDb = hlApi.isLeadRowSourceFromVolatileDb(sourceKey)
@@ -322,19 +361,25 @@ class CbPlugin:
 
         # auto address assign
         if (lead.calcLeadAddress()=="auto"):
-            neighborhoodOption = "abbreviation"
-            addressLine = hlApi.getNiceAddress(leadRow, neighborhoodOption, True)
-            addressLineFirstPart = addressLine.split(",")[0].lower()
-            if (addressLineFirstPart not in subheading.lower()):
-                lead.setAddress(addressLine)
+            #neighborhoodOptions = ["abbreviation"]
+            neighborhoodOptions = ["abbreviation", "loclabel"]
+            [address, addressWithApt] = hlApi.getNiceAddress(leadRow, neighborhoodOptions, True)
+            # check if (non-apt) address is already in subheading, if not, add it
+            addressSplits = address.split(",")
+            addressLineFirstPart = addressSplits[0].lower()
+            # smartly avoid it if its already
+            if (subheading is None) or (addressLineFirstPart not in subheading.lower()):
+                lead.setAddress(addressWithApt)
 
         if (subheading is None):
-            msg = 'Lead {} has no descriptive label; in database as: \"{}\"'.format(leadIdNumberText, dName)
+            [address, addressWithApt] = hlApi.getNiceAddress(leadRow, neighborhoodOptions, True)
+            msg = 'Lead {} has no descriptive label; in database as:  \"{}\" @ \"{}\"'.format(leadIdNumberText, dName, addressWithApt)
             note = JrINote("leadDbWarning", lead, msg, None, None)
             env.addNote(note)
         elif (not hlApi.leadRowHasSimilarLabel(leadRow, subheading)):
             # dissimilar warning
-            msg = 'Lead label differs from database label: \"{}\"'.format(dName)
+            [address, addressWithApt] = hlApi.getNiceAddress(leadRow, neighborhoodOptions, True)
+            msg = 'Lead label \"{}\" differs from database label \"{}\" @ \"{}\"'.format(subheading, dName, addressWithApt)
             note = JrINote("leadDbWarning", lead, msg, None, None)
             env.addNote(note)
 
@@ -352,8 +397,11 @@ class CbPlugin:
                 note = JrINote("leadDbWarning", lead, msg, None, None)
                 env.addNote(note)
 
+        # save dName with lead
+        lead.setDName(dName)
+
         # record that we used it
-        hlApi.addUsedLead(sourceKey, leadRow, lead)
+        hlApi.addUsedLead(sourceKey, leadRow, lead, flagNotAlreadyBeInUsedList)
 
         # done
         return [label, subheading]
@@ -363,4 +411,12 @@ class CbPlugin:
         pass
 
     def postBuildPreRender(self, env):
+        pass
+
+
+
+
+
+    def postProcessNewSubSection(self, env, renderDoc, parentSection, subSection):
+        # chance for plugin to process subsection that was just created
         pass

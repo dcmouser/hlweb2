@@ -1,0 +1,2750 @@
+{
+    "Abandoned and Empty Commercial": {
+        "ptype": "yellow",
+        "pcatg": "Vacant Property",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Abandoned and Empty Manufacturing": {
+        "ptype": "yellow",
+        "pcatg": "Vacant Property",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Abandoned and Empty Residential": {
+        "ptype": "yellow",
+        "pcatg": "Vacant Property",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Accountants": {
+        "ptype": "yellow",
+        "pcatg": "Accountants",
+        "resicon": "office",
+        "restags": [
+            "accountant"
+        ],
+        "seealso": null
+    },
+    "Adoption Agencies": {
+        "ptype": "yellow",
+        "pcatg": "Family & Event Services",
+        "resicon": null,
+        "restags": [
+            "events",
+            "family"
+        ],
+        "seealso": null
+    },
+    "Advertising Agencies": {
+        "ptype": "yellow",
+        "pcatg": "Advertising Agencies",
+        "resicon": "office",
+        "restags": [
+            "advertising"
+        ],
+        "seealso": null
+    },
+    "Aircraft": {
+        "ptype": "yellow",
+        "pcatg": "Industry Sales & Commercial Equipment",
+        "resicon": "wholesale",
+        "restags": [
+            "commercialequipment",
+            "industrysales"
+        ],
+        "seealso": null
+    },
+    "Airports": {
+        "ptype": "yellow",
+        "pcatg": "Transport Depots / Airports / Terminals",
+        "resicon": null,
+        "restags": [
+            "airport",
+            "terminal",
+            "transport"
+        ],
+        "seealso": null
+    },
+    "Ambulances": {
+        "ptype": "yellow",
+        "pcatg": "Medical Services & Supplies",
+        "resicon": null,
+        "restags": [
+            "medical",
+            "medicalservice",
+            "medicalsupply"
+        ],
+        "seealso": null
+    },
+    "Amusements": {
+        "ptype": "yellow",
+        "pcatg": "Amusements & Recreation",
+        "resicon": "playground",
+        "restags": [
+            "amusement",
+            "recreation"
+        ],
+        "seealso": null
+    },
+    "Animal Shelters": {
+        "ptype": "yellow",
+        "pcatg": "Pet Stores / Veterinarians",
+        "resicon": "animal",
+        "restags": [
+            "petshelter",
+            "petstore",
+            "vet"
+        ],
+        "seealso": null
+    },
+    "Antiques": {
+        "ptype": "yellow",
+        "pcatg": "Antiques",
+        "resicon": "antiques",
+        "restags": [
+            "antiques"
+        ],
+        "seealso": null
+    },
+    "Apartments": {
+        "ptype": "yellow",
+        "pcatg": "Apartment Buildings",
+        "resicon": "apartment",
+        "restags": [
+            "apartment"
+        ],
+        "seealso": null
+    },
+    "Appliances": {
+        "ptype": "yellow",
+        "pcatg": "Appliances",
+        "resicon": null,
+        "restags": [
+            "appliances"
+        ],
+        "seealso": null
+    },
+    "Appraisals": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Architects": {
+        "ptype": "yellow",
+        "pcatg": "Construction & Architecture",
+        "resicon": "contractor",
+        "restags": [
+            "architect",
+            "architecture",
+            "construction"
+        ],
+        "seealso": null
+    },
+    "Armories": {
+        "ptype": "yellow",
+        "pcatg": "Armories & Militias",
+        "resicon": "fort",
+        "restags": [
+            "armory",
+            "armoury",
+            "militia"
+        ],
+        "seealso": null
+    },
+    "Armoured Cars": {
+        "ptype": "yellow",
+        "pcatg": "Security Services (Armoured Guards)",
+        "resicon": null,
+        "restags": [
+            "armoredguard",
+            "armouredgard",
+            "guard",
+            "security"
+        ],
+        "seealso": null
+    },
+    "Art Framing": {
+        "ptype": "yellow",
+        "pcatg": "Art Stores",
+        "resicon": "art",
+        "restags": [
+            "artstore"
+        ],
+        "seealso": null
+    },
+    "Art Stores": {
+        "ptype": "yellow",
+        "pcatg": "Art Stores",
+        "resicon": "art",
+        "restags": [
+            "artstore"
+        ],
+        "seealso": null
+    },
+    "Artists": {
+        "ptype": "yellow",
+        "pcatg": "Artists",
+        "resicon": "art",
+        "restags": [
+            "artist"
+        ],
+        "seealso": null
+    },
+    "Associations": {
+        "ptype": "yellow",
+        "pcatg": "Social Clubs / Associations / Charities",
+        "resicon": "charity",
+        "restags": [
+            "association",
+            "charity",
+            "social"
+        ],
+        "seealso": null
+    },
+    "Auctioneers": {
+        "ptype": "yellow",
+        "pcatg": "Auction Houses",
+        "resicon": null,
+        "restags": [
+            "auction"
+        ],
+        "seealso": null
+    },
+    "Automobile Rentals": {
+        "ptype": "yellow",
+        "pcatg": "Automobile Rentals / Repairs / Parts",
+        "resicon": "car",
+        "restags": [
+            "carpart",
+            "carrental",
+            "carrepair"
+        ],
+        "seealso": null
+    },
+    "Automobile Repairs": {
+        "ptype": "yellow_standby",
+        "pcatg": "Automobile Rentals / Repairs / Parts",
+        "resicon": "car",
+        "restags": [
+            "carpart",
+            "carrental",
+            "carrepair"
+        ],
+        "seealso": null
+    },
+    "Automobile Sales": {
+        "ptype": "yellow_standby",
+        "pcatg": "Automobile Sales",
+        "resicon": "car",
+        "restags": [
+            "carshop",
+            "dealer"
+        ],
+        "seealso": null
+    },
+    "Automobiles, Other": {
+        "ptype": "yellow",
+        "pcatg": "Automobile Rentals / Repairs / Parts",
+        "resicon": "car",
+        "restags": [
+            "carpart",
+            "carrental",
+            "carrepair"
+        ],
+        "seealso": null
+    },
+    "Bags": {
+        "ptype": "yellow_standby",
+        "pcatg": "Camping / Luggage",
+        "resicon": "suitcase",
+        "restags": [
+            "camping",
+            "luggage"
+        ],
+        "seealso": null
+    },
+    "Bail Bonds": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Bakeries": {
+        "ptype": "yellow",
+        "pcatg": "Bakeries",
+        "resicon": "bakery",
+        "restags": [
+            "bakery"
+        ],
+        "seealso": null
+    },
+    "Ballet": {
+        "ptype": "yellow",
+        "pcatg": "Dancing & Ballrooms",
+        "resicon": null,
+        "restags": [
+            "ballroom",
+            "club",
+            "dance",
+            "dancing"
+        ],
+        "seealso": null
+    },
+    "Ballrooms": {
+        "ptype": "yellow",
+        "pcatg": "Dancing & Ballrooms",
+        "resicon": null,
+        "restags": [
+            "ballroom",
+            "club",
+            "dance",
+            "dancing"
+        ],
+        "seealso": null
+    },
+    "Banks": {
+        "ptype": "yellow",
+        "pcatg": "Banks",
+        "resicon": "bank",
+        "restags": [
+            "bank"
+        ],
+        "seealso": null
+    },
+    "Barbers": {
+        "ptype": "yellow",
+        "pcatg": "Barbers",
+        "resicon": "barber",
+        "restags": [
+            "barber",
+            "hairdresser"
+        ],
+        "seealso": null
+    },
+    "Bars": {
+        "ptype": "yellow",
+        "pcatg": "Bars & Pubs",
+        "resicon": "bar",
+        "restags": [
+            "bar",
+            "pub"
+        ],
+        "seealso": null
+    },
+    "Bathhouses": {
+        "ptype": "yellow",
+        "pcatg": "Bathhouses & Massage",
+        "resicon": "massage",
+        "restags": [
+            "boathouse",
+            "massage",
+            "massageparlor",
+            "massageparlour"
+        ],
+        "seealso": null
+    },
+    "Beauty Shops": {
+        "ptype": "yellow",
+        "pcatg": "Beauty Shops",
+        "resicon": "beauty",
+        "restags": [
+            "beauty"
+        ],
+        "seealso": null
+    },
+    "Bicycles": {
+        "ptype": "yellow",
+        "pcatg": "Bicycle & Carriage Shops",
+        "resicon": "bicycle",
+        "restags": [
+            "bicycle",
+            "carriage"
+        ],
+        "seealso": null
+    },
+    "Billiards": {
+        "ptype": "yellow",
+        "pcatg": "Amusements & Recreation",
+        "resicon": "playground",
+        "restags": [
+            "amusement",
+            "recreation"
+        ],
+        "seealso": null
+    },
+    "Blacksmiths": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Boarding Houses": {
+        "ptype": "yellow",
+        "pcatg": "Boarding Houses",
+        "resicon": "boardinghouse",
+        "restags": [
+            "boardinghouse",
+            "hostel"
+        ],
+        "seealso": null
+    },
+    "Bodyguards": {
+        "ptype": "yellow",
+        "pcatg": "Security Services (Armoured Guards)",
+        "resicon": null,
+        "restags": [
+            "armoredguard",
+            "armouredgard",
+            "guard",
+            "security"
+        ],
+        "seealso": null
+    },
+    "Boilers": {
+        "ptype": "yellow",
+        "pcatg": "Appliances",
+        "resicon": null,
+        "restags": [
+            "appliances"
+        ],
+        "seealso": null
+    },
+    "Book Publishers": {
+        "ptype": "yellow",
+        "pcatg": "Publishers (Books, etc.)",
+        "resicon": "publisher",
+        "restags": [
+            "publisher"
+        ],
+        "seealso": null
+    },
+    "Booksellers": {
+        "ptype": "yellow",
+        "pcatg": "Booksellers",
+        "resicon": "bookstore",
+        "restags": [
+            "bookshop",
+            "bookstore"
+        ],
+        "seealso": null
+    },
+    "Bowling Alleys": {
+        "ptype": "yellow",
+        "pcatg": "Amusements & Recreation",
+        "resicon": "playground",
+        "restags": [
+            "amusement",
+            "recreation"
+        ],
+        "seealso": null
+    },
+    "Boxing": {
+        "ptype": "yellow",
+        "pcatg": "Sports & Athletics",
+        "resicon": "sport",
+        "restags": [
+            "athletics",
+            "sport"
+        ],
+        "seealso": null
+    },
+    "Breweries": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Bridges & Tunnels": {
+        "ptype": "yellow",
+        "pcatg": "Bridges & Tunnels",
+        "resicon": null,
+        "restags": [
+            "bridge",
+            "tunnel"
+        ],
+        "seealso": null
+    },
+    "Broadcasters": {
+        "ptype": "yellow",
+        "pcatg": "Broadcast & Radio Stations",
+        "resicon": "radio",
+        "restags": [
+            "broadcast",
+            "radio",
+            "radiostation",
+            "tvstation"
+        ],
+        "seealso": null
+    },
+    "Busses": {
+        "ptype": "poi",
+        "pcatg": "Subway & Bus Stations",
+        "resicon": "bus",
+        "restags": [
+            "bus",
+            "subway",
+            "transit"
+        ],
+        "seealso": null
+    },
+    "Butchers": {
+        "ptype": "yellow",
+        "pcatg": "Butchers / Meats / Cheese / Deli",
+        "resicon": "butcher",
+        "restags": [
+            "butcher",
+            "cheese",
+            "cheesemonger",
+            "deli",
+            "meat"
+        ],
+        "seealso": null
+    },
+    "Cabs": {
+        "ptype": "yellow",
+        "pcatg": "Taxicabs & Limos",
+        "resicon": "taxi",
+        "restags": [
+            "cab",
+            "limo",
+            "taxi",
+            "taxicab"
+        ],
+        "seealso": null
+    },
+    "Cafes": {
+        "ptype": "yellow",
+        "pcatg": "Cafes & Diners",
+        "resicon": "cafe",
+        "restags": [
+            "cafe",
+            "diner"
+        ],
+        "seealso": null
+    },
+    "Camping": {
+        "ptype": "yellow",
+        "pcatg": "Camping / Luggage",
+        "resicon": "suitcase",
+        "restags": [
+            "camping",
+            "luggage"
+        ],
+        "seealso": null
+    },
+    "Candy Stores": {
+        "ptype": "yellow",
+        "pcatg": "Candy Stores & Dessert Shops",
+        "resicon": "candy",
+        "restags": [
+            "candy",
+            "dessert",
+            "icecream",
+            "sweet"
+        ],
+        "seealso": null
+    },
+    "Carpets": {
+        "ptype": "yellow",
+        "pcatg": "Carpets & Rugs",
+        "resicon": "carpet",
+        "restags": [
+            "carpet",
+            "rug"
+        ],
+        "seealso": null
+    },
+    "Carriages": {
+        "ptype": "yellow",
+        "pcatg": "Bicycle & Carriage Shops",
+        "resicon": "bicycle",
+        "restags": [
+            "bicycle",
+            "carriage"
+        ],
+        "seealso": null
+    },
+    "Caterers": {
+        "ptype": "yellow",
+        "pcatg": "Family & Event Services",
+        "resicon": null,
+        "restags": [
+            "events",
+            "family"
+        ],
+        "seealso": null
+    },
+    "Cemeteries": {
+        "ptype": "yellow",
+        "pcatg": "Cemeteries / Funeral Homes",
+        "resicon": null,
+        "restags": [
+            "cemetary",
+            "death",
+            "funeral",
+            "funeralhome"
+        ],
+        "seealso": null
+    },
+    "Charities": {
+        "ptype": "yellow",
+        "pcatg": "Social Clubs / Associations / Charities",
+        "resicon": "charity",
+        "restags": [
+            "association",
+            "charity",
+            "social"
+        ],
+        "seealso": null
+    },
+    "Check Cashing": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Chemicals": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Churches": {
+        "ptype": "yellow",
+        "pcatg": "Churches",
+        "resicon": "church",
+        "restags": [
+            "church"
+        ],
+        "seealso": [
+            "Religious Institutions"
+        ]
+    },
+    "Cleaners": {
+        "ptype": "yellow",
+        "pcatg": "Cleaners & Janitorial Services",
+        "resicon": null,
+        "restags": [
+            "cleaner",
+            "janitor",
+            "janitorial"
+        ],
+        "seealso": null
+    },
+    "Clothing Stores": {
+        "ptype": "yellow",
+        "pcatg": "Clothing Stores",
+        "resicon": "clothes",
+        "restags": [
+            "clothing"
+        ],
+        "seealso": [
+            "Tailors"
+        ]
+    },
+    "Coffee Merchants": {
+        "ptype": "yellow",
+        "pcatg": "Import / Export / Wholesalers",
+        "resicon": "clothes",
+        "restags": [
+            "export",
+            "import",
+            "wholesale"
+        ],
+        "seealso": null
+    },
+    "Collection Agencies": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Commodities": {
+        "ptype": "yellow",
+        "pcatg": "Investments (Stock Brokers)",
+        "resicon": "dollar",
+        "restags": [
+            "investment",
+            "stock",
+            "stockbroker"
+        ],
+        "seealso": null
+    },
+    "Construction": {
+        "ptype": "yellow",
+        "pcatg": "Construction & Architecture",
+        "resicon": "contractor",
+        "restags": [
+            "architect",
+            "architecture",
+            "construction"
+        ],
+        "seealso": null
+    },
+    "Contractors": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Costumes": {
+        "ptype": "yellow",
+        "pcatg": "Novelty Shops",
+        "resicon": null,
+        "restags": [
+            "fancydress",
+            "novelty"
+        ],
+        "seealso": null
+    },
+    "Courthouses": {
+        "ptype": "poi",
+        "pcatg": "Courthouses",
+        "resicon": "court",
+        "restags": [
+            "court",
+            "courthouse"
+        ],
+        "seealso": null
+    },
+    "Dairy": {
+        "ptype": "yellow",
+        "pcatg": "Agriculture / Farming / Stables",
+        "resicon": "animal",
+        "restags": [
+            "agriculture",
+            "farming",
+            "stable"
+        ],
+        "seealso": null
+    },
+    "Dance Halls": {
+        "ptype": "yellow",
+        "pcatg": "Dancing & Ballrooms",
+        "resicon": null,
+        "restags": [
+            "ballroom",
+            "club",
+            "dance",
+            "dancing"
+        ],
+        "seealso": null
+    },
+    "Dancing": {
+        "ptype": "yellow",
+        "pcatg": "Dancing & Ballrooms",
+        "resicon": null,
+        "restags": [
+            "ballroom",
+            "club",
+            "dance",
+            "dancing"
+        ],
+        "seealso": null
+    },
+    "Delicatessens": {
+        "ptype": "yellow",
+        "pcatg": "Butchers / Meats / Cheese / Deli",
+        "resicon": "butcher",
+        "restags": [
+            "butcher",
+            "cheese",
+            "cheesemonger",
+            "deli",
+            "meat"
+        ],
+        "seealso": null
+    },
+    "Delivery": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Dentists": {
+        "ptype": "yellow",
+        "pcatg": "Dentists",
+        "resicon": null,
+        "restags": null,
+        "seealso": [
+            "Doctors"
+        ]
+    },
+    "Department Stores": {
+        "ptype": "yellow",
+        "pcatg": "Department Stores",
+        "resicon": "clothes",
+        "restags": [
+            "departmentstore"
+        ],
+        "seealso": [
+            "Variety Stores / Five & Dime"
+        ]
+    },
+    "Dessert Shops": {
+        "ptype": "yellow",
+        "pcatg": "Candy Stores & Dessert Shops",
+        "resicon": "candy",
+        "restags": [
+            "candy",
+            "dessert",
+            "icecream",
+            "sweet"
+        ],
+        "seealso": null
+    },
+    "Detectives": {
+        "ptype": "yellow",
+        "pcatg": "Private Investigators & Detectives",
+        "resicon": null,
+        "restags": [
+            "detective",
+            "pi"
+        ],
+        "seealso": null
+    },
+    "Docks & Piers": {
+        "ptype": "poi",
+        "pcatg": "Docks & Piers",
+        "resicon": "docks",
+        "restags": [
+            "dock",
+            "pier"
+        ],
+        "seealso": null
+    },
+    "Doctors": {
+        "ptype": "yellow",
+        "pcatg": "Doctors",
+        "resicon": "doctor",
+        "restags": [
+            "doctor"
+        ],
+        "seealso": [
+            "Medical Services & Supplies",
+            "Psychologists & Psychiatrists"
+        ]
+    },
+    "Drugstores": {
+        "ptype": "yellow",
+        "pcatg": "Drugstores / Chemists / Pharmacies",
+        "resicon": "drugstore",
+        "restags": [
+            "chemist",
+            "drugstore",
+            "pharmacist"
+        ],
+        "seealso": null
+    },
+    "Electric Appliances": {
+        "ptype": "yellow",
+        "pcatg": "Appliances",
+        "resicon": null,
+        "restags": [
+            "appliances"
+        ],
+        "seealso": null
+    },
+    "Elementary Schools": {
+        "ptype": "yellow",
+        "pcatg": "Schools & Education",
+        "resicon": "school",
+        "restags": [
+            "education",
+            "school",
+            "university"
+        ],
+        "seealso": null
+    },
+    "Elevator Companies": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Embassies": {
+        "ptype": "yellow",
+        "pcatg": "Embassies & Consulates",
+        "tags": [
+            "government",
+            "international"
+        ],
+        "resicon": "embassy",
+        "restags": [
+            "government",
+            "international"
+        ],
+        "seealso": null
+    },
+    "Employment Agencies": {
+        "ptype": "yellow",
+        "pcatg": "Employment Agencies & Temp Workers",
+        "resicon": "office",
+        "restags": [
+            "employment",
+            "temp"
+        ],
+        "seealso": null
+    },
+    "Engineers": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Ethnic Foods": {
+        "ptype": "yellow",
+        "pcatg": "Ethnic & Specialty Foods",
+        "resicon": "grocery",
+        "restags": [
+            "ethnicgrocery",
+            "grocer",
+            "grocery",
+            "specialtyfood"
+        ],
+        "seealso": null
+    },
+    "Ethnic Goods": {
+        "ptype": "yellow",
+        "pcatg": "Ethnic & Specialty Foods",
+        "resicon": "grocery",
+        "restags": [
+            "ethnicgrocery",
+            "grocer",
+            "grocery",
+            "specialtyfood"
+        ],
+        "seealso": null
+    },
+    "Exhibition Halls": {
+        "ptype": "yellow",
+        "pcatg": "Theaters & Playhouses",
+        "resicon": "theatre",
+        "restags": [
+            "playhouse",
+            "theater",
+            "theatre"
+        ],
+        "seealso": null
+    },
+    "Exterminators": {
+        "ptype": "yellow",
+        "pcatg": "Pest Control & Exterminators",
+        "resicon": null,
+        "restags": [
+            "exterminator",
+            "pest",
+            "pestcontrol"
+        ],
+        "seealso": null
+    },
+    "FDNY, Fire Department": {
+        "ptype": "poi",
+        "pcatg": "Fire Department (FDNY)",
+        "resicon": "fire",
+        "restags": [
+            "fdny",
+            "fire"
+        ],
+        "seealso": null
+    },
+    "Factories": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Farming": {
+        "ptype": "yellow",
+        "pcatg": "Agriculture / Farming / Stables",
+        "resicon": "animal",
+        "restags": [
+            "agriculture",
+            "farming",
+            "stable"
+        ],
+        "seealso": [
+            "Pet Stores / Veterinarians"
+        ]
+    },
+    "Financial Services": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Firehouses": {
+        "ptype": "yellow",
+        "pcatg": "Fire Department (FDNY)",
+        "resicon": "fire",
+        "restags": [
+            "fdny",
+            "fire"
+        ],
+        "seealso": null
+    },
+    "Five & Dime Stores": {
+        "ptype": "yellow",
+        "pcatg": "Variety Stores / Five & Dime",
+        "resicon": null,
+        "restags": [
+            "dollar",
+            "fivedime",
+            "pound",
+            "poundshop",
+            "variety"
+        ],
+        "seealso": null
+    },
+    "Florists": {
+        "ptype": "yellow",
+        "pcatg": "Florists",
+        "resicon": "florist",
+        "restags": [
+            "florist"
+        ],
+        "seealso": null
+    },
+    "Food Markets": {
+        "ptype": "yellow",
+        "pcatg": "Food Markets",
+        "resicon": "grocery",
+        "restags": [
+            "foodmarket"
+        ],
+        "seealso": null
+    },
+    "Fuel": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Furniture": {
+        "ptype": "yellow",
+        "pcatg": "Furniture & Interior Decorating",
+        "resicon": "furniture",
+        "restags": [
+            "furniture",
+            "interiordecor"
+        ],
+        "seealso": null
+    },
+    "Furriers": {
+        "ptype": "yellow",
+        "pcatg": "Furriers",
+        "resicon": null,
+        "restags": [
+            "furrier",
+            "furshop"
+        ],
+        "seealso": null
+    },
+    "Galleries": {
+        "ptype": "yellow",
+        "pcatg": "Art Galleries",
+        "resicon": "gallery",
+        "restags": [
+            "artgallery",
+            "gallery"
+        ],
+        "seealso": null
+    },
+    "Gambling": {
+        "ptype": "yellow",
+        "pcatg": "Industry Sales & Commercial Equipment",
+        "resicon": "wholesale",
+        "restags": [
+            "commercialequipment",
+            "industrysales"
+        ],
+        "seealso": null
+    },
+    "Garages": {
+        "ptype": "yellow",
+        "pcatg": "Parking Garages",
+        "resicon": "parking",
+        "restags": [
+            "garage",
+            "parking"
+        ],
+        "seealso": null
+    },
+    "Gardens": {
+        "ptype": "poi",
+        "pcatg": "Public Gardens & Playgrounds",
+        "resicon": "playground",
+        "restags": [
+            "garden",
+            "playground"
+        ],
+        "seealso": null
+    },
+    "Garments": {
+        "ptype": "yellow",
+        "pcatg": "Garment Manufacturers",
+        "resicon": "clothes",
+        "restags": [
+            "garmentmanufacturer"
+        ],
+        "seealso": null
+    },
+    "Gas Stations": {
+        "ptype": "yellow",
+        "pcatg": "Gas Stations",
+        "resicon": "petrol",
+        "restags": [
+            "gas",
+            "gasstation",
+            "petrol",
+            "petrolstation"
+        ],
+        "seealso": null
+    },
+    "Gift Shops": {
+        "ptype": "yellow",
+        "pcatg": "Variety Stores / Five & Dime",
+        "resicon": null,
+        "restags": [
+            "dollar",
+            "fivedime",
+            "pound",
+            "poundshop",
+            "variety"
+        ],
+        "seealso": null
+    },
+    "Glass": {
+        "ptype": "yellow",
+        "pcatg": "Construction & Architecture",
+        "resicon": "contractor",
+        "restags": [
+            "architect",
+            "architecture",
+            "construction"
+        ],
+        "seealso": null
+    },
+    "Government Offices": {
+        "ptype": "yellow",
+        "pcatg": "Government Offices",
+        "resicon": "government",
+        "restags": [
+            "government"
+        ],
+        "seealso": null
+    },
+    "Government Records": {
+        "ptype": "yellow",
+        "pcatg": "Government Offices",
+        "resicon": "government",
+        "restags": [
+            "government"
+        ],
+        "seealso": null
+    },
+    "Grocery Stores": {
+        "ptype": "yellow",
+        "pcatg": "Grocery Stores",
+        "resicon": "grocery",
+        "restags": [
+            "grocer",
+            "grocery"
+        ],
+        "seealso": null
+    },
+    "Guards": {
+        "ptype": "yellow",
+        "pcatg": "Security Services (Armoured Guards)",
+        "resicon": null,
+        "restags": [
+            "armoredguard",
+            "armouredgard",
+            "guard",
+            "security"
+        ],
+        "seealso": null
+    },
+    "Gun Shops": {
+        "ptype": "yellow",
+        "pcatg": "Gun Shops & Gun Smiths",
+        "resicon": "gunshop",
+        "restags": [
+            "gun",
+            "gunshop",
+            "gunsmith"
+        ],
+        "seealso": null
+    },
+    "Gymnasiums": {
+        "ptype": "yellow",
+        "pcatg": "Sports & Athletics",
+        "resicon": "sport",
+        "restags": [
+            "athletics",
+            "sport"
+        ],
+        "seealso": null
+    },
+    "Hair Dressers": {
+        "ptype": "yellow",
+        "pcatg": "Beauty Shops",
+        "resicon": "beauty",
+        "restags": [
+            "beauty"
+        ],
+        "seealso": null
+    },
+    "Hardware Shops": {
+        "ptype": "yellow",
+        "pcatg": "Construction & Architecture",
+        "resicon": "contractor",
+        "restags": [
+            "architect",
+            "architecture",
+            "construction"
+        ],
+        "seealso": null
+    },
+    "Hats": {
+        "ptype": "yellow",
+        "pcatg": "Hats",
+        "resicon": "clothes",
+        "restags": [
+            "hat"
+        ],
+        "seealso": null
+    },
+    "High Schools": {
+        "ptype": "yellow",
+        "pcatg": "Schools & Education",
+        "resicon": "school",
+        "restags": [
+            "education",
+            "school",
+            "university"
+        ],
+        "seealso": null
+    },
+    "Hospitals": {
+        "ptype": "yellow",
+        "pcatg": "Hospitals",
+        "resicon": "hospital",
+        "restags": [
+            "hospital"
+        ],
+        "seealso": null
+    },
+    "Hotels": {
+        "ptype": "yellow",
+        "pcatg": "Hotels",
+        "resicon": "hotel",
+        "restags": [
+            "hotel"
+        ],
+        "seealso": null
+    },
+    "Housewares": {
+        "ptype": "yellow",
+        "pcatg": "Furniture & Interior Decorating",
+        "resicon": "furniture",
+        "restags": [
+            "furniture",
+            "interiordecor"
+        ],
+        "seealso": null
+    },
+    "Ice Cream": {
+        "ptype": "yellow",
+        "pcatg": "Candy Stores & Dessert Shops",
+        "resicon": "candy",
+        "restags": [
+            "candy",
+            "dessert",
+            "icecream",
+            "sweet"
+        ],
+        "seealso": null
+    },
+    "Import & Export": {
+        "ptype": "yellow",
+        "pcatg": "Import / Export / Wholesalers",
+        "resicon": "clothes",
+        "restags": [
+            "export",
+            "import",
+            "wholesale"
+        ],
+        "seealso": null
+    },
+    "Industry Sales": {
+        "ptype": "yellow",
+        "pcatg": "Industry Sales & Commercial Equipment",
+        "resicon": "wholesale",
+        "restags": [
+            "commercialequipment",
+            "industrysales"
+        ],
+        "seealso": null
+    },
+    "Insurance": {
+        "ptype": "yellow",
+        "pcatg": "Insurance",
+        "resicon": "office",
+        "restags": [
+            "insurance"
+        ],
+        "seealso": null
+    },
+    "Interior Decorators": {
+        "ptype": "yellow",
+        "pcatg": "Furniture & Interior Decorating",
+        "resicon": "furniture",
+        "restags": [
+            "furniture",
+            "interiordecor"
+        ],
+        "seealso": null
+    },
+    "Interpreters": {
+        "ptype": "yellow",
+        "pcatg": "Employment Agencies & Temp Workers",
+        "resicon": "office",
+        "restags": [
+            "employment",
+            "temp"
+        ],
+        "seealso": null
+    },
+    "Investments": {
+        "ptype": "yellow",
+        "pcatg": "Investments (Stock Brokers)",
+        "resicon": "dollar",
+        "restags": [
+            "investment",
+            "stock",
+            "stockbroker"
+        ],
+        "seealso": null
+    },
+    "Jails": {
+        "ptype": "yellow",
+        "pcatg": "Jails & Prisons",
+        "resicon": "prison",
+        "restags": [
+            "gaol",
+            "jail",
+            "prison"
+        ],
+        "seealso": null
+    },
+    "Jewelers": {
+        "ptype": "yellow",
+        "pcatg": "Jewelers & Precious Metals",
+        "resicon": "jewellery",
+        "restags": [
+            "jeweler",
+            "jewelry"
+        ],
+        "seealso": null
+    },
+    "Lakes & Ponds": {
+        "ptype": "poi",
+        "pcatg": "Parks & Zoos",
+        "resicon": "tree",
+        "restags": [
+            "park",
+            "zoo"
+        ],
+        "seealso": null
+    },
+    "Landmarks": {
+        "ptype": "yellow",
+        "pcatg": "Landmarks / Monuments / Statues",
+        "resicon": "monument",
+        "restags": [
+            "landmark",
+            "monument",
+            "statue"
+        ],
+        "seealso": null
+    },
+    "Laundromats": {
+        "ptype": "yellow",
+        "pcatg": "Laundromats",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Lawyers": {
+        "ptype": "yellow",
+        "pcatg": "Lawyers & Attorneys",
+        "resicon": "court",
+        "restags": [
+            "attorney",
+            "lawyer",
+            "solicitor"
+        ],
+        "seealso": null
+    },
+    "Libraries": {
+        "ptype": "yellow",
+        "pcatg": "Libraries",
+        "resicon": "library",
+        "restags": [
+            "library"
+        ],
+        "seealso": null
+    },
+    "Limos": {
+        "ptype": "yellow",
+        "pcatg": "Taxicabs & Limos",
+        "resicon": "taxi",
+        "restags": [
+            "cab",
+            "limo",
+            "taxi",
+            "taxicab"
+        ],
+        "seealso": null
+    },
+    "Linens & Bedding": {
+        "ptype": "yellow",
+        "pcatg": "Furniture & Interior Decorating",
+        "resicon": "furniture",
+        "restags": [
+            "furniture",
+            "interiordecor"
+        ],
+        "seealso": null
+    },
+    "Liquor Stores": {
+        "ptype": "yellow",
+        "pcatg": "Liquor Stores & Beverages",
+        "resicon": "alcohol",
+        "restags": [
+            "liquorstore",
+            "offlicense"
+        ],
+        "seealso": null
+    },
+    "Loans & Money Lending": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Locksmiths": {
+        "ptype": "yellow",
+        "pcatg": "Locksmiths & Safes",
+        "resicon": "locksmith",
+        "restags": [
+            "locksmith",
+            "safe"
+        ],
+        "seealso": null
+    },
+    "Magazines": {
+        "ptype": "yellow",
+        "pcatg": "Newspapers & Magazines",
+        "resicon": "newspaper",
+        "restags": [
+            "magazine",
+            "newspaper",
+            "newsstand"
+        ],
+        "seealso": null
+    },
+    "Magic Shops": {
+        "ptype": "yellow",
+        "pcatg": "Novelty Shops",
+        "resicon": null,
+        "restags": [
+            "fancydress",
+            "novelty"
+        ],
+        "seealso": null
+    },
+    "Manufacturing": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Map Sellers": {
+        "ptype": "yellow",
+        "pcatg": "Travel",
+        "resicon": "travel",
+        "restags": [
+            "travel",
+            "travelagent"
+        ],
+        "seealso": null
+    },
+    "Maritime": {
+        "ptype": "yellow",
+        "pcatg": "Maritime Equipment (Boats, Chandlers)",
+        "resicon": "boat",
+        "restags": [
+            "boat",
+            "chandler",
+            "maritime"
+        ],
+        "seealso": null
+    },
+    "Marriage Brokers": {
+        "ptype": "yellow",
+        "pcatg": "Family & Event Services",
+        "resicon": null,
+        "restags": [
+            "events",
+            "family"
+        ],
+        "seealso": null
+    },
+    "Massage": {
+        "ptype": "yellow",
+        "pcatg": "Bathhouses & Massage",
+        "resicon": "massage",
+        "restags": [
+            "boathouse",
+            "massage",
+            "massageparlor",
+            "massageparlour"
+        ],
+        "seealso": null
+    },
+    "Medical Services": {
+        "ptype": "yellow",
+        "pcatg": "Medical Services & Supplies",
+        "resicon": null,
+        "restags": [
+            "medical",
+            "medicalservice",
+            "medicalsupply"
+        ],
+        "seealso": null
+    },
+    "Medical Supplies": {
+        "ptype": "yellow",
+        "pcatg": "Medical Services & Supplies",
+        "resicon": null,
+        "restags": [
+            "medical",
+            "medicalservice",
+            "medicalsupply"
+        ],
+        "seealso": null
+    },
+    "Medical Tonics": {
+        "ptype": "yellow",
+        "pcatg": "Medical Services & Supplies",
+        "resicon": null,
+        "restags": [
+            "medical",
+            "medicalservice",
+            "medicalsupply"
+        ],
+        "seealso": null
+    },
+    "Miscellaneous": {
+        "ptype": "yellow",
+        "pcatg": "Miscellaneous",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Monuments": {
+        "ptype": "yellow",
+        "pcatg": "Landmarks / Monuments / Statues",
+        "resicon": "monument",
+        "restags": [
+            "landmark",
+            "monument",
+            "statue"
+        ],
+        "seealso": null
+    },
+    "Mortgages": {
+        "ptype": "yellow",
+        "pcatg": "Financial Services",
+        "resicon": "dollar",
+        "restags": [
+            "finance"
+        ],
+        "seealso": null
+    },
+    "Movie Production & Equipment": {
+        "ptype": "yellow",
+        "pcatg": "Industry Sales & Commercial Equipment",
+        "resicon": "wholesale",
+        "restags": [
+            "commercialequipment",
+            "industrysales"
+        ],
+        "seealso": null
+    },
+    "Movie Studios": {
+        "ptype": "yellow",
+        "pcatg": "Movie Studios",
+        "resicon": "cinema",
+        "restags": [
+            "filmstudio",
+            "moviestudio"
+        ],
+        "seealso": null
+    },
+    "Movie Theaters": {
+        "ptype": "yellow",
+        "pcatg": "Movie Projection Houses",
+        "resicon": "cinema",
+        "restags": [
+            "cinema"
+        ],
+        "seealso": null
+    },
+    "Moving": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Museums": {
+        "ptype": "yellow",
+        "pcatg": "Museums",
+        "resicon": "museum",
+        "restags": [
+            "museum"
+        ],
+        "seealso": null
+    },
+    "Music Halls": {
+        "ptype": "yellow",
+        "pcatg": "Music & Opera Halls",
+        "resicon": "club",
+        "restags": [
+            "musichall",
+            "opera",
+            "operahall"
+        ],
+        "seealso": null
+    },
+    "Music Publishers": {
+        "ptype": "yellow",
+        "pcatg": "Music Publishers & Studios",
+        "resicon": "club",
+        "restags": [
+            "musicpublisher",
+            "musicstudio"
+        ],
+        "seealso": null
+    },
+    "Music Stores": {
+        "ptype": "yellow",
+        "pcatg": "Music Stores",
+        "resicon": "club",
+        "restags": [
+            "musicshop",
+            "musicstore"
+        ],
+        "seealso": null
+    },
+    "Musical Instruments": {
+        "ptype": "yellow",
+        "pcatg": "Music Stores",
+        "resicon": "club",
+        "restags": [
+            "musicshop",
+            "musicstore"
+        ],
+        "seealso": null
+    },
+    "NYPD, Police Precincts": {
+        "ptype": "poi",
+        "pcatg": "Police (NYPD) - Neighborhood Precincts",
+        "resicon": "police",
+        "restags": [
+            "nypd",
+            "police",
+            "precinct"
+        ],
+        "seealso": null
+    },
+    "Newspaper Stands": {
+        "ptype": "yellow",
+        "pcatg": "Newspapers & Magazines",
+        "resicon": "newspaper",
+        "restags": [
+            "magazine",
+            "newspaper",
+            "newsstand"
+        ],
+        "seealso": null
+    },
+    "Newspapers": {
+        "ptype": "yellow",
+        "pcatg": "Newspapers & Magazines",
+        "resicon": "newspaper",
+        "restags": [
+            "magazine",
+            "newspaper",
+            "newsstand"
+        ],
+        "seealso": null
+    },
+    "Nightclubs": {
+        "ptype": "yellow",
+        "pcatg": "Nightclubs & Cocktail Lounges",
+        "resicon": "club",
+        "restags": [
+            "club",
+            "cocktail",
+            "lounge",
+            "nightclub"
+        ],
+        "seealso": null
+    },
+    "Notaries": {
+        "ptype": "yellow",
+        "pcatg": "Lawyers & Attorneys",
+        "resicon": "court",
+        "restags": [
+            "attorney",
+            "lawyer",
+            "solicitor"
+        ],
+        "seealso": null
+    },
+    "Novelty Shops": {
+        "ptype": "yellow",
+        "pcatg": "Novelty Shops",
+        "resicon": null,
+        "restags": [
+            "fancydress",
+            "novelty"
+        ],
+        "seealso": null
+    },
+    "Nursing": {
+        "ptype": "yellow",
+        "pcatg": "Medical Services & Supplies",
+        "resicon": null,
+        "restags": [
+            "medical",
+            "medicalservice",
+            "medicalsupply"
+        ],
+        "seealso": null
+    },
+    "Occult": {
+        "ptype": "yellow",
+        "pcatg": "Religious Institutions",
+        "resicon": "church",
+        "restags": [
+            "church",
+            "religion"
+        ],
+        "seealso": null
+    },
+    "Occult Churches": {
+        "ptype": "yellow",
+        "pcatg": "Churches",
+        "resicon": "church",
+        "restags": [
+            "church"
+        ],
+        "seealso": null
+    },
+    "Office Buildings": {
+        "ptype": "yellow",
+        "pcatg": "Office / Commercial Space",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Office Equipment": {
+        "ptype": "yellow",
+        "pcatg": "Office Equipment & Supplies",
+        "resicon": null,
+        "restags": [
+            "office",
+            "officesupplies"
+        ],
+        "seealso": null
+    },
+    "Opera": {
+        "ptype": "yellow",
+        "pcatg": "Music & Opera Halls",
+        "resicon": "club",
+        "restags": [
+            "musichall",
+            "opera",
+            "operahall"
+        ],
+        "seealso": null
+    },
+    "Opticians": {
+        "ptype": "yellow",
+        "pcatg": "Doctors",
+        "resicon": "doctor",
+        "restags": [
+            "doctor"
+        ],
+        "seealso": null
+    },
+    "Oriental Antiques": {
+        "ptype": "yellow",
+        "pcatg": "Antiques",
+        "resicon": "antiques",
+        "restags": [
+            "antiques"
+        ],
+        "seealso": null
+    },
+    "Oriental Foods": {
+        "ptype": "yellow",
+        "pcatg": "Ethnic & Specialty Foods",
+        "resicon": "grocery",
+        "restags": [
+            "ethnicgrocery",
+            "grocer",
+            "grocery",
+            "specialtyfood"
+        ],
+        "seealso": null
+    },
+    "Outdoor": {
+        "ptype": "yellow",
+        "pcatg": "Camping / Luggage",
+        "resicon": "suitcase",
+        "restags": [
+            "camping",
+            "luggage"
+        ],
+        "seealso": null
+    },
+    "Outer Boroughs>Brooklyn": {
+        "ptype": "poi",
+        "pcatg": "Outer Boroughs>Brooklyn",
+        "resicon": null,
+        "restags": [
+            "brooklyn"
+        ],
+        "seealso": null
+    },
+    "Outer Boroughs>Brooklyn|Amusements": {
+        "ptype": "poi",
+        "pcatg": "Outer Boroughs>Brooklyn|Amusements",
+        "resicon": null,
+        "restags": [
+            "brooklyn"
+        ],
+        "seealso": null
+    },
+    "Outer Boroughs>Queens": {
+        "ptype": "poi",
+        "pcatg": "Outer Boroughs>Queens",
+        "resicon": null,
+        "restags": [
+            "queens"
+        ],
+        "seealso": null
+    },
+    "Outer Boroughs>Richmond (Staten Island)": {
+        "ptype": "poi",
+        "pcatg": "Outer Boroughs>Richmond (Staten Island)",
+        "resicon": null,
+        "restags": [
+            "statenisland"
+        ],
+        "seealso": null
+    },
+    "Outer Boroughs>The Bronx": {
+        "ptype": "poi",
+        "pcatg": "Outer Boroughs>The Bronx",
+        "resicon": null,
+        "restags": [
+            "bronx"
+        ],
+        "seealso": null
+    },
+    "Packaging": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Parks": {
+        "ptype": "poi",
+        "pcatg": "Parks & Zoos",
+        "resicon": "tree",
+        "restags": [
+            "park",
+            "zoo"
+        ],
+        "seealso": null
+    },
+    "Patent Lawyer": {
+        "ptype": "yellow",
+        "pcatg": "Lawyers & Attorneys",
+        "resicon": "court",
+        "restags": [
+            "attorney",
+            "lawyer",
+            "solicitor"
+        ],
+        "seealso": null
+    },
+    "Pawnbrokers": {
+        "ptype": "yellow",
+        "pcatg": "Pawnbrokers",
+        "resicon": "pawnbroker",
+        "restags": [
+            "pawnbroker",
+            "pawnshop"
+        ],
+        "seealso": null
+    },
+    "Pet Stores": {
+        "ptype": "yellow",
+        "pcatg": "Pet Stores / Veterinarians",
+        "resicon": "animal",
+        "restags": [
+            "petshelter",
+            "petstore",
+            "vet"
+        ],
+        "seealso": null
+    },
+    "Photographers": {
+        "ptype": "yellow",
+        "pcatg": "Photography Equipment & Services",
+        "resicon": "photo",
+        "restags": [
+            "camerastore",
+            "photo",
+            "photolab"
+        ],
+        "seealso": null
+    },
+    "Photographic Equipment": {
+        "ptype": "yellow",
+        "pcatg": "Photography Equipment & Services",
+        "resicon": "photo",
+        "restags": [
+            "camerastore",
+            "photo",
+            "photolab"
+        ],
+        "seealso": null
+    },
+    "Photography": {
+        "ptype": "yellow",
+        "pcatg": "Photography Equipment & Services",
+        "resicon": "photo",
+        "restags": [
+            "camerastore",
+            "photo",
+            "photolab"
+        ],
+        "seealso": null
+    },
+    "Piers": {
+        "ptype": "yellow",
+        "pcatg": "Docks & Piers",
+        "resicon": "docks",
+        "restags": [
+            "dock",
+            "pier"
+        ],
+        "seealso": null
+    },
+    "Playgrounds": {
+        "ptype": "yellow",
+        "pcatg": "Public Gardens & Playgrounds",
+        "resicon": "playground",
+        "restags": [
+            "garden",
+            "playground"
+        ],
+        "seealso": null
+    },
+    "Playhouses": {
+        "ptype": "yellow",
+        "pcatg": "Theaters & Playhouses",
+        "resicon": "theatre",
+        "restags": [
+            "playhouse",
+            "theater",
+            "theatre"
+        ],
+        "seealso": null
+    },
+    "Plumbers": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Police Laboratories": {
+        "ptype": "yellow",
+        "pcatg": "Police (NYPD) - Labs",
+        "resicon": "police",
+        "restags": [
+            "crimelab",
+            "forensics",
+            "nypd",
+            "police"
+        ],
+        "seealso": null
+    },
+    "Police Special Offices": {
+        "ptype": "yellow",
+        "pcatg": "Police (NYPD) - Special Units",
+        "resicon": "police",
+        "restags": [
+            "nypd",
+            "police"
+        ],
+        "seealso": null
+    },
+    "Post Offices": {
+        "ptype": "yellow",
+        "pcatg": "Post Offices",
+        "resicon": "postoffice",
+        "restags": [
+            "post",
+            "postoffice"
+        ],
+        "seealso": null
+    },
+    "Precious Metals": {
+        "ptype": "yellow",
+        "pcatg": "Jewelers & Precious Metals",
+        "resicon": "jewellery",
+        "restags": [
+            "jeweler",
+            "jewelry"
+        ],
+        "seealso": null
+    },
+    "Printing": {
+        "ptype": "yellow",
+        "pcatg": "Printing & Engraving",
+        "resicon": "book",
+        "restags": [
+            "engraver",
+            "printer"
+        ],
+        "seealso": null
+    },
+    "Private Landmarks": {
+        "ptype": "yellow",
+        "pcatg": "Landmarks / Monuments / Statues",
+        "resicon": "monument",
+        "restags": [
+            "landmark",
+            "monument",
+            "statue"
+        ],
+        "seealso": null
+    },
+    "Psychologists": {
+        "ptype": "yellow",
+        "pcatg": "Psychologists & Psychiatrists",
+        "resicon": null,
+        "restags": [
+            "psychiatrist",
+            "psychologist"
+        ],
+        "seealso": null
+    },
+    "Public Swimming Pools": {
+        "ptype": "yellow",
+        "pcatg": "Amusements & Recreation",
+        "resicon": "playground",
+        "restags": [
+            "amusement",
+            "recreation"
+        ],
+        "seealso": null
+    },
+    "Radio Equipment": {
+        "ptype": "yellow",
+        "pcatg": "Appliances",
+        "resicon": null,
+        "restags": [
+            "appliances"
+        ],
+        "seealso": null
+    },
+    "Radio Stations": {
+        "ptype": "yellow",
+        "pcatg": "Broadcast & Radio Stations",
+        "resicon": "radio",
+        "restags": [
+            "broadcast",
+            "radio",
+            "radiostation",
+            "tvstation"
+        ],
+        "seealso": null
+    },
+    "Raw Materials": {
+        "ptype": "yellow",
+        "pcatg": "Factories & Manufacturing (inc. Brewers)",
+        "resicon": "factory",
+        "restags": [
+            "factory",
+            "manufacturing"
+        ],
+        "seealso": null
+    },
+    "Real Estate": {
+        "ptype": "yellow",
+        "pcatg": "Real Estate",
+        "resicon": null,
+        "restags": [
+            "estateagent",
+            "realestate"
+        ],
+        "seealso": null
+    },
+    "Recording Studios": {
+        "ptype": "yellow",
+        "pcatg": "Music Publishers & Studios",
+        "resicon": "club",
+        "restags": [
+            "musicpublisher",
+            "musicstudio"
+        ],
+        "seealso": null
+    },
+    "Religious": {
+        "ptype": "yellow",
+        "pcatg": "Religious Institutions",
+        "resicon": "church",
+        "restags": [
+            "church",
+            "religion"
+        ],
+        "seealso": null
+    },
+    "Research": {
+        "ptype": "yellow",
+        "pcatg": "Research Labs & Think Tanks",
+        "resicon": "lab",
+        "restags": [
+            "lab",
+            "researchlab",
+            "thinktank"
+        ],
+        "seealso": null
+    },
+    "Restaurant Equipment": {
+        "ptype": "yellow",
+        "pcatg": "Industry Sales & Commercial Equipment",
+        "resicon": "wholesale",
+        "restags": [
+            "commercialequipment",
+            "industrysales"
+        ],
+        "seealso": null
+    },
+    "Restaurants": {
+        "ptype": "yellow_standby",
+        "pcatg": "Restaurants",
+        "resicon": "restaurant",
+        "restags": [
+            ""
+        ],
+        "seealso": [
+            "Cafes & Diners"
+        ]
+    },
+    "Roofing": {
+        "ptype": "yellow",
+        "pcatg": "Contractors & Repairs",
+        "resicon": "contractor",
+        "restags": [
+            "contractor",
+            "repair"
+        ],
+        "seealso": null
+    },
+    "Schools": {
+        "ptype": "yellow",
+        "pcatg": "Schools & Education",
+        "resicon": "school",
+        "restags": [
+            "education",
+            "school",
+            "university"
+        ],
+        "seealso": null
+    },
+    "Secretarial Services": {
+        "ptype": "yellow",
+        "pcatg": "Employment Agencies & Temp Workers",
+        "resicon": "office",
+        "restags": [
+            "employment",
+            "temp"
+        ],
+        "seealso": null
+    },
+    "Shelters & Soup Kitchens": {
+        "ptype": "yellow",
+        "pcatg": "Shelters & Soup Kitchens",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Shipping": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Shoes": {
+        "ptype": "yellow",
+        "pcatg": "Shoes",
+        "resicon": "shoes",
+        "restags": [
+            "shoe",
+            "shoeshop"
+        ],
+        "seealso": null
+    },
+    "Signage": {
+        "ptype": "yellow",
+        "pcatg": "Printing & Engraving",
+        "resicon": "book",
+        "restags": [
+            "engraver",
+            "printer"
+        ],
+        "seealso": null
+    },
+    "Specialty Foods": {
+        "ptype": "yellow",
+        "pcatg": "Ethnic & Specialty Foods",
+        "resicon": "grocery",
+        "restags": [
+            "ethnicgrocery",
+            "grocer",
+            "grocery",
+            "specialtyfood"
+        ],
+        "seealso": null
+    },
+    "Sporting Goods": {
+        "ptype": "yellow",
+        "pcatg": "Sports & Athletics",
+        "resicon": "sport",
+        "restags": [
+            "athletics",
+            "sport"
+        ],
+        "seealso": null
+    },
+    "Sports": {
+        "ptype": "yellow",
+        "pcatg": "Sports & Athletics",
+        "resicon": "sport",
+        "restags": [
+            "athletics",
+            "sport"
+        ],
+        "seealso": null
+    },
+    "Sports Fields": {
+        "ptype": "poi",
+        "pcatg": "Sports & Athletics",
+        "resicon": "sport",
+        "restags": [
+            "athletics",
+            "sport"
+        ],
+        "seealso": null
+    },
+    "Stables": {
+        "ptype": "yellow",
+        "pcatg": "Agriculture / Farming / Stables",
+        "resicon": "animal",
+        "restags": [
+            "agriculture",
+            "farming",
+            "stable"
+        ],
+        "seealso": null
+    },
+    "Stationery": {
+        "ptype": "yellow",
+        "pcatg": "Writing & Stationery",
+        "resicon": "book",
+        "restags": [
+            "stationery"
+        ],
+        "seealso": null
+    },
+    "Stations": {
+        "ptype": "yellow",
+        "pcatg": "Subway & Bus Stations",
+        "resicon": "bus",
+        "restags": [
+            "bus",
+            "subway",
+            "transit"
+        ],
+        "seealso": null
+    },
+    "Steamship Companies": {
+        "ptype": "yellow",
+        "pcatg": "Steamship Companies",
+        "resicon": "boat",
+        "restags": [
+            "steamship",
+            "steamshipcompany"
+        ],
+        "seealso": null
+    },
+    "Storage": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Subway Stations": {
+        "ptype": "poi",
+        "pcatg": "Subway & Bus Stations",
+        "resicon": "bus",
+        "restags": [
+            "bus",
+            "subway",
+            "transit"
+        ],
+        "seealso": null
+    },
+    "Tableware": {
+        "ptype": "yellow",
+        "pcatg": "Furniture & Interior Decorating",
+        "resicon": "furniture",
+        "restags": [
+            "furniture",
+            "interiordecor"
+        ],
+        "seealso": null
+    },
+    "Tailors": {
+        "ptype": "yellow",
+        "pcatg": "Tailors",
+        "resicon": "clothes",
+        "restags": [
+            "tailor"
+        ],
+        "seealso": [
+            "Clothing Stores"
+        ]
+    },
+    "Tattoo Parlors": {
+        "ptype": "yellow",
+        "pcatg": "Tattoo Parlors",
+        "resicon": null,
+        "restags": [
+            "tattoo"
+        ],
+        "seealso": null
+    },
+    "Tea Merchants": {
+        "ptype": "yellow",
+        "pcatg": "Import / Export / Wholesalers",
+        "resicon": "clothes",
+        "restags": [
+            "export",
+            "import",
+            "wholesale"
+        ],
+        "seealso": null
+    },
+    "Tea Rooms": {
+        "ptype": "yellow",
+        "pcatg": "Tea Rooms",
+        "resicon": "tea",
+        "restags": [
+            "tea",
+            "tearoom",
+            "teashop"
+        ],
+        "seealso": null
+    },
+    "Telegrams": {
+        "ptype": "yellow",
+        "pcatg": "Telegraph & Western Union",
+        "resicon": null,
+        "restags": [
+            "telegraph",
+            "telegraphy",
+            "westernunion"
+        ],
+        "seealso": null
+    },
+    "Theaters": {
+        "ptype": "yellow",
+        "pcatg": "Theaters & Playhouses",
+        "resicon": "theatre",
+        "restags": [
+            "playhouse",
+            "theater",
+            "theatre"
+        ],
+        "seealso": null
+    },
+    "Timepieces": {
+        "ptype": "yellow",
+        "pcatg": "Clocks & Watches",
+        "resicon": null,
+        "restags": [
+            "clock",
+            "watch"
+        ],
+        "seealso": null
+    },
+    "Tobacconists": {
+        "ptype": "yellow",
+        "pcatg": "Tobacconists",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "Tour Guides": {
+        "ptype": "yellow",
+        "pcatg": "Travel",
+        "resicon": "travel",
+        "restags": [
+            "travel",
+            "travelagent"
+        ],
+        "seealso": null
+    },
+    "Toys": {
+        "ptype": "yellow",
+        "pcatg": "Novelty Shops",
+        "resicon": null,
+        "restags": [
+            "fancydress",
+            "novelty"
+        ],
+        "seealso": null
+    },
+    "Transport": {
+        "ptype": "yellow",
+        "pcatg": "Transport Depots / Airports / Terminals",
+        "resicon": null,
+        "restags": [
+            "airport",
+            "terminal",
+            "transport"
+        ],
+        "seealso": null
+    },
+    "Transport Terminals": {
+        "ptype": "poi",
+        "pcatg": "Transport Depots / Airports / Terminals",
+        "resicon": null,
+        "restags": [
+            "airport",
+            "terminal",
+            "transport"
+        ],
+        "seealso": null
+    },
+    "Trash": {
+        "ptype": "yellow",
+        "pcatg": "Garbage Removal",
+        "resicon": "bin",
+        "restags": [
+            "bin",
+            "disposal",
+            "garbage",
+            "waste"
+        ],
+        "seealso": null
+    },
+    "Travel Agents": {
+        "ptype": "yellow",
+        "pcatg": "Travel",
+        "resicon": "travel",
+        "restags": [
+            "travel",
+            "travelagent"
+        ],
+        "seealso": null
+    },
+    "Typewriters": {
+        "ptype": "yellow",
+        "pcatg": "Office Equipment & Supplies",
+        "resicon": null,
+        "restags": [
+            "office",
+            "officesupplies"
+        ],
+        "seealso": null
+    },
+    "Undertakers": {
+        "ptype": "yellow",
+        "pcatg": "Cemeteries / Funeral Homes",
+        "resicon": null,
+        "restags": [
+            "cemetary",
+            "death",
+            "funeral",
+            "funeralhome"
+        ],
+        "seealso": null
+    },
+    "Uniforms": {
+        "ptype": "yellow",
+        "pcatg": "Office Equipment & Supplies",
+        "resicon": null,
+        "restags": [
+            "office",
+            "officesupplies"
+        ],
+        "seealso": null
+    },
+    "Unions": {
+        "ptype": "yellow",
+        "pcatg": "Unions and Labor Organizations",
+        "resicon": null,
+        "restags": [
+            "labor",
+            "labour",
+            "union"
+        ],
+        "seealso": null
+    },
+    "Utilities": {
+        "ptype": "yellow",
+        "pcatg": "Utilities & Communications",
+        "resicon": "commtower",
+        "restags": [
+            "communication",
+            "utility"
+        ],
+        "seealso": null
+    },
+    "Variety Stores": {
+        "ptype": "yellow",
+        "pcatg": "Variety Stores / Five & Dime",
+        "resicon": null,
+        "restags": [
+            "dollar",
+            "fivedime",
+            "pound",
+            "poundshop",
+            "variety"
+        ],
+        "seealso": null
+    },
+    "Veterinarians": {
+        "ptype": "yellow",
+        "pcatg": "Pet Stores / Veterinarians",
+        "resicon": "animal",
+        "restags": [
+            "petshelter",
+            "petstore",
+            "vet"
+        ],
+        "seealso": null
+    },
+    "Warehouses": {
+        "ptype": "yellow",
+        "pcatg": "Moving / Packaging / Storage / Shipping / Warehousing",
+        "resicon": "box",
+        "restags": [
+            "moving",
+            "packaging",
+            "shipping",
+            "storage",
+            "warehouse"
+        ],
+        "seealso": null
+    },
+    "Weddings": {
+        "ptype": "yellow",
+        "pcatg": "Family & Event Services",
+        "resicon": null,
+        "restags": [
+            "events",
+            "family"
+        ],
+        "seealso": null
+    },
+    "Wholesalers": {
+        "ptype": "yellow",
+        "pcatg": "Import / Export / Wholesalers",
+        "resicon": "clothes",
+        "restags": [
+            "export",
+            "import",
+            "wholesale"
+        ],
+        "seealso": null
+    },
+    "Window Cleaners": {
+        "ptype": "yellow",
+        "pcatg": "Cleaners & Janitorial Services",
+        "resicon": null,
+        "restags": [
+            "cleaner",
+            "janitor",
+            "janitorial"
+        ],
+        "seealso": null
+    },
+    "Workers": {
+        "ptype": "yellow",
+        "pcatg": "Employment Agencies & Temp Workers",
+        "resicon": "office",
+        "restags": [
+            "employment",
+            "temp"
+        ],
+        "seealso": null
+    },
+    "Zoos": {
+        "ptype": "poi",
+        "pcatg": "Parks & Zoos",
+        "resicon": "tree",
+        "restags": [
+            "park",
+            "zoo"
+        ],
+        "seealso": null
+    },
+    "canvas": {
+        "ptype": "action",
+        "pcatg": "canvas",
+        "resicon": null,
+        "restags": null,
+        "seealso": null
+    },
+    "~Off Map>Islands": {
+        "ptype": "poi",
+        "pcatg": "~Off Map>Islands",
+        "resicon": null,
+        "restags": [
+            "island"
+        ],
+        "seealso": null
+    },
+    "~Off Map>Islands|Jails": {
+        "ptype": "poi",
+        "pcatg": "~Off Map>Islands|Jails",
+        "resicon": "police",
+        "restags": [
+            "islands",
+            "jail"
+        ],
+        "seealso": null
+    }
+}

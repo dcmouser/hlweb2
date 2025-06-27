@@ -1,0 +1,15 @@
+Template files are broken into sections, preceded by a special header.
+
+% TEMPLATE DIRECTIVE: ANY TEXT HERE
+
+% TEMPLATE IGNORE
+...
+This will be ignored when used by the template system, but can put stuff here that we want to run when running the standalone latex
+
+% TEMPLATE PREAMBLE
+...
+This text will be added to the final output latex ONCE no matter how many uses
+
+% TEMPLATE USE
+...
+This text is inserted every time the template is used, and {{VARNAME}} is replaced by the template variable.

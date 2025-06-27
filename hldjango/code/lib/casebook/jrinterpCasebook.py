@@ -9,6 +9,8 @@ from lib.jr.jrfilefinder import JrFileFinder
 from .jrinterp import JrInterpreter
 #
 from .cbtags import CbTagManager, CbCheckboxManager
+#
+from .cbquestions import CbQuestionManager
 
 from .cbdays import CbDayManager
 from .cbmindmanagergv import CbMindManagerGv
@@ -67,6 +69,7 @@ class JrInterpreterCasebook(JrInterpreter):
        
         # tag manager, checkbox manager
         self.tagManager = CbTagManager()
+        self.conceptManager = CbTagManager()
         self.checkboxManager = CbCheckboxManager()
 
         # day manager
@@ -74,8 +77,11 @@ class JrInterpreterCasebook(JrInterpreter):
         # mind manager
         self.mindManager = CbMindManagerGv()
 
+        # question manage
+        self.questionManager = CbQuestionManager()
 
-    def resetRenderDataStructures(self):
+
+    def resetRenderDataStructures(self, env):
         # create/clear any data before rendering
         # this is called BOTH at creation, AND before any render, in order to clear the contents of these
         # ATTN: TODO -- instead of relying on garbage collection on recreation of these we could implement clearing functions for them
@@ -89,10 +95,10 @@ class JrInterpreterCasebook(JrInterpreter):
             val.resetUsageCount()
 
 
-    def resetDataForRender(self):
+    def resetDataForRender(self, env):
         # clear any data before rendering
-        self.resetRenderDataStructures()
-        self.preBuildPreRender()
+        self.resetRenderDataStructures(env)
+        self.preBuildPreRender(env)
 
 
 
@@ -146,8 +152,7 @@ class JrInterpreterCasebook(JrInterpreter):
         self.ast.printDebug(env, 1)
 
 
-    def taskRenderRun(self, task, flagFullRender):
-        env = self.getEnvironment()
+    def taskRenderRun(self, env, task, flagFullRender):
         # just pass it off to the ast
         if (self.getDebugMode()):
             jrprint("RunRendering task '{}'..".format(task.getTaskId()))
@@ -162,9 +167,15 @@ class JrInterpreterCasebook(JrInterpreter):
     
     def getTagManager(self):
         return self.tagManager
+    def getConceptManager(self):
+        return self.conceptManager
+
 
     def getCheckboxManager(self):
         return self.checkboxManager
+
+    def getQuestionManager(self):
+        return self.questionManager
 
     def getBuildString(self):
         return DefCbBuildString
@@ -177,33 +188,40 @@ class JrInterpreterCasebook(JrInterpreter):
 
         # casebook image file manager
         if (localMediaDirectory is not None):
-            imageFileManagerCase = self.setupFileManagerImages(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"images"), "local case images")
+            imageFileManagerCase = self.setupFileManagerImages(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"images"), "local case images", "local")
             self.setFileManager(DefFileManagerNameImagesCase, imageFileManagerCase)
 
         # shared image file manager
         if (sharedMediaDirectory is not None):
-            imageFileManagerShared = self.setupFileManagerImages(sharedMediaDirectory + "/images", "shared images")
+            fingerprintImagePath = self.getFingerprintImageDirectoryPath()
+            paths = [sharedMediaDirectory + "/images", fingerprintImagePath]
+            imageFileManagerShared = self.setupFileManagerImages(paths, "shared images", "shared")
             self.setFileManager(DefFileManagerNameImagesShared, imageFileManagerShared)
 
         # pdfs for inclusion
         if (localMediaDirectory is not None):
-            pdfFileManagerCase = self.setupFileManagerPdfs(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"pdfs"), "local case pdfs")
+            pdfFileManagerCase = self.setupFileManagerPdfs(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"pdfs"), "local case pdfs", "local")
             self.setFileManager(DefFileManagerNamePdfsCase, pdfFileManagerCase)
 
         # shared image file manager
         if (sharedMediaDirectory is not None):
-            pdfFileManagerShared = self.setupFileManagerPdfs(sharedMediaDirectory + "/pdfs", "shared images")
+            pdfFileManagerShared = self.setupFileManagerPdfs(sharedMediaDirectory + "/pdfs", "shared images", "shared")
             self.setFileManager(DefFileManagerNamePdfsShared, pdfFileManagerShared)
+
+        # shared image file manager
+        if (sharedMediaDirectory is not None):
+            fontFileManagerShared = self.setupFileManagerFonts(sharedMediaDirectory + "/fonts", "shared fonts", "shared")
+            self.setFileManager(DefFileManagerNameFontsShared, fontFileManagerShared)
 
         # source code includes
         sourceFileManagerList = []
         if (localMediaDirectory is not None):
-            sourceFileManagerCase = self.setupFileManagerGeneric(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"source"), [".casebook"], "local case casebook source files")
+            sourceFileManagerCase = self.setupFileManagerGeneric(self.addExpectSubdirectoriesForLocalMediaFiles(localMediaDirectory,"source"), [".casebook"], "local case casebook source files", "local")
             sourceFileManagerList.append(sourceFileManagerCase)
             self.setFileManager(DefFileManagerNameSourceCase, sourceFileManagerCase)
 
         if (sharedMediaDirectory is not None):
-            sourceFileManagerShared = self.setupFileManagerGeneric(sharedMediaDirectory + "/source", [".casebook"], "shared casebook source files")
+            sourceFileManagerShared = self.setupFileManagerGeneric(sharedMediaDirectory + "/source", [".casebook"], "shared casebook source files", "shared")
             self.setFileManager(DefFileManagerNameSourceShared, sourceFileManagerShared)
             sourceFileManagerList.append(sourceFileManagerShared)
         #
@@ -218,15 +236,18 @@ class JrInterpreterCasebook(JrInterpreter):
             return localMediaDirectory
 
 
-    def setupFileManagerImages(self, path, sourceLabel):
+    def setupFileManagerImages(self, paths, sourceLabel, locationClass):
         fileManagerOptions = {"stripExtensions": False}
-        fileManager = JrFileFinder(fileManagerOptions, sourceLabel)
+        fileManager = JrFileFinder(fileManagerOptions, sourceLabel, locationClass)
         fileManager.clearExtensionList()
         fileManager.addExtensionListImages()
         # now scan
         directoryList = []
         # add uploads directory for this game
-        directoryList.append({'prefix':'', 'path':path})
+        if (isinstance(paths,str)):
+            paths = [paths]
+        for path in paths:
+            directoryList.append({'prefix':'', 'path':path})
         #
         fileManager.setDirectoryList(directoryList)
         fileManager.scanDirs(False)
@@ -234,9 +255,9 @@ class JrInterpreterCasebook(JrInterpreter):
         return fileManager
 
 
-    def setupFileManagerPdfs(self, path, sourceLabel):
+    def setupFileManagerPdfs(self, path, sourceLabel, locationClass):
         fileManagerOptions = {"stripExtensions": False}
-        fileManager = JrFileFinder(fileManagerOptions, sourceLabel)
+        fileManager = JrFileFinder(fileManagerOptions, sourceLabel, locationClass)
         fileManager.clearExtensionList()
         addList = [".pdf"]
         fileManager.addExtensionList(addList)
@@ -252,9 +273,14 @@ class JrInterpreterCasebook(JrInterpreter):
         return fileManager
 
 
-    def setupFileManagerGeneric(self, path, extensionList, sourceLabel):
+    def setupFileManagerFonts(self, path, sourceLabel, locationClass):
+        extensionList = [".ttf", ".otf"]
+        return self.setupFileManagerGeneric(path, extensionList, sourceLabel, locationClass)
+
+
+    def setupFileManagerGeneric(self, path, extensionList, sourceLabel, locationClass):
         fileManagerOptions = {"stripExtensions": False}
-        fileManager = JrFileFinder(fileManagerOptions, sourceLabel)
+        fileManager = JrFileFinder(fileManagerOptions, sourceLabel, locationClass)
         fileManager.clearExtensionList()
         fileManager.addExtensionList(extensionList)
         # now scan
@@ -333,10 +359,12 @@ class JrInterpreterCasebook(JrInterpreter):
         taskGenerateMindMap = task.getOption("taskGenerateMindMap")
         taskSaveLeadJsons = task.getOption("taskSaveLeadJsons")
         taskSaveHtmlSource = task.getOption("taskSaveHtmlSource")
+        taskSavePlainText = taskSaveHtmlSource
         taskZipFiles = task.getOption("taskZipFiles")
         cleanExtras = task.getOption("cleanExtras")
         variant = task.getOption("variant")
         convert = task.getOption("convert")
+        convertSuffix = task.getOption("convertSuffix")
         #
         convertDpi = 150
 
@@ -346,44 +374,55 @@ class JrInterpreterCasebook(JrInterpreter):
             jrfuncs.deleteFilePattern(suffixedOutputPath, baseFileName+"*.zip")
 
         # TASK EXTRAS - EARLY
-        # save html version
-        if (taskSaveHtmlSource):
-            # higher level parser options
+        if (taskSavePlainText):
+            # save the actual plain text for the record
             parserOptions = jrfuncs.getDictValueOrDefault(job, "parserOptions", None)
             sourceFilePath = jrfuncs.getDictValueOrDefault(parserOptions, "sourceFilePath", None)
             sourceFileText = jrfuncs.getDictValueOrDefault(parserOptions, "sourceFileText", None)
+            outFilePath = suffixedOutputPath + "/" + baseFileName + "_casebookSource.txt"
             #
-            retv = self.saveHtmlSource(task, sourceFilePath, sourceFileText, suffixedOutputPath, baseFileName)
+            encoding = "utf-8"
+            retv = jrfuncs.saveTxtToFile(outFilePath, sourceFileText, encoding)
+
 
         # generic render run (this may set options that OVERRIDE our taskOptions, but they will ve set again by the task when we renderToPdf)
-        self.taskRenderRun(task, True)
+        self.taskRenderRun(env, task, True)
 
         # create pdf
         renderSectionName = None
         # experimental, only render specific section
         if (variant == "cover"):
             renderSectionName = "COVER"
-            
+
         #
         [retv, fileList] = task.renderToPdf(suffixedOutputPath, suffixedBaseFileName, self.getDebugMode(), renderSectionName)
         if (retv):
             # success
 
             # TASK EXTRAS - LATE
-            # mindmap
-            if (taskGenerateMindMap):
-                [retv, generatedFileName] = self.mindManager.buildMindMap(self.getEnvironment(), suffixedOutputPath, baseFileName, self.getDebugMode())
-                if (retv):
-                    self.addGeneratedFile(generatedFileName)
-            # json export of used leads
-            if (taskSaveLeadJsons):
-                self.saveLeadJsons(task, suffixedOutputPath, baseFileName)
+
+            # save html version (note we do this late now so that we have proper hlapi loaded)
+            if (taskSaveHtmlSource):
+                # higher level parser options
+                parserOptions = jrfuncs.getDictValueOrDefault(job, "parserOptions", None)
+                sourceFilePath = jrfuncs.getDictValueOrDefault(parserOptions, "sourceFilePath", None)
+                sourceFileText = jrfuncs.getDictValueOrDefault(parserOptions, "sourceFileText", None)
+                #
+                retv = self.saveHtmlSource(task, sourceFilePath, sourceFileText, suffixedOutputPath, baseFileName)
 
             if (convert is not None) and (convert != ""):
                 # NOT IMPLEMENTED YET
                 # convert the fileList[0] output file to an image .convertPdfToImage?
                 for filePath in fileList:
-                    convertedFileName = jrfuncs.changeFileExtension(filePath, convert)
+                    if (not filePath.lower().endswith(".pdf")):
+                        continue
+                    # add suffix?
+                    if (convertSuffix is not None) and (convertSuffix!=""):
+                        convertedFileName = jrfuncs.addSuffixToPath(filePath, convertSuffix)
+                    else:
+                        convertedFileName = filePath
+                    convertedFileName = jrfuncs.changeFileExtension(convertedFileName, convert)
+                    #
                     if (convertedFileName != filePath):
                         # do the image conversion
                         retv = jrauxfuncs.convertPdfFileToImageFile(filePath, convertedFileName, convert, convertDpi)
@@ -392,8 +431,23 @@ class JrInterpreterCasebook(JrInterpreter):
                             if (False):
                                 self.removeGeneratedFile(filePath)
                             self.addGeneratedFile(convertedFileName)
+                            if (True):
+                                # only the first file gets created
+                                break
                         else:
                             raise Exception("In runJobTask_latexBuildPdf, failed to convert '{}' to '{}'.".format(filePath, convertedFileName))
+
+            # mindmap
+            if (taskGenerateMindMap):
+                #[retv, generatedFileName] = self.mindManager.buildMindMap(self.getEnvironment(), suffixedOutputPath, baseFileName, self.getDebugMode())
+                [retv, generatedFileName] = self.mindManager.buildMindMap(env, suffixedOutputPath, baseFileName, self.getDebugMode())
+                if (retv):
+                    self.addGeneratedFile(generatedFileName)
+
+            # json export of used leads
+            if (taskSaveLeadJsons):
+                self.saveLeadJsons(task, suffixedOutputPath, baseFileName)
+
             # zip?
             if (taskZipFiles):
                 # ATTN: we now handle zip files mostly using a separate TASK and do NOT use this
@@ -475,7 +529,7 @@ class JrInterpreterCasebook(JrInterpreter):
             self.runJobEarlyGenericsParser(job)
             # we have to parse to get info
             # generic render run (this may set options that OVERRIDE our taskOptions, but they will ve set again by the task when we renderToPdf)
-            self.taskRenderRun(task, False)
+            self.taskRenderRun(env, task, False)
 
         # generic render run (this may set options that OVERRIDE our taskOptions, but they will ve set again by the task when we renderToPdf)
         if (self.getDebugMode()):
@@ -519,9 +573,9 @@ class JrInterpreterCasebook(JrInterpreter):
 
     def saveHtmlSource(self, task, sourceFilePath, sourceFileText, outputPath, baseFilename):
         jrfuncs.createDirIfMissing(outputPath)
-        outFileName = baseFilename + "_srcout.html"
+        outFileName = baseFilename + "_casebookSource.html"
         outFilePath = outputPath + "/" + outFileName
-        retv = createHtmlFromCbSourceFile(sourceFilePath, sourceFileText, outFilePath, self.getDebugMode())
+        retv = createHtmlFromCbSourceFile(self.hlapi, self.hlapiPrev, sourceFilePath, sourceFileText, outFilePath, self.getDebugMode())
         self.addGeneratedFile(outFilePath)
         return retv
 
@@ -530,3 +584,6 @@ class JrInterpreterCasebook(JrInterpreter):
 
 
 
+    def getFingerprintImageDirectoryPath(self):
+        hlApi = self.getHlApi()
+        return hlApi.getFingerprintImageDirectoryPath()

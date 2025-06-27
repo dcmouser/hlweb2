@@ -19,9 +19,6 @@
 			<!-- bootstrap icons? -->
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-
-			{{ form.media }}
-
         <title>
             {% block head_title %}New York Noir WEB SERVICES{% endblock head_title %}
         </title>
@@ -34,7 +31,7 @@
 
 
     <body>
-	    <header class="p-3 mb-3 border-bottom">
+	    <header class="p-3 mb-2 border-bottom">
 
 	        <nav class="navbar navbar-expand-sm navbar-dark bg-primary" id="hlnavbar">
 	        <div class="container-fluid ">
@@ -53,15 +50,19 @@
 	                    </li>
 
 	                    <li class="nav-item">
+	                        <a class="nav-link {% jrActiveLink 'coreDownloads' %}" href="{% url 'coreDownloads' %}">Downloads</a>
+	                    </li>
+
+						<li class="nav-item">
 	                        <a class="nav-link {% jrActiveLink 'coreAbout' %}" href="{% url 'coreAbout' %}">About</a>
 	                    </li>
 
 
-	                    {% if user.get_is_gadmin %}
-	                        <li class="nav-item">
-	                            <a class="nav-link {% jrActiveLink 'gadminHome' %}" href="{% url 'gadminHome' %}">Admin</a>
-	                        </li>
-	                    {% endif %}
+						{% if user|userIsAuthenticatedAndGadmin %}
+								<li class="nav-item">
+									<a class="nav-link {% jrActiveLink 'gadminHome' %}" href="{% url 'gadminHome' %}">Admin</a>
+								</li>
+						{% endif %}
 
 
 						{% if user.is_authenticated %}

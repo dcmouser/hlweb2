@@ -2,18 +2,18 @@
 
 # interpreter
 from lib.casebook.jrinterpCasebook import JrInterpreterCasebook
-from lib.casebook.cbtasks import CbTaskLatex
 #
 from lib.casebook.casebookDefines import *
 
 from lib.jr.jrfuncs import jrprint
+from lib.jr import jrfuncs
 
 
 
 
 class CasebookWrapper:
-    def __init__(self):
-        self.debugMode = True
+    def __init__(self, debugMode):
+        self.debugMode = debugMode
         self.continueOnException = False
         #
         # grammar file is in a subdirectory of our casebook interpretter called ./grammardaata
@@ -26,13 +26,18 @@ class CasebookWrapper:
         return self.jrinterp.getGeneratedFileList()
 
     def getBuildLog(self):
-        return "Build log for jrinterp not implemented yet."
+        text = self.jrinterp.getBuildLog()
+        return text
+
+    def getDebugMode(self):
+        return self.debugMode
     
     def getLeadStats(self):
         # get stats from last renderer run
-        renderer = self.jrinterp.getEnvironment().getRenderer()
+        env = self.jrinterp.getEnvironment()
+        renderer = env.getRenderer()
         if (renderer):
-            leadStatsString = renderer.calcLeadStatsString()
+            leadStatsString = renderer.calcLeadStatsString(env)
         else:
             leadStatsString = "n/a"
         #
@@ -73,8 +78,8 @@ class CasebookWrapper:
         # jobs
         taskList = []
         for build in buildList:
-            variantType = build["variant"] if ("variant" in build) else ""
-            reportMode = build["reportMode"] if ("reportMode" in build) else False
+            variantType = jrfuncs.getDictValueOrDefault(build,"variant","")
+            reportMode = jrfuncs.getDictValueOrDefault(build,"reportMode",False)
             task = {
                 "label": build["label"],
                 "taskName": build["task"],
@@ -83,7 +88,7 @@ class CasebookWrapper:
                 "variant": variantType,
                 #
                 "baseFileName": baseFileName,
-                "outputSuffix": build["suffix"] if ("suffix" in build) else "",
+                "outputSuffix": jrfuncs.getDictValueOrDefault(build,"suffix",""),
                 "outputSubdir": "",
                 #
                 # extra stuff to do
@@ -94,16 +99,16 @@ class CasebookWrapper:
                 # no longer zip files as part of task but rather as a separate task
                 "taskZipFiles": False,
                 #
-                # render options
-                "latexPaperSize": build["latexPaperSize"] if ("latexPaperSize" in build) else None,
-                "latexFontSize": build["latexfontSize"] if ("latexfontSize" in build) else None,
-                "doubleSided": build["doubleSided"] if ("doubleSided" in build) else None,
-                "leadColumns": build["leadColumns"] if ("leadColumns" in build) else None,
-                "leadBreak": build["leadBreak"] if ("leadBreak" in build) else None,
-                "convert": build["convert"] if ("convert" in build) else None,
-                #
-                "cleanExtras": build["cleanExtras"] if ("cleanExtras" in build) else None,
+                "cleanExtras": jrfuncs.getDictValueOrDefault(build,"cleanExtras",None),
+                "convert": jrfuncs.getDictValueOrDefault(build,"convert",None),
+                "convertSuffix": jrfuncs.getDictValueOrDefault(build,"convertSuffix",None),
+                # gamepk
+                "gamePk": jrfuncs.getDictValueOrDefault(build,"gamePk",None),
             }
+            # copy in render Options
+            if ("renderOptions" in build):
+                # copy all renderOptions
+                jrfuncs.deepMergeOverwriteA(task, build["renderOptions"])
             taskList.append(task)
 
         #
@@ -118,4 +123,5 @@ class CasebookWrapper:
         self.jrinterp.runJobs([job], progressCallback)
         #
         isErrored = self.jrinterp.isErrored()
-        jrprint("Done runnning tasks{}.".format(" (ERRORS)" if (self.isErrored()) else ""))
+        if (self.getDebugMode()):
+            jrprint("Done runnning tasks{}.".format(" (ERRORS)" if (self.isErrored()) else ""))

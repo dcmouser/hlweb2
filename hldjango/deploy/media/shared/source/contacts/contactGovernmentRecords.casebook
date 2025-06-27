@@ -1,0 +1,13 @@
+// Government Records Contact Reference
+//* $referDb("Administrative Clerk for City Records Archive: Hall of Records")
+* $referDb("Birth certificates & death records: Registrar of Births and Deaths")
+* $referDb("Marriage & divorce records: Office of County Clerk (Domestic)")
+* $referDb("Welfare records: NYC Department of Social Services")
+* $referDb("Building permits & construction records: NYC Department of City Planning")
+* $referDb("Property & tax records: NYC Department of Finance")
+* $referDb("Education records: NYC Department of Education")
+* $referDb("Political office records: NYC Board of Elections")
+* $referDb("High-level city management: City Hall (Mayor's Office)")
+* $referDb("Bankruptcy filings & records: U.S. Bankruptcy Court")
+* $referDb("Restaurant Inspections & Health records: NYC Department of Health")
+* $referDb("Sport licensing, gambling: Athletic Commission")

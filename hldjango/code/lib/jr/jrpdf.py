@@ -70,6 +70,14 @@ class JrPDFLaTeX:
         self.log = None
         self.rememberedOutputDirectory = None
         self.setJobFName("file_" + job_name)
+        self.setCompiler("pdflatex")
+
+
+    def setCompiler(self, val):
+        if (val in ["pdflatex", "xelatex"]):
+            self.setLatexExeBaseName(val)
+        else:
+            raise Exception("Unknown latex compiler '{}'.".format(val))
 
     def setJobFName(self, val):
         self.jobName = val
@@ -77,6 +85,13 @@ class JrPDFLaTeX:
         return self.jobName
     def getJobFNameWithExt(self, ext):
         return self.jobName + ext
+
+
+
+    def getLatexExeBaseName(self):
+        return self.latexExeBaseName
+    def setLatexExeBaseName(self, val):
+        self.latexExeBaseName = val
 
     @classmethod
     def from_texfile(cls, filename):
@@ -162,7 +177,8 @@ class JrPDFLaTeX:
 
     def get_run_args(self):
         a = [k+('='+v if v is not None else '') for k, v in self.params.items()]
-        a.insert(0, 'pdflatex')
+        latexExeBaseName = self.getLatexExeBaseName()
+        a.insert(0, latexExeBaseName)
         return a
     
     def add_args(self, params: dict):
@@ -275,7 +291,8 @@ class JrPdf():
 
 
     def generatePdflatex(self, filepath, flagDebug, flagCleanExtras):
-        maxRuns = 5
+        maxRuns = 7
+        #
         filePathAbs = os.path.abspath(filepath)
         outputDirName = os.path.dirname(filePathAbs)
         baseFileName = os.path.basename(filepath)
@@ -294,6 +311,8 @@ class JrPdf():
         #
         errored = False
         pdfl = None
+        #
+        optionLatexCompiler = jrfuncs.getDictValue(self.renderOptions, 'latexCompiler')
 
         extraTimesToRun = jrfuncs.getDictValue(self.renderOptions, 'latexExtraRuns')
 
@@ -349,6 +368,7 @@ class JrPdf():
                 try:
                     if (pdfl is None):
                         pdfl = JrPDFLaTeX.from_texfile(filePathAbs)
+                        pdfl.setCompiler(optionLatexCompiler)
                         pdfl.setJobFName(self.getJobFName())
                         # see https://stackoverflow.com/questions/71991645/python-3-7-pdflatex-filenotfounderror
                         pdfl.set_interaction_mode()  # setting interaction mode to None.
@@ -392,7 +412,11 @@ class JrPdf():
             # check for error
             if (type(stdout_data) is str):
                 stdout_data = stdout_data.encode(decodeCharSet)
-            if (b'error occurred' in stdout_data) or ((stderr_data is not None) and (b'error occurred' in stderr_data)) or ('ERROR:' in stdOutText):
+            #errorStrings = [b'error occurred', b'error occurred', 'LATEX ERROR:', 'Emergency stop', '! Undefined control sequence']
+            # THIS IS ABSOLUTELTY #%&**#%&#* INFURIATING
+            # PDF ERRORS
+            errorStrings = ['error occurred', 'LATEX ERROR:', 'Emergency stop', 'Undefined control sequence', 'Error: Undefined', 'doesn\'t match its definition', '! Package pgfkeys Error', '! File ended while scanning', '! Illegal unit', '! Too many }', '! Too many {', '! LaTeX Error', '! Missing number', '! Missing', '! Package calc Error:', '! You can', '! Paragraph ended', '! Text line contains', '! Package', '! Improper ']
+            if (self.outputContainsAnyError(errorStrings, [stdout_data, stderr_data, stdOutText])):
                 jrprint('\nERROR RUNNING PDF LATEX on {}!\n\n'.format(filepath))
                 msg = 'Error encountered running latex.\n'
                 if (stdErrText != ''):
@@ -401,7 +425,7 @@ class JrPdf():
                 if (flagSwitchToNonQuietOnError):
                     latexQuietMode = False
                 errored = True
-                wantBreak = True
+                wantBreak = 9999
                 self.addBuildLog(stdErrText, True)
 
             # pdflatex may require multiple runs
@@ -423,12 +447,15 @@ class JrPdf():
                 shutil.copy(logFilePath, os.path.join(outputDirName, baseFileNameNoExt + '.log'))
             else:
                 jrprint("ERROR: expected to find log file at {} but it's not there.".format(logFilePath))
+                errored = True
+
         if (pdfFilePath is not None):
             if (os.path.exists(pdfFilePath)):
                 #shutil.move(pdfFilePath, os.path.join(outputDirName, baseFileNameNoExt + '.pdf'))
                 shutil.copy(pdfFilePath, os.path.join(outputDirName, baseFileNameNoExt + '.pdf'))
             else:
                 jrprint("ERROR: expected to find pdf file at {} but it's not there.".format(pdfFilePath))
+                errored = True
 
         # delete temporary files (this seems to fail sometimes -- still in use? docker issue only?)
         if (not errored):
@@ -471,7 +498,7 @@ class JrPdf():
             self.addBuildLog('Pdf generation of "{}" from Latex completed successfully ({} runs).'.format(baseFileName, runCount), False)
             jrfuncs.deleteExtensionFilesIfExists(outputDirName, self.getJobFName(), ['aux','out','toc', 'pdf', 'log'])
         else:
-            self.addBuildLog('\n\n----------\nError generating "{}".\nFULL LATEX OUTPUT: {}\n'.format(baseFileName, stdOutText), True)
+            self.addBuildLog('\n\n----------\nError generating "{}".\nFULL LATEX OUTPUT: {}\n{}\n'.format(baseFileName, stdOutText, stdErrText), True)
 
         if (flagCleanExtras):
             if (not errored):
@@ -489,6 +516,20 @@ class JrPdf():
         return (not errored)
 
 
+# ---------------------------------------------------------------------------
+    def outputContainsAnyError(self, errorStrings, errorSources):
+        for errorString in errorStrings:
+            errrorStringAsBytes = str.encode(errorString)
+            for errorSource in errorSources:
+                if (errorSource is None):
+                    continue
+                if (type(errorSource) is bytes):
+                    if (errrorStringAsBytes in errorSource):
+                        return True
+                elif (errorString in errorSource):
+                    return True
+        return False
+# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
     def clearBuildLog(self):

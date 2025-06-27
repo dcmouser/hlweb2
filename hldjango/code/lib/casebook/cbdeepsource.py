@@ -128,7 +128,7 @@ class CbDeepSource:
 
     def runMacros(self, env):
         # walk text and run expansions
-        regexInclude = re.compile(r"\$macro\.include\(\"([^\"]*)\"\)")
+        regexInclude = re.compile(r"^\$macro\.include\(\"([^\"]*)\"\)", re.MULTILINE)
         #
         maxReplaces = 1000
         replaceCount = 0
@@ -145,9 +145,9 @@ class CbDeepSource:
 
             # replace
             fileNameRelative = matches.group(1)
-            filePath = self.findFilePathInFileManagers(fileNameRelative)
-            if (filePath is None):
-                raise Exception("Could not locate include file '{}' in allowed include directories.".format(fileNameRelative))
+
+            # note we pass None to say we will add our own use note so we can add more info
+            [filePath, warningText] = env.locateManagerFileWithUseNote(env.calcManagerIdListSource(), fileNameRelative, None, None, None, env, None, False)
             # make source from file contents
             comment = "macro included file (name unknown)"
             newSource = createDeepSourceFromFile(filePath, encoding, comment)
@@ -172,15 +172,6 @@ class CbDeepSource:
             # increment
             replaceCount += 1
 
-
-
-    def findFilePathInFileManagers(self, fileNameRelative):
-        for fileManager in self.fileManagerList:
-            path = fileManager.findFullPath(fileNameRelative)
-            if (path is not None):
-                return path
-        # not found
-        return None
 
 
 

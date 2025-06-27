@@ -1,0 +1,21 @@
+<!-- User does not have permission to create a game -->
+{% extends "allauth/layouts/base.html" %}
+
+{% block title %}Create Game - Access Denied{% endblock title %}
+
+{% block content %}
+<h1 class="textErrored">ERROR: You do not (currently) have permission to create games on this website.</h1>
+
+
+
+<hr/>
+<h2>How to request to be added to Game Author group:</h2>
+<p>At the current time, potential authors must manually request permission to be authorized to create games on this website.  Here's how:</p>
+<ul>
+<li>Contact me (Jesse Reichler) via email at <a href="mailto:jessereichler@gmail.com" target="_blank">jessereichler@gmail.com</a>.</li>
+<li>OR... Post your request on the BoardGameGeek <a href="https://boardgamegeek.com/boardgame/418459/new-york-noir-mysteries-high-and-low" target="_blank">game page for New York Noir</a>.</li>
+<li>OR... Visit the New York Noir <a href="https://discord.gg/fgyp9ZBE9Y" target="_blank">Discord chat server</a>.</li>
+<li>OR.. Download a local <a href="https://hub.docker.com/repository/docker/jreichler/hlweb_personal/general" target="_blank">docker image</a> to run this tool offline.</li>
+</ul>
+
+{% endblock content %}

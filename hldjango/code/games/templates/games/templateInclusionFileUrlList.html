@@ -15,7 +15,9 @@
     {% endfor %}
 
     {% if fileList|length == 0 %}
-        <div>None.</div>
+        {% if not buildError %}
+            <div>No files.</div>
+        {% endif %}
     {% endif %}
 
 </ul>

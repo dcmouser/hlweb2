@@ -8,7 +8,6 @@ from django.core.wsgi import get_wsgi_application
 
 # my funcs
 from lib.jr.jrfuncs import jrprint
-from lib.jr import jrdfuncs
 
 # helper logger
 from paste.translogger import TransLogger
@@ -18,7 +17,7 @@ from gunicorn import serve
 
 
 # Use paste translogger (see https://docs.pylonsproject.org/projects/waitress/en/stable/logging.html) to output all requests to stdout
-optionUseTransLogger = True
+optionUseTransLogger = False
 
 
 
@@ -46,9 +45,6 @@ class Command(BaseCommand):
             # wrap around logger
             if (optionUseTransLogger):
                 application = TransLogger(application, setup_console_handler=False)
-
-            # announce version and settings in use
-            jrdfuncs.announceDjangoAndSettingsVersion()
 
             # serve it
             hostStr = "127.0.0.1" if (host=="0.0.0.0") else host

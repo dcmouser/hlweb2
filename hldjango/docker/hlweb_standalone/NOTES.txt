@@ -1,0 +1,12 @@
+This is the docker I upload for people to use locally.
+
+This is the docker you can use to build cases on a local pc.
+It's also a way I can test a full build before trying on the real web server.
+It does NOT use my windows local files.
+
+I THINK After you build and run, open browser at:
+http://localhost/games
+OR is it http://localhost:8000/
+But you may have to go through docker desktop app to get url.
+
+Default initial superuser is: admin / admin

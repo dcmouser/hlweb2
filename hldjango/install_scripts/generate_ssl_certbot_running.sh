@@ -6,7 +6,8 @@ echo "Running certbot script to generate ssl keys using letsencrypt and certbot 
 
 #DOMAIN='newyorknoirgame.com'
 #DOMAIN='nycnoirgame.com'
-DOMAIN='nycnoir.org'
+#DOMAIN='nycnoir.org'
+DOMAIN='nynoir.org'
 
 
 

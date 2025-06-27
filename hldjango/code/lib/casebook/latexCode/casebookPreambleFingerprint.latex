@@ -1,0 +1,201 @@
+
+\newlength{\imagewidth}
+
+
+
+% Ensure that the total width minus the space for 9 gaps fits the text width
+\newlength{\totalimagewidth}
+\setlength{\totalimagewidth}{\textwidth}
+\addtolength{\totalimagewidth}{-\dimexpr 9\imagewidth/10 \relax} % adjust space between images
+
+
+% OLD remove default label in captions -- this is now put into main preamble
+%\captionsetup[figure]{labelformat=empty} % Removes the label from figure captions
+%\captionsetup[subfloat]{labelformat=empty} % Removes the label from subfigure captions
+
+
+
+\setlength{\imagewidth}{2.2cm} % Width of the images
+\newcommand{\gap}{20pt}
+\newcommand{\vgapfix}{\vspace*{4pt}}
+\newcommand{\vgapbfix}{\vspace*{12pt}}
+
+
+
+
+
+
+% FINGERPRINT IMAGE IN BORDER WITH TEXT (pass pass as first arg, and caption as second)
+\newcommand{\iwidth}{0.17}
+\newcommand{\jwidth}{0.12}
+%\newcommand{\kwidth}{0.11}
+\newcommand{\setFingerPrintSetWidthCompact}{\def\kwidth{0.17}}
+\newcommand{\setFingerPrintSetWidthNormal}{\def\kwidth{0.11}}
+
+
+
+\newcommand{\fpimage}[2]{%
+   \fbox{\includegraphics[width=\jwidth\textwidth]{#1}} \par \textbf{#2}
+}
+
+\newcommand{\fpimagenc}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+\newcommand{\fpimagen}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+
+
+
+
+
+
+
+
+% Custom environment definition
+\newenvironment{myfprowtable}
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}}
+    {\end{tabular}
+    \end{center}
+    \vgapfix
+    }
+
+
+\newcommand{\mfplabeledHand}[6]
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.2cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+\rotatebox{90}{\textbf{#1}} &
+ #2 & #3 & #4 & #5 & #6
+  \end{tabular}
+  \end{center}
+   \vgapfix
+}
+
+
+\newcommand{\mfpLabelRow}[5]
+    {\noindent 
+    \begin{center}
+    \vspace*{-14pt}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.15cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+ &
+ #1 & #2 & #3 & #4 & #5
+  \end{tabular}
+  \end{center}
+%   \vgapfix
+}
+
+
+
+
+
+
+
+
+
+
+\newcommand{\myfpersontableSetLeft}[5]{
+    \def\fpTempLa{#1}%
+    \def\fpTempLb{#2}%
+    \def\fpTempLc{#3}%
+    \def\fpTempLd{#4}%
+    \def\fpTempLe{#5}%
+}
+
+\newcommand{\myfpersontableSetRight}[5]{
+    \def\fpTempRa{#1}%
+    \def\fpTempRb{#2}%
+    \def\fpTempRc{#3}%
+    \def\fpTempRd{#4}%
+    \def\fpTempRe{#5}%
+}
+
+% 10 fingerprint table in 2 rows
+\newcommand{\myfpersontable}[1]{%
+\begin{tcolorbox}[sharp corners, colframe=black, colback=white, boxrule=2pt]
+    \ttfamily
+% Adjust spacing
+\setlength{\tabcolsep}{4pt} % Space between columns
+\renewcommand{\arraystretch}{1.5} % Adjust vertical spacing
+% Reduce padding and margin around the images
+\setlength{\fboxsep}{0pt} % Padding between the content and border of \fbox
+\setlength{\fboxrule}{1pt} % Thickness of the border of \fbox
+\vgapfix
+\centering \Large\textbf {#1}
+\vgapfix
+\mfplabeledHand{LEFT} %
+{\fpimagenc{\fpTempLa}} %
+{\fpimagenc{\fpTempLb}} %
+{\fpimagenc{\fpTempLc}} %
+{\fpimagenc{\fpTempLd}} %
+{\fpimagenc{\fpTempLe}}
+\mfplabeledHand{RIGHT} %
+{\fpimagenc{\fpTempRa}}%
+{\fpimagenc{\fpTempRb}}%
+{\fpimagenc{\fpTempRc}}%
+{\fpimagenc{\fpTempRd}}%
+{\fpimagenc{\fpTempRe}}
+\mfpLabelRow %
+{Thumb}
+{Index}
+{Middle}
+{Ring}
+{Pinky}
+\end{tcolorbox}
+}
+
+
+
+
+% COMPACT 10 fingerprint table in 2 rows
+\newcommand{\myfpersontableC}[1]{%
+\begin{tcolorbox}[sharp corners, colframe=black, colback=white, boxrule=0.5pt, left=0pt, right=0pt, top=0pt, bottom=0pt, boxsep=0pt]
+\ttfamily
+% Adjust spacing
+\setlength{\tabcolsep}{1.3pt} % Space between columns
+\renewcommand{\arraystretch}{1.3} % Adjust vertical spacing
+% Reduce padding and margin around the images
+\setlength{\fboxsep}{0pt} % Padding between the content and border of \fbox
+\setlength{\fboxrule}{0.5pt} % Thickness of the border of \fbox
+\vgapfix
+\centering \small\textbf {#1}
+%\vgapfix
+\vspace*{2pt}
+\mfplabeledHand{LEFT} %
+{\fpimagenc{\fpTempLa}} %
+{\fpimagenc{\fpTempLb}} %
+{\fpimagenc{\fpTempLc}} %
+{\fpimagenc{\fpTempLd}} %
+{\fpimagenc{\fpTempLe}}
+\mfplabeledHand{RIGHT} %
+{\fpimagenc{\fpTempRa}}%
+{\fpimagenc{\fpTempRb}}%
+{\fpimagenc{\fpTempRc}}%
+{\fpimagenc{\fpTempRd}}%
+{\fpimagenc{\fpTempRe}}
+\mfpLabelRow %
+{Thumb}
+{Index}
+{Middle}
+{Ring}
+{Pinky}
+\end{tcolorbox}
+}
+
+

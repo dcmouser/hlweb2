@@ -7,4 +7,4 @@ do
 done
 
 # really delete all
-docker system prune --all
+docker system prune --all --force

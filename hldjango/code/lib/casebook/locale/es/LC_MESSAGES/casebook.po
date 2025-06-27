@@ -1,0 +1,352 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-03-03 01:14-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=cp1252\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: code/lib/casebook\cbfuncs_core1.py:1319
+msgid "SUMMARY"
+msgstr "EL SUMMARIO"
+
+#: code/lib/casebook\cbfuncs_core1.py:1325
+msgid "Author"
+msgstr "EL AUTOR"
+
+#: code/lib/casebook\cbfuncs_core1.py:1326
+msgid "Status"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1329
+msgid "Additional credits"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1331
+msgid "Web"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1333
+msgid "Keywords"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1335
+msgid "Difficulty"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1336
+msgid "Playtime"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1338
+msgid "Cautions"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1339
+msgid "Build tool"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1340
+msgid "Typesetting"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1341
+msgid "Compiled"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1444
+msgid "Return to"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1463
+msgid "go to"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1470
+msgid "and then return here"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1542
+msgid "and then return back here"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1712
+msgid "If you still need help, as a last resort {}visit the following lead where this item is obtained"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:1714
+msgid "If you still need help, as a last resort {}visit one or more of the following leads where this item is obtained"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2174
+msgid "before day"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2175
+msgid "after day"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2176
+msgid "day"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2179
+msgid "If it is **{}** **{}**"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2226
+msgid "**must** be {} before you may end"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2227
+msgid "You should note this in your case log in some way to avoid having to consult this list while playing"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2228
+msgid "Record in your case log that"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2230
+msgid "**must** have been {} before you ended"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2231
+msgid "If you have missed {}, return to searching for leads until you find all of them (if stuck, consult the hints section)"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2231
+msgid "it"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2231
+msgid "one or more"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2232
+msgid "You should have noted in your case log that"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2244
+msgid "There are no items that must be {} before the end of **day {}**."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2247
+msgid "The following {} {} **day {}**. {}"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2266
+msgid "THE CLOCK IS TICKING!"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2268
+msgid "**day {}** start{} at **{}** and end{} at **{}**."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2271
+msgid "the required item"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2273
+msgid "all of the required items"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2274
+msgid "If you have *not* {} {} listed above by **{}**, you enter **overtime**.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find {}."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2276
+msgid "Keep track of what time you visit each lead, until you reach (or pass) **{}**, after which your day ends."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2292
+msgid "**Note**: There are specific hints available for each of the the day's required items (see table of contents)."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2299
+msgid "However, if you need guidance on where to focus your efforts on any given day"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2301
+msgid "you can drop by your old police precinct in the Financial District for some advice"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2302
+msgid "you can catch the chief on his break and get his advice without penalty"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2308
+msgid "(if you arrive between **{} and {}** {})."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2310
+msgid "(if you arrive after **{} {})."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2312
+msgid "(if you arrive before **{} {})."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2357
+msgid ""
+"Stop reading this case book now, and begin searching for leads in the directories.\n"
+"\n"
+"Continue to the next page only when you are ready to end"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2358
+msgid "Proceed only when you are ready to begin"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2359
+msgid "The case is nearing an end. You will have another chance to search for leads, but in the meantime, turn to"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2360
+msgid "Proceed only when you are ready to answer questions."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2361
+msgid "Once you have answered all questions on the previous page(s) you may continue to the next page."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2362
+msgid ""
+"WARNING! Do **not** read through the rest of this document like a book from beginning to end. Lead entries are meant to be read individually only when you look up a lead by its number.\n"
+"\n"
+"Close this book now and follow rulebook instructions for looking up leads."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2363
+msgid "Do **not** access the documents section unless directed to retrieve a specific document."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2364
+msgid "Do **not** access the hints section except when looking up a specific hint from the table of contents at the start of this case book."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2365
+msgid ", and found the day's required **{} item{}**."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2365
+msgid "Proceed only after you have completed searching for leads on"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2366
+msgid "Proceed only after you are ready to continue."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2369
+msgid "Proceed only when you are ready to proceed to **Late Night** activities."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2370
+msgid "Proceed only after you have finished resolving any special **Late Night** actions described on the previous pages."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2371
+msgid "Once you have resolved the previous page you may continue to the next page."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2372
+msgid "Once you have answered all questions on the previous page(s) you may turn the page for the **conclusion to the case**."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2373
+msgid "Do **not** turn the page until you are ready to begin wrapping up your case."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2374
+msgid "Your case has ended, there is nothing more to read."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2375
+msgid "Stop reading this case book now, and begin searching for leads in the directories."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2396
+msgid "STOP!"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2417
+msgid "NOTE: If you’ve been playing for a couple of hours, now might be a good time to take a break before continuing..."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core1.py:2438
+msgid "Continue to next entry"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core2.py:1027
+msgid "In your case log, record that the current value of **track {}** is: **{}**."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core2.py:1031
+msgid "In your case log, **reduce** the current value of **track {}** by **{}**"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core2.py:1036
+msgid "In your case log, **increase** the current value of **track {}** by **+{}**"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core2.py:1038
+msgid ", but not greater than "
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:124
+msgid "Mark {} {} checkbox{} in your case log"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:822
+msgid "have"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:824
+#: code/lib/casebook\cbfuncs_core_support.py:826
+msgid "have *not*"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:827
+msgid ", stop reading now, and return here after you have."
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:842
+msgid "If you {} {}"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:850
+msgid "**both**"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:852
+msgid "**all**"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:853
+msgid "and"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:855
+msgid "*any*"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:856
+msgid "or"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:865
+msgid "If you {} {} {} of the the following {} items ({})"
+msgstr ""
+
+#: code/lib/casebook\cbfuncs_core_support.py:1292
+msgid "Time advances {} minutes."
+msgstr ""
+

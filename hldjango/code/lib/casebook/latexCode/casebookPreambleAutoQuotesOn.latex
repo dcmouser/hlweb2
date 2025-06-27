@@ -1,0 +1,4 @@
+\usepackage[english]{babel}
+\usepackage[autostyle, english = american, debug=true]{csquotes}
+
+\MakeOuterQuote{"} % Automatically use different left and right quote mark symbols (WARNING: This can lead to hard to diagnose errors on imbalanced double quotes!!)\n

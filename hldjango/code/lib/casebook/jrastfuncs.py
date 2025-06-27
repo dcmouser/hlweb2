@@ -8,6 +8,7 @@ import pylatex
 from .cblarkdefs import *
 #
 from .jriexception import *
+from .casebookDefines import *
 
 # my libs
 from lib.jr import jrfuncs
@@ -16,11 +17,7 @@ from lib.jr.jrfuncs import jrprint
 
 
 
-# defines
-DefLatexVouchedPrefix = "LATEX:"
-DefLatexVouchedEmbeddablePrefix = "LATEXEMBED:"
-DefContdStr = "contd."
-DefInlineLeadPlaceHolder = "(see other lead)"
+
 
 
 
@@ -120,6 +117,29 @@ def getParseTreeChildString(pnode):
     # we expect one child, which is a STRING type
     pchildStringNode = pnode.children[0]
     return getParseTreeString(pchildStringNode)
+
+
+# helper function to return value of parse tree node that is a string or a new nonstringtextline (just remainder of line)
+def getParseTreeChildStringOrTextLine(pnode):
+    # we expect one child, which is a STRING type
+    pchildNode = pnode.children[0]
+    ruleValue = pchildNode.data.value
+    if (ruleValue == JrCbLarkRule_nonstringtextline):
+        pchildSubStringNode = pchildNode.children[0]
+        val = getParseNodeTokenValue(pchildSubStringNode)
+        return val
+    else:
+        return getParseTreeString(pchildNode)
+
+
+# helper function to return value of parse tree node that is a string or a new nonstringtextline (just remainder of line)
+def getParseTreeEntryLineLabel(pnode):
+    # we expect one child, which is a STRING type
+    pchildNode = pnode.children[0]
+    val = getParseNodeTokenValue(pchildNode)
+    return val
+
+
 
 
 # helper function to return value of parse tree node with a single child literal token
@@ -533,6 +553,8 @@ def convertEscapeUnsafePlainTextToLatex(text):
     return latexText
 
 
+
+
 def convertEscapeUnsafePlainTextToLatexMorePermissive(text):
     # allow some stuff that is normally escaped
 
@@ -557,6 +579,31 @@ def convertEscapePlainTextFilePathToLatex(text):
     return latexText
 
 
+def convertIdToSafeLatexId(text):
+    # ATTN: this is not sufficient
+    text = text.replace(" ", "spc")
+    text = text.replace("_", "und")
+    text = text.replace("%", "perc")
+    text = text.replace("-", "dash")
+    text = text.replace(".", "dot")
+    text = text.replace("'", "sq")
+    text = text.replace('"', "dq")
+    text = text.replace("(", "lp")
+    text = text.replace(")", "rp")
+    text = text.replace("0", "zero")
+    text = text.replace("1", "one")
+    text = text.replace("2", "two")
+    text = text.replace("3", "three")
+    text = text.replace("4", "four")
+    text = text.replace("5", "five")
+    text = text.replace("6", "six")
+    text = text.replace("7", "seven")
+    text = text.replace("8", "eight")
+    text = text.replace("9", "nine")
+
+    latexText = pylatex.utils.escape_latex(text)
+    return latexText
+
 def makeLatexLabelFromRid(rid):
     ltext = r"\label{" + rid + "}" + "\n"
     return ltext
@@ -564,7 +611,7 @@ def makeLatexLabelFromRid(rid):
 
 
 def makeLatexLinkToRid(rid, label, pageNumberStyle):
-    if (label!=""):
+    if (label!="") and (label is not None):
         labelEscaped = convertEscapeVouchedOrUnsafePlainTextToLatex(label)
         ltext = labelEscaped
     else:

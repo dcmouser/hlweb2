@@ -4,6 +4,11 @@
 LaTeX renderer for mistletoe with pylatex.
 """
 
+from .jrhtmlrenderer import MyUnderline
+
+#from mistletoe import Markdown
+#from mistletoe.block_token import CodeFence, BlockToken, Heading, Quote, ThematicBreak, List, Table
+
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
 from mistletoe.latex_renderer import LaTeXRenderer
@@ -34,7 +39,11 @@ class PyLaTeXRenderer(LaTeXRenderer):
         self.packages = {}
         super().__init__(*chain(tokens, extras), **kwargs)
 
-
+        # underline support
+        # doesnt seem to do anything
+        self.render_map["MyUnderline"] = self.render_underline
+        # needed?
+        #self.add_token(MyUnderline) 
 
 
 
@@ -77,6 +86,7 @@ class PyLaTeXRenderer(LaTeXRenderer):
         return '\\sout{{{}}}'.format(self.render_inner(token))
 
     def render_image(self, token):
+        raise Exception("Latex mistletoe markdown image support is disabled (see pylatexrenderer.py).")
         self.packages['graphicx'] = []
         # ATTN: jr 2/11/24 support for heigh and width
         imageSource = token.src
@@ -170,18 +180,24 @@ class PyLaTeXRenderer(LaTeXRenderer):
         return '\n{}\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        self.packages['listings'] = []
-        template = ('\n\\begin{{lstlisting}}[language={}]\n'
-                    '{}'
-                    '\\end{{lstlisting}}\n')
-        inner = self.render_raw_text(token.children[0], False)
-        return template.format(token.language, inner)
+        if (False):
+            # ATTN: 2/2/25 this seems to cause problems with newspaper and or indented blocks
+            self.packages['listings'] = []
+            template = ('\n\\begin{{lstlisting}}[language={}]\n'
+                        '{}'
+                        '\\end{{lstlisting}}\n')
+            inner = self.render_raw_text(token.children[0], False)
+            retv = template.format(token.language, inner)
+        else:
+            # ATTN: we need to ESCAPE this text
+            retv = self.render_raw_text(token.children[0], True)
+        return retv
 
     def render_list(self, token):
         self.packages['listings'] = []
         template = '\\begin{{{tag}}}\n{inner}\\end{{{tag}}}\n'
         tag = 'enumerate' if token.start is not None else 'itemize'
-        if (True):
+        if (False):
             if (tag=='enumerate'):
                 # ATTN: jr - bypass enumerated lists
                 inner = self.render_inner(token)
@@ -192,7 +208,7 @@ class PyLaTeXRenderer(LaTeXRenderer):
     def render_list_item(self, token):
         inner = self.render_inner(token)
         # ATTN: jr - bypass enumerated lists
-        if (True):
+        if (False):
             leader = token.leader
             if (len(leader)>0) and (leader[0] in ['0','1','2','3','4','5','6','7','8','9']):
                 return '\n' + leader + ' ' + inner.strip() + '\n'
@@ -430,3 +446,9 @@ class PyLaTeXRenderer(LaTeXRenderer):
         # throw error if we can't resolve it to a known image
         filePathResolved = self.parserRef.safelyResolveImageSource(filePath)
         return filePathResolved
+
+
+
+    def render_underline(self, token):
+        inner = self.render_inner(token)
+        return "\\underline{" + inner + "}"

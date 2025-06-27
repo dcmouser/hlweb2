@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+    <p>New York Noir Web Service Django Built-in Model Administration Page</p>
+    <ul>
+        <li>
+            <a href="{% url 'gadminHome' %}">Return to New York Noir admin page</a>
+        </li>
+    </ul>
+
+    {{ block.super }}  <!-- Keeps existing admin content -->
+
+{% endblock %}

@@ -1,15 +1,40 @@
 {% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+
 {% load jrtemplatetags %}
 {% load gametemplatetags %}
 {% load static %}
 
 
-{% block content %}
+
+
 <h1>Status Page</h1>
+
+
+
+{% block content %}
+{% if result %}
+<div>
+    RESULT OF ACTION: {{ result }}
+</div>
+<hr/>
+{% endif %}
+
+<a href="{% url 'gadminStatus' %}">Refresh</a>
+
+<br/>
+<h2>Basic Information</h2>
+<ul>
+    <li>Timezone: {{ info.timeZone }}</li>
+    <li>Local date/time: {{ info.currentDateString }}</li>
+</ul>
+
 
 <br/>
 <h2>Huey Task Queue</h2>
 <ul>
+    <li>Currently running tasks: {{ huey.runningTaskCount }}</li>
     <li>Queue Size: {{ huey.queueSize }}</li>
     <li>Enqueued Items: {{ huey.enqueued_itemsHtml }}</li>
     <li>All Results: {{ huey.all_resultsHtml }}</li>
@@ -19,6 +44,14 @@
 <p>
     {{ huey.settingsHtml }}
 </p>
+
+
+<form method="post" id="cleanHuey">
+    {% csrf_token %}
+    {{ form | crispy }}
+    <input type="hidden" id="action" name="action" value="cleanHuey">
+    <button type="submit" onclick="return confirm('Are you sure?');">Delete all huey results</button>
+</form>
 
 
 

@@ -1,0 +1,6 @@
+start poetry shell
+cd (hldjango-py3.10) E:\MyDocs\Programming\Python\hlweb2\hldjango\code
+
+run:
+python manage.py makemigrations
+python manage.py migrate

@@ -17,6 +17,7 @@
     <a href="{% url 'gameFileDetail' gamefile.pk %}" class="btn btn-primary" role="button">Cancel</a>
     <input class="btn btn-danger" type="submit" value="Confirm">
 </form>
+<br/>
 <p>
     <a href="{{ gamefile.filefield.url }}" data-toggle="lightbox">
         <img src="{{ gamefile.filefield.url }}" class="imgReasonableSized"/>

@@ -1,0 +1,8 @@
+// Courts Contact Reference
+//* $referDb("County Clerk Head Secretary: Office of County Clerk")
+* $referDb("Civil court records: Office of County Clerk (Civil Court)")
+* $referDb("Criminal court records: New York County Criminal Court")
+* $referDb("Ongoing & open criminal cases: Manhattan Prosecutor's Office")
+* $referDb("Information, records, gossip regarding Lawyers: Association of the Bar")
+* $referDb("Prison records: NYC Department of Corrections")
+* $referDb("Parole board and records: NYC Department of Probation")

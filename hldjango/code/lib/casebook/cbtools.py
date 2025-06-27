@@ -82,6 +82,8 @@ class CbTools:
         # close file
         fileOut.close()
 
+        return "Documentation explored to {}.".format(outFilePath)
+
 
     def runCommandJob(self, args):
         progressCallback = None
@@ -173,7 +175,7 @@ class CbTools:
         #
         if (isinstance(wrappedVal, CbFunc)):
             propDict["Description"] = wrappedVal.getDescription()
-            propDict["Usage"] = wrappedVal.getUsageInfoHtml()
+            propDict["Usage"] = wrappedVal.getUsageInfoSimple()
             paramHtml = wrappedVal.getParameterInfoHtml()
             if (paramHtml!=""):
                 propDict["Parameters"] = paramHtml
@@ -209,3 +211,5 @@ class CbTools:
             retvHtml += "<li>" + html + "</li>\n"
         retvHtml += "</ul>\n"
         return retvHtml
+
+

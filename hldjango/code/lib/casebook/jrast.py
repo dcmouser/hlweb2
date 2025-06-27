@@ -10,6 +10,7 @@ from .jrastvals import *
 from .jriexception import *
 from .cbplugin import DefPluginDomainEntryLeadProcessor
 
+from . import cblocale
 
 # my libs
 from lib.jr import jrfuncs
@@ -17,7 +18,9 @@ from lib.jr.jrfuncs import jrprint
 
 
 # other defines
-JrCb_blankEntryId = ""
+DefCbDefine_IDEmpty = ""
+DefCbDefine_IdBlank = "BLANK"
+
 DefEntryIdOptions = "OPTIONS"
 DefEntryIdSetup = "SETUP"
 DefSpecialEntryIdsAlwaysRunDontRender = [DefEntryIdOptions, DefEntryIdSetup]
@@ -147,14 +150,17 @@ class JrAstRoot (JrAst):
 
         # stage 0
         # ATTN: IMPORTANT - first tell jrinterp to clear all render helpers (so that we can run multiple tasks without them building data on top of each other)
-        env.getInterp().resetDataForRender()
+        env.getInterp().resetDataForRender(env)
+
+        # new, set variables based on task
+        self.imposeTaskOptionsEnvironmentVariables(task, env)
 
         # stage 1
         self.stage1RenderRunApplyOptionsRecursively(task, rmode, env)
 
         if (flagFullRender):
             # stage 2
-            env.getInterp().postBuildPreRender()
+            env.getInterp().postBuildPreRender(env)
 
             # stage 3
             self.stage2RenderRun(task, rmode, env)
@@ -162,6 +168,27 @@ class JrAstRoot (JrAst):
             # stage 4 - let RENDERER doc do some final stuff
             renderer = env.getRenderer()
             renderer.afterTaskRenderRunProcess(task, rmode, env)
+
+
+
+
+    def imposeTaskOptionsEnvironmentVariables(self, task, env):
+        # there are options that the user can configure in their casebook file, which we can OVERWRITE in task options
+        #
+        sectionBreak = task.getOption("sectionBreak", None)
+        sectionColumns = task.getOption("sectionColumns", None)
+        leadBreak = task.getOption("leadBreak", None)
+        leadColumns = task.getOption("leadColumns", None)
+        #
+        if (sectionBreak is not None):
+            env.setCreateEnvValue(None, "taskLeadSectionBreak", sectionBreak, False, False)
+        if (sectionColumns is not None):
+            env.setCreateEnvValue(None, "taskLeadSectionColumns", sectionColumns, False, False)
+        if (leadBreak is not None):
+            env.setCreateEnvValue(None, "taskLeadBreak", leadBreak, False, False)
+        if (leadColumns is not None):
+            env.setCreateEnvValue(None, "taskLeadColumns", leadColumns, False, False)
+
 
 
 
@@ -175,12 +202,20 @@ class JrAstRoot (JrAst):
         for child in self.entries.childList:
             if (child.calcIsEarlyOptionsEntry()):
                 # this entry should renderRun (run) and ONLY renderRun during this special apply options stage (see below)
+                # this should include options and setup
                 child.renderRun(DefRmodeRun, env, child, None, False)
             # apply options recursively
             child.applyOptionsRecursively(rmode, env)
 
+        # language translation
+        self.configureSetupLocaleTranslation(env)
+
         # now that options are processed, we might do things that depend on options being set (such as setting up the hlapi)
         self.configureHlApi(env)
+
+        # AND now we can sort tags, since all tags should have been defined by now
+        tagManager = env.getTagManager()
+        tagManager.postProcessTagsIfNeeded(env)
 
 
 
@@ -205,15 +240,29 @@ class JrAstRoot (JrAst):
         # get any configured data options
         # main lead data
         interp = env.getInterp()
-        dataVersion = env.getEnvValueUnwrapped(None, "leadDbData.version", None)
+        leadDbData = env.getEnvValueUnwrapped(None, "leadDbData", None)
+        dataVersion = jrfuncs.getDictValueOrDefault(leadDbData, "version", None)
+        dataVersionPrevious = jrfuncs.getDictValueOrDefault(leadDbData, "versionPrevious", None)
+        seed = jrfuncs.getDictValueOrDefault(leadDbData, "seed", None)
+        #
         if (dataVersion is not None):
-            hlApiOptions = {"dataVersion": dataVersion}
+            hlApiOptions = {"dataVersion": dataVersion, "seed": seed}
             interp.getHlApi().configure(hlApiOptions)
         #
-        dataVersion = env.getEnvValueUnwrapped(None, "leadDbData.versionPrevious", None)
-        if (dataVersion is not None):
-            hlApiOptions = {"dataVersion": dataVersion}
+        if (dataVersionPrevious is not None) and (dataVersionPrevious!=""):
+            hlApiOptions = {"dataVersion": dataVersionPrevious, "seed": seed}
             interp.getHlApiPrev().configure(hlApiOptions)
+        else:
+            interp.getHlApiPrev().setDisabled(True)
+
+
+
+
+    def configureSetupLocaleTranslation(self, env):
+        localeData = env.getEnvValueUnwrapped(None, "localeData", None)
+        language = jrfuncs.getDictValueOrDefault(localeData, "language", None)
+        cblocale.changeLanguage(language)
+
 
 
 
@@ -228,7 +277,9 @@ class JrAstRoot (JrAst):
             idPart = idPart.strip()
             descendant = parentp.entries.findDescendantByIdOrLabel(idPart, astloc)
             if (descendant is None):
-                raise makeJriException("Could not find referenced entry with id ({}) with path ({})".format(idPart, id), astloc)
+                # not found
+                return None
+                #raise makeJriException("Could not find referenced entry with id ({}) with path ({})".format(idPart, id), astloc)
             parentp = descendant
         # ok we found it
         return descendant
@@ -249,6 +300,8 @@ class JrAstEntry(JrAst):
         super().__init__(sloc, parentp)
         self.level = level
         #
+        #self.idOriginal = None
+        self.autoId = None
         self.id = None
         self.label = None
         self.options = None
@@ -263,6 +316,7 @@ class JrAstEntry(JrAst):
         self.leadColumns = None
         self.sectionColumns = None
         self.toc = None
+        self.childToc = None
         self.heading = None
         self.childPlugins = None
         #
@@ -271,11 +325,24 @@ class JrAstEntry(JrAst):
         GlobalEidCounter += 1
         self.rid = "e" + str(GlobalEidCounter)
         #
+        self.headingStyle = None
+        self.childHeadingStyle = None
+        self.layout = None
         self.blankHead = False
         self.time = None
-        self.tombstones = None
+        self.timePos = None
+        self.dividers = None
         self.mStyle = None
         self.address = None
+        self.dName = None
+        #
+        self.sectionBreak = None
+        self.leadBreak = None
+        #
+        self.sortGroup = None
+        self.sortKey = None
+        #
+        self.multiPage = None
         #
         self.entries = JrAstEntryChildHelper(self, self)
 
@@ -314,13 +381,21 @@ class JrAstEntry(JrAst):
     def getDisplayIdLabel(self):
         return "{}:'{}'".format(self.getId(), self.getLabelOrBlank())
     
-    def getRuntimeDebugDisplay(self, env):
+    def getRuntimeDebugDisplay(self, env, entryp, leadp):
         return "ENTRY {}:{} (level {})".format(self.getId(), self.getLabelOrBlank(), self.level)
 
     def setId(self, val):
+        #if (self.idOriginal is None):
+        #    # remember idOriginal, a bit of a kludge
+        #    self.idOriginal = self.id
         self.id = val
     def getId(self):
         return self.id
+
+    def getAutoId(self):
+        return self.autoId
+    def setAutoId(self, val):
+        self.autoId = val
 
     def getMindMapNodeInfo(self):
         id = self.getId()
@@ -343,6 +418,7 @@ class JrAstEntry(JrAst):
             "type": "entry",
             "pointer": self,
             "mStyle": mStyle,
+            "showDefault": False,
             }
         return mmInfo
     
@@ -415,11 +491,31 @@ class JrAstEntry(JrAst):
         return self.toc
     def setToc(self, val):
         self.toc = val
+    #
+    def getChildToc(self):
+        return self.childToc
+    def setChildToc(self, val):
+        self.childToc = val
+
+
+    def setHeadingStyle(self, val):
+        self.headingStyle = val
+    def getHeadingStyle(self):
+        return self.headingStyle
+    def setChildHeadingStyle(self, val):
+        self.childHeadingStyle = val
+    def getChildHeadingStyle(self):
+        return self.childHeadingStyle
 
     def setBlankHead(self, val):
         self.blankHead = val
     def getBlankHead(self):
         return self.blankHead
+    def setLayout(self, val):
+        self.layout = val
+    def getLayout(self):
+        return self.layout
+
 
     def getTime(self):
         return self.time
@@ -435,15 +531,33 @@ class JrAstEntry(JrAst):
     def setHeading(self, val):
         self.heading = val
 
-    def getTombstones(self):
-        return self.tombstones
-    def setTombstones(self, val):
-        self.tombstones = val
+    def getDividers(self):
+        return self.dividers
+    def setDividers(self, val):
+        self.dividers = val
 
     def getAddress(self):
         return self.address
     def setAddress(self, val):
         self.address = val
+    def getDName(self):
+        return self.dName
+    def setDName(self, val):
+        self.dName = val
+
+    def getSortGroup(self):
+        return self.sortGroup
+    def getSortKey(self):
+        return self.sortKey
+    def setSortGroup(self, val):
+        self.sortGroup = val
+    def setSortKey(self, val):
+        self.sortKey = val
+
+    def getMultiPage(self):
+        return self.multiPage
+    def setMultiPage(self, val):
+        self.multiPage = val
 
     def getParentEntry(self):
         parentp = self.getParentp()
@@ -456,6 +570,12 @@ class JrAstEntry(JrAst):
     def setChildPlugins(self, val):
         self.childPlugins = val
 
+    def shouldEntryIdBeUnique(self):
+        # ATTN: note that options have not been processed yet, so getBlankHead() is not a reliable check
+        id = self.getId()
+        if (self.getBlankHead()) or (id in [DefCbDefine_IdBlank, DefCbDefine_IDEmpty]):
+            return False
+        return True
 
     def getMarkdownLabel(self):
         displayLabel = self.calcDisplayTitle()
@@ -520,7 +640,11 @@ class JrAstEntry(JrAst):
                     elif (achildValue in [JrCbLarkRule_entry_id]):
                         self.setId(getParseTreeChildLiteralTokenOrString(achild))
                     elif (achildValue == JrCbLarkRule_entry_label):
-                        self.setLabel(getParseTreeChildString(achild))
+                        val = getParseTreeChildStringOrTextLine(achild)
+                        self.setLabel(val)
+                    elif (achildValue == JrCbLarkRule_entry_linelabel):
+                        val = getParseTreeEntryLineLabel(achild)
+                        self.setLabel(val)
                     else:
                        raise makeJriException("Uncaught syntax error; expected to find {}.".format([JrCbLarkRule_entry_id, JrCbLarkRule_overview_entry_id, JrCbLarkRule_entry_label, JrCbLarkRule_overview_level1_id]), pchild)
             elif (pchildValue == JrCbLarkRule_entry_options):
@@ -530,6 +654,18 @@ class JrAstEntry(JrAst):
             else:
                 # this shouldnt happen because parser should flag it
                 raise makeJriException("Uncaught syntax error; expected to find entry header element from {}.".format([JrCbLarkRule_entry_id_opt_label, JrCbLarkRule_overview_level1_id, JrCbLarkRule_entry_options]), pchild)
+
+        # ATTN: 2/1/25: Fixup for blank IDs
+        # if we just have a label, and no id, this is a kludge in the syntax parser and we treat this as the ID not the label
+        label = self.getLabel()
+        id = self.getId()
+        if (id=="") and (label!="") and (label is not None):
+            # move label to id, and clear label?
+            self.setId(label)
+            # should we really clear label or leave it same as id?
+            if (False):
+                self.setLabel("")
+
 
 
     def convertAddBodyBlockSeq(self, node):
@@ -564,8 +700,8 @@ class JrAstEntry(JrAst):
             raise makeJriException("Internal error; could not find special entry options function '{}' in environment.".format(functionName), self)
         funcp = funcVal.getWrappedExpect(AstValFunction)
 
-        # force pointer to us
-        optionsArgList.setNamedArgValue("_entry", AstValObject(self.getSourceLoc(), self, self, False, True))
+        # force pointer to us (no longer used, we pass entry into the invoke now)
+        #optionsArgList.setNamedArgValue("_entry", AstValObject(self.getSourceLoc(), self, self, False, True))
 
         # invoke it (alwaysin run mode)
         retv = funcp.invoke(DefRmodeRun, env, self, None, self, optionsArgList, [])
@@ -580,20 +716,26 @@ class JrAstEntry(JrAst):
 
     def runPluginsOnEntry(self, env):
         #
-        parentEntry = self.getParentEntry()
-        if (parentEntry is not None):
-            parentChildPlugins = parentEntry.getChildPlugins()
-            if (parentChildPlugins is not None):
-                pluginIds = parentChildPlugins.split(",")
-                for pluginId in pluginIds:
-                    pluginManager = env.getPluginManager()
-                    plugin = pluginManager.findPluginById(DefPluginDomainEntryLeadProcessor, pluginId)
-                    if (plugin is None):
-                        raise makeJriException("Unknown plugin '{}:{}' in runPluginsOnEntry".format(DefPluginDomainEntryLeadProcessor, pluginId), self)
-                    # all plugin run their "processLead" function (which might change label, etc.)
-                    plugin.processEntry(env, self, parentEntry)
-
-
+        try:
+            parentEntry = self.getParentEntry()
+            if (parentEntry is not None):
+                parentChildPlugins = parentEntry.getChildPlugins()
+                if (parentChildPlugins is not None):
+                    pluginIds = parentChildPlugins.split(",")
+                    for pluginId in pluginIds:
+                        pluginManager = env.getPluginManager()
+                        plugin = pluginManager.findPluginById(DefPluginDomainEntryLeadProcessor, pluginId)
+                        if (plugin is None):
+                            raise makeJriException("Unknown plugin '{}:{}' in runPluginsOnEntry".format(DefPluginDomainEntryLeadProcessor, pluginId), self)
+                        # all plugin run their "processLead" function (which might change label, etc.)
+                        plugin.processEntry(env, self, parentEntry)
+        except Exception as e:
+            e = makeModifyJriExceptionAddLocIfNeeded(e, self, None)
+            interp = env.getInterp()
+            if (interp.getFlagContinueOnException()):
+                interp.displayException(e, True)
+            else:
+                raise e
 
 
 
@@ -611,24 +753,40 @@ class JrAstEntry(JrAst):
         # build output
         resultList = JrAstResultList()
 
-        #jrprint("RenderRun ({}): {}".format(rmode, self.getRuntimeDebugDisplay(env)))
+        #jrprint("RenderRun ({}): {}".format(rmode, self.getRuntimeDebugDisplay(env, entryp, inleadp)))
+
+        renderer = env.getRenderer()
+        addOutputToRenderer = (not self.calcIsSpecialEntryAlwaysRunDontRender())
 
         if (not self.getShouldRender()):
-            # setting this means we will NOT add a lead for this entry
+            # setting this means we will NOT add a renderlead for this entry
+            # ATTN: new 6/13/25 - we dont have to use this since we check below when iterating children
+            if False and (not optionJustReturnResults) and (not addOutputToRenderer):
+                # this means we are rendering ourselves AND we are a render = false
+                # so if we are not being embedded, and we are not a special no-render
+                # then we should not even run?
+                # ATTN: maybe better to check this when just dumping leads in a section?
+                return AstValNull(None, entryp)
             optionJustReturnResults = True
 
+
+        doCreateRenderBase = (addOutputToRenderer) and (not optionJustReturnResults) and (renderer is not None)
+
         # we wrap this childs renderrunning in a try catch exception in case we want to catch exceptions as warnings
-        lead = inleadp
+        renderBase = inleadp
         try:
             # get renderer (if not None)
-            renderer = env.getRenderer()
-            addOutputToRenderer = (not self.calcIsSpecialEntryAlwaysRunDontRender())
 
             # create lead early so that we can pass it around in renderrun (it will not have its contents yet)
-            if (addOutputToRenderer) and (not optionJustReturnResults):
-                if (level == 2):
-                    if (renderer is not None):
-                        lead = renderer.createLeadFromEntry(self, env)
+            if doCreateRenderBase:
+                # create the lead or section (both derived from renderBase)
+                if (level == 1):
+                    # create and add it (we need to add it now because child lead might be recursively created and need to access it)
+                    renderBase = renderer.createSectionFromEntry(self, env)
+                    renderer.addSection(renderBase)
+                elif (level == 2):
+                    # create this lead; no need to add it yet?
+                    renderBase = renderer.createLeadFromEntry(self, env)
 
             if (level > 2):
                 # when we are an entry bigger than level 2, we basically just use our label as a markdown header; as if it were just a text item
@@ -637,10 +795,11 @@ class JrAstEntry(JrAst):
 
             # BODY of this entry
             for blockSeq in self.bodyBlockSeqs:
-                retv = blockSeq.renderRun(rmode, env, self, lead)
+                retv = blockSeq.renderRun(rmode, env, self, renderBase)
                 resultList.flatAdd(retv)
 
         except Exception as e:
+            e = makeModifyJriExceptionAddLocIfNeeded(e, self, None)
             interp = env.getInterp()
             if (interp.getFlagContinueOnException()):
                 interp.displayException(e, True)
@@ -648,17 +807,13 @@ class JrAstEntry(JrAst):
                 raise e
 
 
-
-        # if its a level 1 section, then we create the section from the resultList; if it is level we we just collect text results from chilren and will add the list of them as a lead after
-        if (addOutputToRenderer) and (not optionJustReturnResults):
-            if (level == 1):
-                if (renderer is not None):
-                    renderer.addSectionFromEntryBlocks(self, resultList)
-
-
         # CHILDREN ENTRIES (RECURSIVE CALL)
         for child in self.entries.childList:
-            retv = child.renderRun(rmode, env, self, lead, optionJustReturnResults)
+            childShouldRenderFlag = child.getShouldRender()
+            if (not childShouldRenderFlag):
+                # ATTN: new 6/13/25 - when walking children we do not render this; these only get rendered on explicit embed
+                continue
+            retv = child.renderRun(rmode, env, self, renderBase, optionJustReturnResults)
             if (addOutputToRenderer) or (optionJustReturnResults):
                 if (level > 1):
                     resultList.flatAdd(retv)
@@ -675,18 +830,18 @@ class JrAstEntry(JrAst):
                 copyEntry = env.findEntryByIdPath(id, self)
             if (copyEntry is not None):
                 # add contents
-                # ATTN: 9/25/24 test
-                #resultList.flatAdd(copyEntry.renderRun(rmode, env, self, inleadp, True))
-                resultList.flatAdd(copyEntry.renderRun(rmode, env, self, lead, True))
+                resultList.flatAdd(copyEntry.renderRun(rmode, env, self, renderBase, True))
             else:
                 raise makeJriException("Entry is marked as copyFrom ({}) but could not find it".format(copyFromId), self)
 
 
         # if its level 2 lead, then create lead from contents
-        if (addOutputToRenderer) and (not optionJustReturnResults):
+        if doCreateRenderBase:
             if (level == 2):
-                if (renderer is not None):
-                    renderer.addLeadFromEntryBlocks(env, self, lead, resultList)
+                renderer.fileLeadWithBlockList(env, self, renderBase, resultList)
+            elif (level == 1):
+                # save built up contents of section
+                renderBase.setBlockList(resultList)
 
         if (level > 2) or (optionJustReturnResults):
             # bigger than level 2 its just the resultList we return which will be added to the higher level lead
@@ -928,8 +1083,8 @@ class JrAstFunctionCall(JrAst):
         super().printDebug(env, depth, "{}(..)".format(self.getFunctionName()))
 
 
-    def getRuntimeDebugDisplay(self, env):
-        niceCallString = self.calcResolvedArgListWithDetailsForDebug(env)
+    def getRuntimeDebugDisplay(self, env, entryp, leadp):
+        niceCallString = self.calcResolvedArgListWithDetailsForDebug(env, entryp, leadp)
         return "FUNCTION {}".format(niceCallString)
 
 
@@ -937,7 +1092,7 @@ class JrAstFunctionCall(JrAst):
         return self.functionName
 
 
-    def calcResolvedArgListWithDetailsForDebug(self, env):
+    def calcResolvedArgListWithDetailsForDebug(self, env, entryp, leadp):
         # to aid in debugging
 
         # get function pointer
@@ -946,7 +1101,7 @@ class JrAstFunctionCall(JrAst):
 
         # ask for the arg list
         compileTimeArgListString = self.argumentList.asDebugStr()
-        annotatedArgListString = funcp.calcAnnotatedArgListStringForDebug(env, self, self.argumentList, self.targetGroups)
+        annotatedArgListString = funcp.calcAnnotatedArgListStringForDebug(env, self, self.argumentList, self.targetGroups, entryp, leadp)
         return "{}({}) --> {}({})".format(functionName, compileTimeArgListString, functionName, annotatedArgListString)
 
 
@@ -955,25 +1110,27 @@ class JrAstFunctionCall(JrAst):
         functionName = self.getFunctionName()
         funcVal = env.getEnvValue(self, functionName, None)
         if (funcVal is None):
-            raise makeJriException("Runtime error; Attemped to invoke undefined function: {}(..).".format(self.getFunctionName()), self)
+            msg = "Runtime error; Attemped to invoke undefined function: ${}(..).".format(self.getFunctionName())
+            didYouMean = env.findDidYouMeanFunction(functionName)
+            if (didYouMean is not None):
+                msg += " Did you mean: " + didYouMean + "?"
+            raise makeJriException(msg, self)
         funcp = funcVal.getWrappedExpect(AstValFunction)
         return funcp
+
+
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
+        # most value return themselves
+        rmode = DefRmodeRun
+        retv = self.execute(rmode, env, entryp, leadp)
+        return retv
 
 
     def renderRun(self, rmode, env, entryp, leadp):
         #invoke the function
 
         funcRetVal = None
-        try:
-            funcRetVal = self.execute(rmode, env, entryp, leadp)
-            funcRetAsString = astOrNativeValueAsNiceString(funcRetVal, True)
-            #jrprint("run ({}) Functioncall {} returned {}".format(rmode, self.getRuntimeDebugDisplay(env), funcRetAsString))
-        except Exception as e:
-            interp = env.getInterp()
-            if (interp.getFlagContinueOnException()):
-                interp.displayException(e, True)
-            else:
-                raise e
+        funcRetVal = self.execute(rmode, env, entryp, leadp)
         return funcRetVal
 
 
@@ -1072,7 +1229,7 @@ class JrAstControlStatementIf(JrAst):
         consequenceResult = None
 
         # evaluate expression
-        expressionResultVal = self.ifExpression.resolve(env, True)
+        expressionResultVal = self.ifExpression.resolve(env, True, entryp, leadp)
         # is it true?
         evaluatesTrue = expressionResultVal.getWrappedExpect(AstValBool)
         if (evaluatesTrue):
@@ -1364,14 +1521,14 @@ class JrAstExpression(JrAst):
         return None
 
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
-        return self.element.resolve(env, flagResolveIdentifiers)
+        return self.element.resolve(env, flagResolveIdentifiers, entryp, leadp)
 
 
     def renderRun(self, rmode, env, entryp, leadp):
         #jrprint("RenderRun ({}) EXPRESSION".format(rmode))
-        retv = self.resolve(env, True)
+        retv = self.resolve(env, True, entryp, leadp)
         return retv
 
 
@@ -1388,12 +1545,12 @@ class JrAstExpressionBinary(JrAst):
         self.leftOperand = convertExpressionOperand(pnode.children[0], self)
         self.rightOperand = convertExpressionOperand(pnode.children[1], self)
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
         # run the operation on the resolved operand
         # resolve operand
-        leftOperandResolved = self.leftOperand.resolve(env, flagResolveIdentifiers)
-        rightOperandResolved = self.rightOperand.resolve(env, flagResolveIdentifiers)
+        leftOperandResolved = self.leftOperand.resolve(env, flagResolveIdentifiers, entryp, leadp)
+        rightOperandResolved = self.rightOperand.resolve(env, flagResolveIdentifiers, entryp, leadp)
         rule = self.rule
         #
         if (rule == JrCbLarkRule_Operation_Binary_add):
@@ -1524,11 +1681,11 @@ class JrAstExpressionUnary(JrAst):
         self.rule = rule
         self.operand = convertExpressionOperand(pnode.children[0], self)
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
         # run the operation on the resolved operand
         # resolve operand
-        operandResolved = self.operand.resolve(env, flagResolveIdentifiers)
+        operandResolved = self.operand.resolve(env, flagResolveIdentifiers, entryp, leadp)
         # run operation
         if (self.rule == JrCbLarkRule_Operation_Unary_neg):
             operationResult = self.operateNeg(operandResolved)
@@ -1576,10 +1733,10 @@ class JrAstExpressionAtom(JrAst):
         else:
             raise makeJriException("Internal error; unexpected token in atom expression ({}).".format(rule), pnode)
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
         # for an atom value, we just ask the value to resolve
-        operandResolved = self.operand.resolve(env, flagResolveIdentifiers)
+        operandResolved = self.operand.resolve(env, flagResolveIdentifiers, entryp, leadp)
         return operandResolved
 
     def getOperand(self):
@@ -1602,13 +1759,13 @@ class JrAstExpressionCollectionList(JrAst):
         self.itemList = itemList
 
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
 
         # for a list, we need to ask each item in list to resolve
         resolvedItemList = []
         for item in self.itemList:
-            resolvedItemList.append(item.resolve(env, flagResolveIdentifiers))
+            resolvedItemList.append(item.resolve(env, flagResolveIdentifiers, entryp, leadp))
         return AstValList(self, self, resolvedItemList)
 
 
@@ -1629,15 +1786,18 @@ class JrAstExpressionCollectionDict(JrAst):
 
 
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # resolve the expression (recursively using ast)
+
+        flagReadOnly = False
+        flagCreateKeyOnSet = True
 
         # for a dict, we need to ask each item in dict to resolve
         resolvedItemDict = {}
         for key, item in self.itemDict.items():
-            resolvedItemDict[key] = item.resolve(env, flagResolveIdentifiers)
-        return AstValDict(self, self, resolvedItemDict)
-
+            resolvedItemDict[key] = item.resolve(env, flagResolveIdentifiers, entryp, leadp)
+        aDict = AstValDict(self, self, resolvedItemDict, flagReadOnly, flagCreateKeyOnSet)
+        return aDict
 
 
 
@@ -1725,7 +1885,7 @@ class JrAstEntryChildHelper(JrAst):
         # return info on an existing child or NONE if none matches
         if (self.childIdHash is None):
             return None
-        entryId = entryAst.getEntryIdFallback(JrCb_blankEntryId)
+        entryId = entryAst.getEntryIdFallback(DefCbDefine_IDEmpty)
         if (entryId in self.childIdHash):
             return self.childIdHash[entryId]
         return None
@@ -1738,19 +1898,14 @@ class JrAstEntryChildHelper(JrAst):
             self.childIdHash = {}
 
         # add to hash
-        entryId = childAst.getEntryIdFallback(JrCb_blankEntryId)
-        # now, does this ID already exist? (if its blank no id, then dont even bother)
-        # ATTN: we dont worry about this any more, since we want to allow some entries with non-unique ids
-        if (False) and (entryId!=JrCb_blankEntryId) and (entryId in self.childIdHash):
-            # it already exists! i dont think this branch should ever take place, since caller checks for this and tries to merge INSTEAD of calling this
-            raise makeJriException("Internal grammar error: Asked to add child item with a duplicate id that is already a child of parent ({}).".format(entryId), pnode)
-        else:
+        # ATTN: im not sure we even use the hash for fast lookups currently
+        entryId = childAst.getEntryIdFallback(DefCbDefine_IDEmpty)
+        if (True):
             # add it
             childIndex = len(self.childList)
             self.childList.append(childAst)   
-            # add hash if it has an id; note that check above should prevent it from ever overwriting/clashing
-            if (entryId != JrCb_blankEntryId):
-                self.childIdHash[entryId] = childAst
+            # add hash; note that it will overwrite if it already exists, which we dont really care about, error would have flagged earlier at time of creationg
+            self.childIdHash[entryId] = childAst
 
 
 
@@ -1761,11 +1916,14 @@ class JrAstEntryChildHelper(JrAst):
         try:
             return self.convertEntryAddMergeChildAstDoWork(env, pnode, expectedLevel)
         except Exception as e:
+            e = makeModifyJriExceptionAddLocIfNeeded(e, self, None)
             interp = env.getInterp()
             if (interp.getFlagContinueOnException()):
                 interp.displayException(e, True)
             else:
                 raise e
+
+
 
 
     def convertEntryAddMergeChildAstDoWork(self, env, pnode, expectedLevel):
@@ -1774,12 +1932,11 @@ class JrAstEntryChildHelper(JrAst):
         newEntryAst.convertCoreFromPnode(pnode)
 
         # now see if this exists already as a child and should be merged
-        # ATTN: we only do this for top level sections!
-        id = newEntryAst.getId()
-        #if (expectedLevel==1) and (id != "BLANK" and id!=""):
-        if (id != "BLANK" and id!=""):
+        if (newEntryAst.shouldEntryIdBeUnique()):
+            # this id should be unique so see if there is another with this same id
             existingChild = self.findExistingEntryChild(newEntryAst)
         else:
+            #  we dont care about it being unique, so create a new one
             existingChild = None
 
         if (existingChild is None):
@@ -1787,7 +1944,7 @@ class JrAstEntryChildHelper(JrAst):
             self.addChild(env, newEntryAst, pnode)
             recurseEntryAst = newEntryAst
         else:
-            # we have an existing child with this id, so we will merge children into it, AFTER we check for conflicts
+            # we have an existing child with this id, so we check for conflicts and then merge children into it if there are none
             recurseEntryAst = existingChild
             # check for conflict
             if (jrfuncs.isNonEmptyString(newEntryAst.getLabel())):
@@ -1901,16 +2058,21 @@ class JrAstResultList:
     def append(self, item):
         self.contents.append(item)
 
-    def flatAdd(self, item):
+    def flatAdd(self, item, flagChangeBlankLinesToLatexNewlines=False):
         # if item being added is a list or another JrAstResultList then flatten it before adding
         if (isinstance(item, list)):
             for i in item:
-                self.flatAdd(i)
+                self.flatAdd(i, flagChangeBlankLinesToLatexNewlines)
         elif (isinstance(item, JrAstResultList)):
             for i in item.getContents():
-                self.flatAdd(i)
+                self.flatAdd(i, flagChangeBlankLinesToLatexNewlines)
         else:
+            if (flagChangeBlankLinesToLatexNewlines) and (item=="\n"):
+                item = vouchForLatexString(r"~\\"+"\n", True)
             self.append(item)
+
+    def flatAddBlankLine(self):
+        self.flatAdd("~\n")
 
     def getContents(self):
         return self.contents
@@ -1940,3 +2102,75 @@ class JrAstResultList:
             elif (isinstance(block, AstValString)):
                 block = 'AstValString: "{}"'.format(block.getWrapped())
             jrprint("         {}: {}".format(index+1, block))
+
+
+
+# result atom is going to be something we can add to result list
+class ResultAtom:
+    def __init__(self, value):
+        self.value = str(value)
+    def __str__(self):
+        return self.value
+    def isSafeLatex(self):
+        return False
+    def isMarkdown(self):
+        return False
+
+
+# ATTN: i want to move from vouched latex string to this;
+# so eventually vouched latex string will actually be ResultAtomLatex instanced
+class ResultAtomLatex(ResultAtom):
+    def __init__(self, value, flagIsEmbeddable):
+        super().__init__(value)
+        self.isEmbeddable = flagIsEmbeddable
+    def isSafeLatex(self):
+        return True
+    def getIsLatexEmbeddable(self):
+        return self.isEmbeddable
+
+
+
+class ResultAtomMarkdownString(ResultAtom):
+    def __init__(self, value):
+        super().__init__(value)
+    def isMarkdown(self):
+        return True
+
+
+class ResultAtomPlainString(ResultAtom):
+    def __init__(self, value):
+        super().__init__(value)
+
+
+class ResultAtomNote(ResultAtom):
+    def __init__(self, note):
+        super().__init__("")
+        self.note = note
+    def getNote(self):
+        return self.note
+    def isSafeLatex(self):
+        # it's safe latex because it's BLANK
+        return True
+
+
+
+
+
+
+
+
+def convertTypeStringToAstType(typeStr):
+    rmap = {
+        "string": AstValString,
+        "number": AstValNumber,
+        "bool": AstValBool,
+        "list": AstValList,
+        "dict": AstValDict,
+        "identifier": AstValIdentifier,
+    }
+    if (typeStr in rmap):
+        return rmap[typeStr]
+    # any kind
+    return None
+
+

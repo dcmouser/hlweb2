@@ -9,9 +9,17 @@ import os
 import pathlib
 import json
 
+
+if (True):
+    # GRAPHVIZ GENERATES A TON OF WARNINGS ABOUT DEPRECATED CALLS
+    import logging
+    # Get the logger for Graphviz (you might need to adjust the logger name based on the library specifics)
+    graphviz_logger = logging.getLogger('graphviz')
+    # Set the logger level to ERROR to suppress warnings and below
+    graphviz_logger.setLevel(logging.ERROR)
+
 # graphviz
 import graphviz
-
 
 
 
@@ -156,7 +164,7 @@ class CbMindManagerGv(CbMindManager):
                     shape = 'ellipse'
                     color = 'firebrick1'
                     penwidth = '2'
-                elif (subtype=="cond"):
+                elif (subtype in ['cond']):
                     shape = 'ellipse'
                     color = 'brown2'
                     penwidth = '2'
@@ -169,6 +177,10 @@ class CbMindManagerGv(CbMindManager):
                 else:
                     shape = 'hexagon'
                     color = 'red'
+            elif (mtype=='concept'):
+                shape='cylinder'
+                color = 'blue'
+                penwidth = '2'
             elif (mtype=='day'):
                 shape = 'circle'
                 penwidth = '2'
@@ -184,19 +196,30 @@ class CbMindManagerGv(CbMindManager):
                 color = 'red'
                 penwidth = '4'
 
-            if (mStyle is not None):
-                if (mStyle=="research"):
-                    # research nodes more dramatic
+            if (mStyle is not None) and (mtype!='entry'):
+                # we dont obey this for ENTRIES since we want them to look distinct
+                if (mStyle in ["research", "ally","contact"]):
+                    # contact/research nodes more dramatic; these are places the player may just go to, so we dont nesc. expect them to have links into them
+                    shape= 'house'
                     color = 'deepskyblue'
-                    penwidth = '3'
-                elif (mStyle=="hint"):
                     penwidth = '2'
-                    color = "purple"
+                if (mStyle in ["fingerprint", "crimehistory"]):
+                    # contact/research nodes more dramatic; these are places the player may just go to, so we dont nesc. expect them to have links into them
+                    shape = 'component'
+                    color = 'dodgerblue3'
+                    penwidth = '2'
+                elif (mStyle=="hint"):
+                    shape = 'egg'
+                    penwidth = '2'
+                    color = "chocolate2"
                 elif (mStyle=="inline"):
                     color = "darkcyan"
                 else:
                     # complain?
                     pass
+            #
+            if ("LEADS" in nodeId) or ("LEADS" in label):
+                jrprint("ATTN:DEBUG BREAK")
             #
             dot.node(nodeId, label, shape=shape, color=color, penwidth=penwidth)
 
@@ -204,8 +227,8 @@ class CbMindManagerGv(CbMindManager):
         # LINKS
         for link in self.links:
             arrowDirection = "forward"
-            sourceNodeId = link.source
-            targetNodeId = link.target
+            sourceNodeId = link.sourceHash
+            targetNodeId = link.targetHash
             #
             if (sourceNodeId is None) or (targetNodeId is None):
                 # ATTN: TODO support these kind of attribute labels
@@ -233,30 +256,43 @@ class CbMindManagerGv(CbMindManager):
                 penwidth = '1'
             elif (linkType in ['follows']):
                 color = 'brown'
-                penwidth = '3'
+                penwidth = '2'
                 arrowDirection = "reverse"
+                # reverse direction, requires change label
+                if (dotEdgeLabel == 'follows'):
+                    dotEdgeLabel = 'followed by'
+            elif (linkType in ['followed', 'proceed']):
+                color = 'brown'
+                penwidth = '2'
             elif (linkType=='provides'):
                 color = 'red'
                 penwidth = '2'
+            elif (linkType=='irp'):
+                color = 'blue'
+                penwidth = '1'
             #
             # travel
             elif (linkType=='embeds'):
                 color = 'darkcyan'
-                arrowDirection = 'reverse'
+                #arrowDirection = 'reverse'
             elif (linkType=='inlines'):
                 color = 'darkcyan'
-            elif (linkType=='inlineb'):
+            elif (linkType in ['inlineb', 'eventInline']):
                 color = 'darkcyan'
                 #arrowDirection = "both"
             elif (linkType=='returns'):
                 color = 'darkcyan'
             elif (linkType=='go'):
                 color = 'brown'
+            elif (linkType=='event'):
+                color = 'brown'
+            elif (linkType=='irp'):
+                color = 'brown'
             #
             # tags
-            elif (linkType=='gain'):
+            elif (jrfuncs.startsWithAny(linkType, ['gain', 'circle', 'underline', 'strike'])):
                 color = 'darkgreen'
-            elif (linkType in ['has','require','check','missing']):
+            elif (jrfuncs.startsWithAny(linkType, ['has','require','check','missing'])):
                 color = 'red'
                 arrowDirection = "reverse"
             # days
@@ -271,6 +307,10 @@ class CbMindManagerGv(CbMindManager):
             # ATTN: UNUSED so far
             elif (linkType=='hint'):
                 color = 'purple'
+
+            elif (linkType.startswith('concept')):
+                color = 'deeppink'
+                penwidth = '2'
 
             # unknoiwn
             else:
@@ -297,22 +337,26 @@ class CbMindManagerGv(CbMindManager):
             return True
         nodeId = node["id"]
         nodeLabel = node["label"]
-        # skip drawing it?
-        if (nodeLabel=="BLANK"):
-            return True
+        showDefault = node["showDefault"]
 
-        mStyle = node['mStyle'] if ('mStyle' in node) else None
+        # individual mStyle can be set to hide to hide it
+        mStyle = jrfuncs.getDictValueOrDefault(node, 'mStyle', None)
         if (mStyle=="hide"):
             return True
 
-        if (node["type"]=="entry"):
-            # entries we ONLY show if they are linked to
-            if (self.linkConnectsToNodeId(node["id"])):
-                return False
-            return True
+        # if set to show by default then dont hide it
+        if (showDefault):
+            return False
 
-        # by default dont skip
-        return False
+        #if (node["type"]=="entry"):
+            # entries (not leads but the basis for leads) we ONLY show if they are linked to
+
+        # if something connects to it then dont hide it
+        if (self.doesAnyLinkConnectToNodeId(node["id"])):
+            return False
+
+        # nothing connects and it doesnt show by default, so hide it
+        return True
 
 
     def shouldSkipDrawingNodeById(self, nodeId):
@@ -328,9 +372,9 @@ class CbMindManagerGv(CbMindManager):
         return None
 
 
-    def linkConnectsToNodeId(self, nodeId):
+    def doesAnyLinkConnectToNodeId(self, nodeId):
         for link in self.links:
-            if (link.source == nodeId) or (link.target == nodeId):
+            if (link.sourceHash == nodeId) or (link.targetHash == nodeId):
                 return True
         return False
 # ---------------------------------------------------------------------------

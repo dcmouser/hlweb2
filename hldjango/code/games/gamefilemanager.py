@@ -96,7 +96,7 @@ class GameFileManager:
         if (self.imageFileFinder is None):
             # create image file helper
             imageFileFinderOptions = {"stripExtensions": False}
-            self.imageFileFinder = JrFileFinder(imageFileFinderOptions, "game images (local and shared)")
+            self.imageFileFinder = JrFileFinder(imageFileFinderOptions, "game images (local and shared)", "combined")
             self.imageFileFinder.clearExtensionList()
             self.imageFileFinder.addExtensionListImages()
             # now scan
@@ -139,11 +139,12 @@ class GameFileManager:
                 fileDateString = jrfuncs.getNiceDateTimeCompact(fileDateTime)
                 fileSizeBytes = os.path.getsize(filePath)
                 fileSizeNiceStr = jrfuncs.niceFileSizeStr(fileSizeBytes)
+                urlExtraForCache = "?filetime=" + str(fileTimestamp)
                 fileEntry = {
                     "name": fileName,
                     "path": filePath,
                     "comment": "",
-                    "url": url,
+                    "url": url + urlExtraForCache,
                     "fileTimestamp": fileTimestamp,
                     "fileDateTime": fileDateTime,
                     "fileDateString": fileDateString,
@@ -284,8 +285,10 @@ class GameFileManager:
 
 
 
-    def copyPublishFiles(self, fromGameType, toGameType):
+    def copyPublishFiles(self, game, fromGameType, toGameType):
         # raise exception on error; otherwise return text message describing results
+
+        optionPublishVersionBackup = True
 
         # source directory
         fromDir = self.getDirectoryPathForGameType(fromGameType)
@@ -296,10 +299,18 @@ class GameFileManager:
         fromFileFile = self.buildFileList(fromGameType)
         if (len(fromFileFile)==0):
             raise Exception("No files found in source directory to copy from does: '{}'.".format(fromDir)) 
+        
 
         # destination
         toDir = self.getDirectoryPathForGameType(toGameType)
         self.prepareEmptyFileDirectoryForGameType(toGameType)
+
+        # alternate file naming possibility
+        draftKeyword = "draft"
+        publishedKeyword = "published"
+
+        # for storing versioned copies
+        versionBakDir = self.getDirectoryPathForGameType(EnumGameFileTypeName_VersionedGame)
 
         # ok now copy files
         fileCopyCount = 0
@@ -310,9 +321,19 @@ class GameFileManager:
             if (fileExt==".zip"):
                 # for zip file we do a substitue in filename
                 fileName = fileName.replace(fromGameType, toGameType)
+                fileName = fileName.replace(draftKeyword, publishedKeyword)
             filePathDest = os.path.join(toDir, fileName)
             jrfuncs.copyFilePath(filePathSource, filePathDest)
             fileCopyCount += 1
+            if (optionPublishVersionBackup) and (fileExt in [".zip", ".pdf"]) and ("_cover." not in fileName):
+                bakFilePathDest = os.path.join(versionBakDir, fileName)
+                versionStr = game.version
+                versionStr = versionStr.replace(".", "p")
+                nowTime = datetime.datetime.now()
+                currentDateStr = nowTime.strftime('_%Y%m%d_%H%M%S')
+                fileNameSuffix = "_published_{}_v{}".format(currentDateStr, versionStr)
+                suffixedPath = jrfuncs.addSuffixToPath(bakFilePathDest, fileNameSuffix)
+                jrfuncs.copyFilePath(filePathSource, suffixedPath)
         
         resultMessage = "Successfully copied ({}) files from {} to {}.".format(fileCopyCount, fromGameType, toGameType)
         return resultMessage
@@ -359,3 +380,22 @@ class GameFileManager:
 
 
 
+    def findCoverImage(self):
+        [imageFilePath, imageFileUrl] = self.findCoverImageInFileList(self.buildFileList(EnumGameFileTypeName_Published))
+        if (imageFilePath is None):
+            # fallback to debug cover
+            [imageFilePath, imageFileUrl] = self.findCoverImageInFileList(self.buildFileList(EnumGameFileTypeName_Debug))
+        # return it
+        return [imageFilePath, imageFileUrl]
+
+
+    def findCoverImageInFileList(self, fileList):
+        for fileEntry in fileList:
+            filePath = fileEntry["path"]
+            if ((filePath.endswith("_cover.jpg")) or (filePath.endswith("_cover.png"))):
+                imageFilePath = filePath
+                imageFileUrl = fileEntry["url"]
+                return [imageFilePath, imageFileUrl]
+        
+        # not found
+        return [None, None]

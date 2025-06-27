@@ -13,13 +13,32 @@
   <li><strong>Last name</strong>: {{customuser.last_name | naifblank}}</li>
 
   {% if user.is_authenticated %}
-    {% if customuser.pk == user.pk %}
+    {% if customuser.pk == user.pk or viewingUserHasGadamin %}
       <li><strong>Email</strong>: {{customuser.email}}</li>
     {% endif %}
   {% endif %}
 
-  <li><strong>BGG Link</strong>: {{customuser.bgglink | naifblank}}</li>
+  {% if userGroupString %}
+  <li><strong>Groups</strong>: {{userGroupString}}</li>
+  {% else %}
+  <li><strong>Groups</strong>: None</li>
+  {% endif %}
+
+  {% if userBggUrl %}
+  <li><strong>BGG Link</strong>: <a href="{{ userBggUrl|escape }}" target="_blank" rel="noopener noreferrer">{{userBggUrl}}</a></li>
+  {% endif %}
+
+  {% if user.webpage %}
+  <li><strong>Home page</strong>: <a href="{{ user.webpage|jrwrapurl|escape }}" target="_blank" rel="noopener noreferrer">{{user.webpage}}</a></li>
+  {% endif %}
+
+  {% if user.last_login %}
+  <li><strong>Last login</strong>: {{ user.last_login|date:"F j, Y, g:i a" }}</li>
+  {% endif %}
+
 </ul>
+
+
 
 
 {% if user.is_authenticated %}

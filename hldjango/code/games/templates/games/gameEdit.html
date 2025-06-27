@@ -8,20 +8,20 @@
 
 <h1>Edit Game "<a href="{% url 'gameDetail' game.slug %}">{{ game.name }}</a>" ({{ game.title }})</h1>
 
-<div class="gameEntry">
-    <p><b>Title:</b> {{ game.title }}</p>
-    <p><b>Owner:</b> {{ game.owner }}</p>
-    <p><b>Summary:</b> {{ game.summary }}</p>
-</div>
-
-
 <form action=""" method="post"> {% csrf_token %}
-    {{ form | crispy }}
+    <!-- new, moved buttons top top -->
     <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Manage attached files ({{ gameFileListCount }})</a>
     <a href="{% url 'gameChangeDir' game.slug %}" class="btn btn-info" role="button">Change file storage subdirname (experimental)</a>
-    <br/>
-    <a href="{% url 'gameDetail' game.slug %}" class="btn btn-primary" role="button">Cancel</a>
     <input class="btn btn-success" type="submit" name="saveBuild" value="Save Changes">
     <input class="btn btn-success" type="submit" name="saveBuildPreferred" value="Save Changes and Build Preferred">
+    <a href="{% url 'gameDetail' game.slug %}" class="btn btn-warning" role="button">Cancel</a>
+    <br/><br/>
+    <div class="gameEntry">
+        <p><b>Title:</b> {{ game.title }}</p>
+        <p><b>Owner:</b> {{ game.owner }}</p>
+        <p><b>Summary:</b> {{ game.summary }}</p>
+    </div>  
+
+    {% crispy form %}
 </form>
 {% endblock content %}

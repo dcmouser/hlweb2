@@ -1,0 +1,5 @@
+Type : Double Loop
+Loop  : 110	122
+Loop  : 125	212
+Delta : 37	263
+Delta : 218	250

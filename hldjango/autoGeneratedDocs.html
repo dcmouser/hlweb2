@@ -16,13 +16,19 @@
 <li>authors: None</li>
 <li>version: None</li>
 <li>versionDate: None</li>
+<li>status: None</li>
 <li>difficulty: None</li>
 <li>duration: None</li>
 <li>cautions: None</li>
 <li>summary: None</li>
 <li>extraCredits: None</li>
 <li>url: None</li>
+<li>copyright: None</li>
 <li>keywords: None</li>
+<li>gameSystem: None</li>
+<li>gameDate: None</li>
+<li>campaignName: None</li>
+<li>campaignPosition: None</li>
 <li>clockMode: True</li>
 </ul>
 
@@ -31,6 +37,13 @@
 <ul>
 <li>version: None</li>
 <li>versionPrevious: None</li>
+<li>seed: 0</li>
+</ul>
+
+<br/>
+<h2>localeData</h2>
+<ul>
+<li>language: en</li>
 </ul>
 
 <br/>
@@ -43,9 +56,23 @@
 <h2>rendererData</h2>
 <ul>
 <li>doubleSided: True</li>
-<li>latexPaperSize: 10</li>
+<li>latexPaperSize: letter</li>
 <li>latexFontSize: 10</li>
+<li>isNarrowPaperSize: False</li>
 <li>autoStyleQuotes: False</li>
+<li>bypassErrorOnMissingImage: None</li>
+<li>timeStyle: box</li>
+<li>defaultTimeStyle: bold</li>
+<li>zeroTimeStyle: hide</li>
+</ul>
+
+<br/>
+<h2>tagData</h2>
+<ul>
+<li>alwaysNumber: True</li>
+<li>consistentNumber: True</li>
+<li>mode: sequential</li>
+<li>sortRequire: True</li>
 </ul>
 
 <br/>
@@ -64,15 +91,15 @@
 <h2>_entryApplyOptions</h2>
 <ul>
 <li>Internal function for applying options to entry</li>
-<li>Usage: _entryApplyOptions(_entry, autoLead="False", time="None", timePos="", sectionColumns="None", leadColumns="None", sectionBreak="None", leadBreak="None", heading="None", toc="None", childPlugins="None", tombstones="None", address="None", copy="None", render="True", blank="False", mStyle="None", sortIndex="-1", continuedFrom="None", deadline="-1")</li>
+<li>Usage: _entryApplyOptions(id= NONE, autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
 <li>Parameters: <ul>
-<li>_entry: "Object pointer to entry whose options are being set"; required</li>
+<li>id: "id as parameter for overiding"; type=AstValString</li>
 
-<li>autoLead: "Automatically assign a lead id"; type=AstValBool; default="False"</li>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
 
 <li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
 
-<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']; default=""</li>
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
 
 <li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
 
@@ -86,25 +113,55 @@
 
 <li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
 
-<li>childPlugins: "Name of the plugins to run on children (optional)"; type=AstValString</li>
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
 
-<li>tombstones: "Should we show tombstombs between child entries"; type=AstValBool</li>
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
 
-<li>address: "Address line under heading/label (optional); set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
 
 <li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
 
-<li>render: "If set false this lead will not render"; type=AstValBool; default="True"</li>
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
 
-<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool; default="False"</li>
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
 
-<li>mStyle: "Set to a string keyword that informs mind map drawing (optional)"; type=AstValString</li>
-
-<li>sortIndex: "Sort index"; type=AstValNumber; default="-1"</li>
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
 
 <li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
 
-<li>deadline: "Deadline day for a check"; type=AstValNumber; default="-1"</li>
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>adjustTrack</h2>
+<ul>
+<li>adjust track value</li>
+<li>Usage: adjustTrack(id, val="", min= NONE, max= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "track id (A,B,C,D)"; type=AstValString; required</li>
+
+<li>val: "value to adust"; type=AstValNumber; default=""</li>
+
+<li>min: "min value"; type=AstValNumber</li>
+
+<li>max: "max value"; type=AstValNumber</li>
 
 </ul>
 </li>
@@ -114,21 +171,21 @@
 <h2>advanceTime</h2>
 <ul>
 <li>Instruct player to advance clock by some clicks</li>
-<li>Usage: advanceTime(time="1", box="True")</li>
+<li>Usage: advanceTime(time=60, box="default")</li>
 <li>Parameters: <ul>
-<li>time: "Duration (in minutes)"; type=AstValNumber; default="1"</li>
+<li>time: "Duration (in minutes)"; type=AstValNumber; default="60"</li>
 
-<li>box: "Put this text in a standalone box"; type=AstValBool; default="True"</li>
+<li>box: "Put this text in a standalone box"; type=[<class 'lib.casebook.jrastvals.AstValString'>]; default="default"</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>afterday</h2>
+<h2>afterDay</h2>
 <ul>
 <li>Text saying if after day</li>
-<li>Usage: afterday(day)</li>
+<li>Usage: afterDay(day)</li>
 <li>Parameters: <ul>
 <li>day: "Day number"; type=AstValNumber; required</li>
 
@@ -151,10 +208,10 @@
 </ul>
 
 <br/>
-<h2>autohint</h2>
+<h2>autoHint</h2>
 <ul>
 <li>generate an autohint</li>
-<li>Usage: autohint(id="", demerits="3")</li>
+<li>Usage: autoHint(id="", demerits=3)</li>
 <li>Parameters: <ul>
 <li>id: "ID of tag (or list of ids)"; type=AstValString; default=""</li>
 
@@ -165,12 +222,62 @@
 </ul>
 
 <br/>
-<h2>beforeday</h2>
+<h2>autoHintDependencies</h2>
+<ul>
+<li>tell player about hint dependencies</li>
+<li>Usage: autoHintDependencies(id="")</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>beforeDay</h2>
 <ul>
 <li>Text saying if before day</li>
-<li>Usage: beforeday(day)</li>
+<li>Usage: beforeDay(day)</li>
 <li>Parameters: <ul>
 <li>day: "Day number"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>block</h2>
+<ul>
+<li>Keep together as a block</li>
+<li>Usage: block(align="t"): {targetblock}</li>
+<li>Parameters: <ul>
+<li>align: "alignment of minipage block"; type=['t', 'b', 'c']; default="t"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>blurb</h2>
+<ul>
+<li>Add some text</li>
+<li>Usage: blurb(type, box= NONE, textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE)</li>
+<li>Parameters: <ul>
+<li>type: "The blurb type"; type=AstValString; required</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
 
 </ul>
 </li>
@@ -184,16 +291,70 @@
 </ul>
 
 <br/>
+<h2>blurbDay</h2>
+<ul>
+<li>Say some stuff about the day</li>
+<li>Usage: blurbDay(day, type="", box= NONE, textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE)</li>
+<li>Parameters: <ul>
+<li>day: "Number of the day"; type=AstValNumber; required</li>
+
+<li>type: "What type of info to show"; type=['dayTimeStart', 'dayDateStart', 'dayDateNoYear', 'calendar', 'timeStart']; default=""</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>blurbStop</h2>
 <ul>
 <li>Add some instructions to stop</li>
-<li>Usage: blurbStop(type, day="-1", rest="None")</li>
+<li>Usage: blurbStop(type, day=-1, rest= NONE, text= NONE, goLead= NONE)</li>
 <li>Parameters: <ul>
-<li>type: "The stop blurb type"; type=['dayStart', 'dayEnd', 'nextDay', 'nightStart', 'nightEnd', 'conclusion', 'questions', 'questionPause', 'resolvePause', 'solution', 'leads', 'documents', 'hints', 'end', 'begin', 'noMore']; required</li>
+<li>type: "The stop blurb type"; type=['dayStart', 'dayStartEvent', 'dayEnd', 'nextDay', 'nightStart', 'nightEnd', 'conclusion', 'questions', 'questionPause', 'resolvePause', 'solution', 'leads', 'documents', 'hints', 'end', 'begin', 'noMore', 'dayStartThenConclusion']; required</li>
 
 <li>day: "Number of the day"; type=AstValNumber; default="-1"</li>
 
 <li>rest: "Suggest player takes a rest?"; type=AstValBool</li>
+
+<li>text: "Alternate text"; type=AstValString</li>
+
+<li>goLead: "id of lead to go to"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>box</h2>
+<ul>
+<li>Put contents in box</li>
+<li>Usage: box(box="default", textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>box: "box style"; type=AstValString; default="default"</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
 
 </ul>
 </li>
@@ -212,10 +373,130 @@
 </ul>
 
 <br/>
+<h2>calendar</h2>
+<ul>
+<li>Draw a calendar of one or more months</li>
+<li>Usage: calendar(start, end, style="", strikeStart="", strikeEnd="", circle="", box= NONE, textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE)</li>
+<li>Parameters: <ul>
+<li>start: "Start date"; type=AstValString; required</li>
+
+<li>end: "End date"; type=AstValString; required</li>
+
+<li>style: "style of calendar (not supported yet, but eventually small and large)"; type=AstValString; default=""</li>
+
+<li>strikeStart: "date strikes start"; type=AstValString; default=""</li>
+
+<li>strikeEnd: "date strikes end"; type=AstValString; default=""</li>
+
+<li>circle: "date to circle"; type=AstValString; default=""</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>censor</h2>
+<ul>
+<li>censors a small section of text so it is unreadable</li>
+<li>Usage: censor(text)</li>
+<li>Parameters: <ul>
+<li>text: "Text to redact if you don't want to put it in a target block"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>cipher</h2>
+<ul>
+<li>generate some cipher text</li>
+<li>Usage: cipher(method, key= NONE, debug=false, removePunctuation=false, spellDigits=false, format=true, case= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>method: "Name of cipher method"; type=AstValString; required</li>
+
+<li>key: "The cipher key to use"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>debug: "Debug by showing info about the cipher at top in plaintext."; type=AstValBool; default="False"</li>
+
+<li>removePunctuation: "Remove punctuation? (spells out periods as 'stop')"; type=AstValBool; default="False"</li>
+
+<li>spellDigits: "Change digits to spelled version"; type=AstValBool; default="False"</li>
+
+<li>format: "Format the message nicely when appropriate"; type=AstValBool; default="True"</li>
+
+<li>case: "convert to upper or lower case"; type=['lower', 'upper', 'title', 'sentence']</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>circleTag</h2>
+<ul>
+<li>Mark a tag</li>
+<li>Usage: circleTag(id, box= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>circleUnderlinedTag</h2>
+<ul>
+<li>instruct user to circle an underlined tag and then extra</li>
+<li>Usage: circleUnderlinedTag(id, check="all", box= NONE, noif=false): {targetblock}</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureCampaign</h2>
+<ul>
+<li>Configure game campaign options</li>
+<li>Usage: configureCampaign(name= NONE, position)</li>
+<li>Parameters: <ul>
+<li>name: "Campaign name"; type=AstValString</li>
+
+<li>position: "Position in campaign sequence"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>configureClock</h2>
 <ul>
 <li>Configure game clock options</li>
-<li>Usage: configureClock(clockMode="True")</li>
+<li>Usage: configureClock(clockMode=true)</li>
 <li>Parameters: <ul>
 <li>clockMode: "True means that players will track how much time passes as they visit leads"; type=AstValBool; default="True"</li>
 
@@ -227,21 +508,95 @@
 <h2>configureDay</h2>
 <ul>
 <li>Configure a day</li>
-<li>Usage: configureDay(day, type="normal", start="9", end="18", hintAlly="financialPrecinct", allyFreeStart="-1", allyFreeEnd="-1")</li>
+<li>Usage: configureDay(day, type="normal", start=9, end=18, date= NONE, hintAlly="", allyFreeStart=-1, allyFreeEnd=-1, autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
 <li>Parameters: <ul>
 <li>day: "Number of the day"; type=AstValNumber; required</li>
 
 <li>type: "Day type"; type=AstValString; default="normal"</li>
 
-<li>start: "24 hour clock hour"; type=AstValNumber; default="9"</li>
+<li>start: "24 hour clock hour or string"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="9"</li>
 
-<li>end: "24 hour clock hour"; type=AstValNumber; default="18"</li>
+<li>end: "24 hour clock hour"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="18"</li>
 
-<li>hintAlly: "is there an ally they can visit for more help"; type=['', 'financialPrecinct']; default="financialPrecinct"</li>
+<li>date: "Date in form mm/dd/yyyy"; type=AstValString</li>
 
-<li>allyFreeStart: "tell the user this period is free"; type=AstValNumber; default="-1"</li>
+<li>hintAlly: "is there an ally they can visit for more help"; type=['', 'financialPrecinct']; default=""</li>
 
-<li>allyFreeEnd: "tell the user this period is free"; type=AstValNumber; default="-1"</li>
+<li>allyFreeStart: "start time where hint is free"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="-1"</li>
+
+<li>allyFreeEnd: "end time where hint is free"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="-1"</li>
+
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureDivider</h2>
+<ul>
+<li>Configure divider options</li>
+<li>Usage: configureDivider(id="lead", path= NONE, pgfornament= NONE, width="3cm", rule=false, align="center")</li>
+<li>Parameters: <ul>
+<li>id: "Divider id"; type=AstValString; default="lead"</li>
+
+<li>path: "Path to image (or specify 'none' for none or 'rule' for rule)"; type=AstValString</li>
+
+<li>pgfornament: "PgfOrnament id"; type=AstValNumber</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="3cm"</li>
+
+<li>rule: "put a side rule on either side of the image"; type=AstValBool; default="False"</li>
+
+<li>align: "Alignment"; type=['left', 'center', 'right']; default="center"</li>
 
 </ul>
 </li>
@@ -250,14 +605,184 @@
 <br/>
 <h2>configureDocuments</h2>
 <ul>
-<li>Configure document options</li>
-<li>Usage: configureDocuments(defaultLocation="back", printLocation="inline", printStyle="simple")</li>
+<li>Configure document options and documents section</li>
+<li>Usage: configureDocuments(defaultLocation="back", printLocation="inline", printStyle="simple", autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
 <li>Parameters: <ul>
 <li>defaultLocation: "Default location of documents [back,custom text]"; type=AstValString; default="back"</li>
 
 <li>printLocation: "Where to print documents [inline, end, pdf]"; type=['inline', 'end', 'pdf']; default="inline"</li>
 
 <li>printStyle: "Style to print documents [simple, triFold]"; type=['simple', 'triFold']; default="simple"</li>
+
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureEnd</h2>
+<ul>
+<li>Configure end section</li>
+<li>Usage: configureEnd(autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureFront</h2>
+<ul>
+<li>Configure front section</li>
+<li>Usage: configureFront(autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
 
 </ul>
 </li>
@@ -267,7 +792,7 @@
 <h2>configureGameInfo</h2>
 <ul>
 <li>Configure game options</li>
-<li>Usage: configureGameInfo(name, title, subtitle="", authors, version, versionDate, difficulty, duration)</li>
+<li>Usage: configureGameInfo(name, title, subtitle="", authors, version, versionDate, status="", difficulty, duration)</li>
 <li>Parameters: <ul>
 <li>name: "Simple unique name of the case (used for filenames, etc.)"; type=AstValString; required</li>
 
@@ -281,6 +806,8 @@
 
 <li>versionDate: "Date of this version (day/month/year)"; type=AstValString; required</li>
 
+<li>status: "Status of the game (playable, inprogress, etc.)"; type=AstValString; default=""</li>
+
 <li>difficulty: "From 1 to 5 (e.g. 3.5)"; type=AstValNumber; required</li>
 
 <li>duration: "Estimated play time in hours"; type=AstValNumber; required</li>
@@ -293,15 +820,21 @@
 <h2>configureGameInfoExtra</h2>
 <ul>
 <li>Configure game options</li>
-<li>Usage: configureGameInfoExtra(cautions="", url="", extraCredits="", keywords="")</li>
+<li>Usage: configureGameInfoExtra(gameSystem="nyNoir", gameDate="", cautions="", url="", copyright="", extraCredits="", keywords="")</li>
 <li>Parameters: <ul>
+<li>gameSystem: "Game system (nyNoir, shcd)"; type=AstValString; default="nyNoir"</li>
+
+<li>gameDate: "Date of the first day of the case in game time; as a string (mm/dd/yyyy)"; type=AstValString; default=""</li>
+
 <li>cautions: "Any cautions to players (eg. adult language)"; type=AstValString; default=""</li>
 
-<li>url: "Optional website url to learn more"; type=AstValString; default=""</li>
+<li>url: "Website url to learn more"; type=AstValString; default=""</li>
 
-<li>extraCredits: "Optional extra credits to show in listing and on cover page"; type=AstValString; default=""</li>
+<li>copyright: "Copyright line"; type=AstValString; default=""</li>
 
-<li>keywords: "Optional keywords"; type=AstValString; default=""</li>
+<li>extraCredits: "Extra credits to show in listing and on cover page"; type=AstValString; default=""</li>
+
+<li>keywords: "Keywords"; type=AstValString; default=""</li>
 
 </ul>
 </li>
@@ -320,14 +853,148 @@
 </ul>
 
 <br/>
+<h2>configureHints</h2>
+<ul>
+<li>Configure hint options and hints section</li>
+<li>Usage: configureHints(autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>configureLeadDb</h2>
 <ul>
 <li>Configure location data options (what database to use for looking up locations)</li>
-<li>Usage: configureLeadDb(version="v2", versionPrevious="")</li>
+<li>Usage: configureLeadDb(version="v2", versionPrevious="", seed= NONE)</li>
 <li>Parameters: <ul>
 <li>version: "Version of the location data"; type=AstValString; default="v2"</li>
 
 <li>versionPrevious: "Version of the previous location data (used to help check for migration problems)"; type=AstValString; default=""</li>
+
+<li>seed: "Random number generator seed used for randomizing unused leads"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureLeads</h2>
+<ul>
+<li>Configure leads options and leads section</li>
+<li>Usage: configureLeads(autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureLocale</h2>
+<ul>
+<li>Configure locale options</li>
+<li>Usage: configureLocale(language="en")</li>
+<li>Parameters: <ul>
+<li>language: "Language code [en|fr|es|...]"; type=AstValString; default="en"</li>
 
 </ul>
 </li>
@@ -344,15 +1011,189 @@
 <h2>configureRenderer</h2>
 <ul>
 <li>Configure renderer options</li>
-<li>Usage: configureRenderer(doubleSided="True", latexPaperSize="10", latexFontSize="10", autoStyleQuotes="False")</li>
+<li>Usage: configureRenderer(doubleSided=true, latexPaperSize="letter", latexFontSize=10, autoStyleQuotes=false, timeStyle="box", defaultTimeStyle="bold", zeroTimeStyle="hide")</li>
 <li>Parameters: <ul>
 <li>doubleSided: "Lay out page numbers for double sided printing (alternating corners)"; type=AstValBool; default="True"</li>
 
-<li>latexPaperSize: "Latex paper size"; type=['letter', 'A4', 'B6', 'A5']; default="10"</li>
+<li>latexPaperSize: "Latex paper size"; type=['letter', 'A4', 'B6', 'A5']; default="letter"</li>
 
 <li>latexFontSize: "Latex font size"; type=AstValNumber; default="10"</li>
 
 <li>autoStyleQuotes: "Auto style unicode left and right quote markers for more subtle font look (can cause hard-to-diagnose latex compilation errors)"; type=AstValBool; default="False"</li>
+
+<li>timeStyle: "How to display elapsed time in leads"; type=['box', 'header', 'hide']; default="box"</li>
+
+<li>defaultTimeStyle: "Whether to hide or dim default times"; type=['hide', 'normal', 'bold', 'red']; default="bold"</li>
+
+<li>zeroTimeStyle: "Whether to say explicitly when leads have 0 time"; type=['hide', 'normal', 'bold', 'red']; default="hide"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureReport</h2>
+<ul>
+<li>Configure reports options and reports section</li>
+<li>Usage: configureReport(autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureSection</h2>
+<ul>
+<li>Configure an arbitrary section</li>
+<li>Usage: configureSection(id, autoLead= NONE, time= NONE, timePos= NONE, sectionColumns= NONE, leadColumns= NONE, sectionBreak= NONE, leadBreak= NONE, heading= NONE, toc= NONE, childToc= NONE, childPlugins= NONE, dividers= NONE, address= NONE, copy= NONE, render= NONE, blank= NONE, mStyle= NONE, continuedFrom= NONE, headingStyle= NONE, childHeadingStyle= NONE, layout= NONE, label= NONE, sortGroup= NONE, sortKey= NONE, multiPage= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "Section ID"; type=AstValString; required</li>
+
+<li>autoLead: "Automatically assign a lead id"; type=AstValBool</li>
+
+<li>time: "Duration of lead (in minutes)"; type=AstValNumber</li>
+
+<li>timePos: "Position to add time instruction"; type=['', 'start', 'end', 'hide']</li>
+
+<li>sectionColumns: "Number of columns in Section main text"; type=AstValNumber</li>
+
+<li>leadColumns: "Number of columns in layout for child leads"; type=AstValNumber</li>
+
+<li>sectionBreak: "Break style for section"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>leadBreak: "Break style for child leads"; type=['', 'none', 'before', 'after', 'solo', 'beforeFacing', 'afterFacing', 'soloFacing', 'soloAfterFacing']</li>
+
+<li>heading: "Heading text shown on page (blank for none)"; type=AstValString</li>
+
+<li>toc: "Label for table of contents (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childToc: "Label for table of contents for children (blank to hide from table of contents)"; type=AstValString</li>
+
+<li>childPlugins: "Name of the plugins to run on children"; type=AstValString</li>
+
+<li>dividers: "Should we show dividers between child entries"; type=AstValBool</li>
+
+<li>address: "Address line under heading/label; set to 'auto' to auto grab from database or '' blank to mean none"; type=AstValString</li>
+
+<li>copy: "Entry id to copy contents from, or 'next' to copy from next lead"; type=AstValString</li>
+
+<li>render: "If set false this lead will not render"; type=AstValBool</li>
+
+<li>blank: "If set true then we will not show the header or add this to toc"; type=AstValBool</li>
+
+<li>mStyle: "Set to a string keyword that informs mind map drawing"; type=AstValString</li>
+
+<li>continuedFrom: "Add label saying 'continued from this lead"; type=AstValString</li>
+
+<li>headingStyle: "style for rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>childHeadingStyle: "default style for child lead rendering heading"; type=['header', 'footer', 'alsoFooter', 'huge']</li>
+
+<li>layout: "rendering layout styles"; type=AstValString</li>
+
+<li>label: "Label as parameter"; type=AstValString</li>
+
+<li>sortGroup: "sort group"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>sortKey: "sort key"; type=AstValString</li>
+
+<li>multiPage: "Should we show page N of M in header"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>configureTags</h2>
+<ul>
+<li>Configure tag options</li>
+<li>Usage: configureTags(alwaysNumber=true, consistentNumber=true, mode="sequential", sortRequire=true)</li>
+<li>Parameters: <ul>
+<li>alwaysNumber: "Always use marker ids like A1,B1,...A2,B2 instead of A,B..A2,B2, even if < 26 markers; default true; note the caselog.pdf need to amtch)"; type=AstValBool; default="True"</li>
+
+<li>consistentNumber: "If alwaysNumber is false, you can set this to change A,B,... to A1,B1,... if and only if there are enough markers to reach A2, etc."; type=AstValBool; default="True"</li>
+
+<li>mode: "mode to use when generating obfuscated labels"; type=['sequential', 'random', 'firstLetter']; default="sequential"</li>
+
+<li>sortRequire: "When presenting list of required tags for the day, sort them by (obfuscated) tag label; default true; set this to false if you set sequential false and order of hint checking is important; if false, order in requirement list will match order that tags were declared"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>date</h2>
+<ul>
+<li>format a date into a nice string</li>
+<li>Usage: date(date, year=true)</li>
+<li>Parameters: <ul>
+<li>date: "Date in form mm/dd/yyyy"; type=AstValString; required</li>
+
+<li>year: "should show year?"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>dayDate</h2>
+<ul>
+<li>format a day's date into a nice string</li>
+<li>Usage: dayDate(day, type="dayDate")</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+<li>type: "What type of info to show"; type=['dayTimeStart', 'dayDate', 'dayDateNoYear', 'mmddyyyy', 'dayOfWeek', 'timeStart']; default="dayDate"</li>
 
 </ul>
 </li>
@@ -385,6 +1226,28 @@
 </ul>
 
 <br/>
+<h2>debugFonts</h2>
+<ul>
+<li>do a test of all available fonts</li>
+<li>Usage: debugFonts(size= NONE, scale= NONE, color= NONE, hyphenate=true, monoSpace=false): {targetblock}</li>
+<li>Parameters: <ul>
+<li>size: "base font size"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>scale: "scale the font, use number from 0.1 to 10.0"; type=AstValNumber</li>
+
+<li>color: "override default color with color name"; type=AstValString</li>
+
+<li>hyphenate: "set to false to avoid splitting end of line words"; type=AstValBool; default="True"</li>
+
+<li>monoSpace: "set to true to force monospacing of font; defaults false)"; type=AstValBool; default="False"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>declareConst</h2>
 <ul>
 <li>Declarts a variable</li>
@@ -404,7 +1267,7 @@
 <h2>declareVar</h2>
 <ul>
 <li>Declarts a variable</li>
-<li>Usage: declareVar(var, val="None", desc="")</li>
+<li>Usage: declareVar(var, val= NONE, desc="")</li>
 <li>Parameters: <ul>
 <li>var: "The variable name to set"; type=AstValIdentifier; required</li>
 
@@ -417,10 +1280,96 @@
 </ul>
 
 <br/>
+<h2>defineConcept</h2>
+<ul>
+<li>Defines a tag</li>
+<li>Usage: defineConcept(id, label="")</li>
+<li>Parameters: <ul>
+<li>id: "The dotted identifier used to refer to the tag"; type=AstValString; required</li>
+
+<li>label: "Longer label describing the tag"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>defineFont</h2>
+<ul>
+<li>Defines a font</li>
+<li>Usage: defineFont(id, path="", size= NONE, scale= NONE, color= NONE, hyphenate=false, monoSpace=false, ignoreDupe=false)</li>
+<li>Parameters: <ul>
+<li>id: "The id that will refer to the font"; type=AstValString; required</li>
+
+<li>path: "Path to the font within the shared fonts dir"; type=AstValString; default=""</li>
+
+<li>size: "base font size (optional; prefer use of scale)"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>scale: "scale the font, use number from 0.1 to 10.0"; type=AstValNumber</li>
+
+<li>color: "override default color with color name see https://www.latextemplates.com/svgnames-colors)"; type=AstValString</li>
+
+<li>hyphenate: "set to true to let latex hyphenate and split long words at end of lines; defaults false)"; type=AstValBool; default="False"</li>
+
+<li>monoSpace: "set to true to force monospacing of font; defaults false)"; type=AstValBool; default="False"</li>
+
+<li>ignoreDupe: "if true this will be ignored if a font with this id already exists; otherwise an error will be thrown"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>defineFunc</h2>
+<ul>
+<li>define a new function</li>
+<li>Usage: defineFunc(id, params= NONE, description= NONE, customData= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>id: "Id name of the function"; type=AstValIdentifier; required</li>
+
+<li>params: "List of parameters"; type=AstValList</li>
+
+<li>description: "description of function"; type=AstValString</li>
+
+<li>customData: "customData set during function definition"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>defineQuestion</h2>
+<ul>
+<li>Create a question</li>
+<li>Usage: defineQuestion(id= NONE, summary= NONE, points= NONE, type= NONE, size= NONE, lines= NONE, choices= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>id: "Id of the question (like Q1)"; type=AstValString</li>
+
+<li>summary: "Summary of question for repeating in answer"; type=AstValString</li>
+
+<li>points: "Max points the question is worse"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>type: "Question type"; type=AstValString</li>
+
+<li>size: "How much size for answer space"; type=AstValNumber</li>
+
+<li>lines: "How many lines for answer spaces"; type=AstValNumber</li>
+
+<li>choices: "List of choices, separated by | character"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>defineTag</h2>
 <ul>
 <li>Defines a tag</li>
-<li>Usage: defineTag(tagId, deadline="-1", label="", location="None", obfuscatedLabel="None")</li>
+<li>Usage: defineTag(tagId, deadline=-1, label="", location= NONE, obfuscatedLabel= NONE, dependencies= NONE)</li>
 <li>Parameters: <ul>
 <li>tagId: "The dotted identifier used to refer to the tag"; type=AstValString; required</li>
 
@@ -430,25 +1379,213 @@
 
 <li>location: "Override default (document) location; use 'back' for back of book"; type=AstValString</li>
 
-<li>obfuscatedLabel: "Override default (document) obfuscated label"; type=AstValString</li>
+<li>obfuscatedLabel: "Override default (document) obfuscated label; set to 'label' to use the label"; type=AstValString</li>
+
+<li>dependencies: "list of tags we are dependent on when giving hints"; type=AstValString</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>dropcaps</h2>
+<h2>designateFile</h2>
+<ul>
+<li>Designate an uploaded file (local or shared) to be copied into certain builds</li>
+<li>Usage: designateFile(path, tag="publish", rename="")</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to uploaded file"; type=AstValString; required</li>
+
+<li>tag: "Tag which says how to use the file"; type=['debug', 'publish']; default="publish"</li>
+
+<li>rename: "Rename copied version of file when it is moved to publish set, etc."; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didCircleTag</h2>
+<ul>
+<li>Check if user circled tag</li>
+<li>Usage: didCircleTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didGainTag</h2>
+<ul>
+<li>Check if user gained tag</li>
+<li>Usage: didGainTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didMarkTag</h2>
+<ul>
+<li>Check if user marked tag</li>
+<li>Usage: didMarkTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didStrikeTag</h2>
+<ul>
+<li>Check if user underlined tag</li>
+<li>Usage: didStrikeTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didUnderlineNotCircleTag</h2>
+<ul>
+<li>Check if user marked tag</li>
+<li>Usage: didUnderlineNotCircleTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>didUnderlineTag</h2>
+<ul>
+<li>Check if user underlined tag</li>
+<li>Usage: didUnderlineTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>dither</h2>
+<ul>
+<li>Return cached path to ditherized version of an image file, ditherizing it the first time</li>
+<li>Usage: dither(path, mode="bw")</li>
+<li>Parameters: <ul>
+<li>path: "Image file path"; type=AstValString; required</li>
+
+<li>mode: "Ditherization mode"; type=AstValString; default="bw"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>divider</h2>
+<ul>
+<li>divider insert</li>
+<li>Usage: divider(id= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "Divider id"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>dropCaps</h2>
 <ul>
 <li>Drop cap effect for some text (make first letter BIG)</li>
-<li>Usage: dropcaps(style="", lines="4", multi="wrap"): {targetblock}</li>
+<li>Usage: dropCaps(style="letter", lines=3, multi="wrap", fIndent=0.25, nIndent=0.75, lHang=0): {targetblock}</li>
 <li>Parameters: <ul>
-<li>style: "drop cap style"; type=AstValString; default=""</li>
+<li>style: "drop cap style"; type=['letter', 'word', 'none', 'bold']; default="letter"</li>
 
-<li>lines: "height in lines"; type=AstValNumber; default="4"</li>
+<li>lines: "height in lines"; type=AstValNumber; default="3"</li>
 
-<li>multi: "how to handle multiple paragraphs [none, wrap, gap]"; type=AstValString; default="wrap"</li>
+<li>multi: "how to handle multiple paragraphs"; type=['none', 'wrap', 'gap']; default="wrap"</li>
+
+<li>fIndent: "findent"; type=AstValNumber; default="0.25"</li>
+
+<li>nIndent: "nIndent"; type=AstValNumber; default="0.75"</li>
+
+<li>lHang: "lHang"; type=AstValNumber; default="0"</li>
 
 <li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>effect</h2>
+<ul>
+<li>Build and cache (add to game file list) an effect version of image</li>
+<li>Usage: effect(path, effect)</li>
+<li>Parameters: <ul>
+<li>path: "Image file path"; type=AstValString; required</li>
+
+<li>effect: "Effect key"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>effectUp</h2>
+<ul>
+<li>text effect that makes first letter bold and bigger, and remaining words uppercase</li>
+<li>Usage: effectUp(text, enabled=true, style= NONE)</li>
+<li>Parameters: <ul>
+<li>text: "the text to operate one"; type=AstValString; required</li>
+
+<li>enabled: "set to false to disable"; type=AstValBool; default="True"</li>
+
+<li>style: "optional style (not supported yet)"; type=AstValString</li>
 
 </ul>
 </li>
@@ -458,15 +1595,17 @@
 <h2>embedFile</h2>
 <ul>
 <li>Embed another pdf/text file in output</li>
-<li>Usage: embedFile(path, pages="None", scale="None", pageStyle="")</li>
+<li>Usage: embedFile(path, pages="-", scale= NONE, pageStyle="", toc= NONE)</li>
 <li>Parameters: <ul>
 <li>path: "Relative path to file to embed"; type=AstValString; required</li>
 
-<li>pages: "Comma separated page list"; type=AstValString</li>
+<li>pages: "Comma separated page list"; type=AstValString; default="-"</li>
 
 <li>scale: "Scaled for embed"; type=AstValNumber</li>
 
 <li>pageStyle: "Page style to use for the page (use 'empty' to hide footer)"; type=AstValString; default=""</li>
+
+<li>toc: "Table of contents label"; type=AstValString</li>
 
 </ul>
 </li>
@@ -485,10 +1624,108 @@
 </ul>
 
 <br/>
+<h2>event</h2>
+<ul>
+<li>Boilerplate language to schedule an event</li>
+<li>Usage: event(lead= NONE, day= NONE, time= NONE, when= NONE, mandatory= NONE, label= NONE, duration= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>lead: "What lead player should read at schedule time"; type=AstValString</li>
+
+<li>day: "Day number when"; type=AstValNumber</li>
+
+<li>time: "Time when"; type=AstValString</li>
+
+<li>when: "When they can read/visit the lead"; type=AstValString</li>
+
+<li>mandatory: "is it mandatory"; type=AstValBool</li>
+
+<li>label: "Label of the event"; type=AstValString</li>
+
+<li>duration: "Duration of an inline lead"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>fingerPrint</h2>
+<ul>
+<li>insert a fingerprint image (DEPRECATED; instead use $image($fingerprintPath(..)))</li>
+<li>Usage: fingerPrint(id, finger, impression="2", style="", width="1in", align= NONE, showId=false, caption= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "lead id"; type=AstValString; required</li>
+
+<li>finger: "finger id in form L# or R# where # is finger number from 1-5"; type=AstValString; required</li>
+
+<li>impression: "the impression id (1=rolled clean in book, 2=dirtyslightlydif)"; type=AstValString; default="2"</li>
+
+<li>style: "style variant"; type=AstValString; default=""</li>
+
+<li>width: "Width (fraction where 0.5 is half page width) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1in"</li>
+
+<li>align: "Alignment"; type=['left', 'center', 'right']</li>
+
+<li>showId: "show the person ID?"; type=AstValBool; default="False"</li>
+
+<li>caption: "Alternative caption when not showing id"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>fingerPrintPath</h2>
+<ul>
+<li>get the path to the image of a fingerprint, so it can be used in an $image() function call</li>
+<li>Usage: fingerPrintPath(id, finger, impression="2")</li>
+<li>Parameters: <ul>
+<li>id: "lead id"; type=AstValString; required</li>
+
+<li>finger: "finger id in form L# or R# where # is finger number from 1-5"; type=AstValString; required</li>
+
+<li>impression: "the impression id (1=rolled clean in book, 2=dirtyslightlydif)"; type=AstValString; default="2"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>fingerPrintSet</h2>
+<ul>
+<li>insert a fingerprint image</li>
+<li>Usage: fingerPrintSet(id, style="", showId=false, caption= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "lead id"; type=AstValString; required</li>
+
+<li>style: "style variant"; type=AstValString; default=""</li>
+
+<li>showId: "show the person ID?"; type=AstValBool; default="False"</li>
+
+<li>caption: "Alternative caption when not showing id"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>flatAlpha</h2>
+<ul>
+<li>Return cached path to alpha flattened (white background) version of an image file</li>
+<li>Usage: flatAlpha(path)</li>
+<li>Parameters: <ul>
+<li>path: "Image file path"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>form</h2>
 <ul>
 <li>Form field insert</li>
-<li>Usage: form(type, size="None", choices="None")</li>
+<li>Usage: form(type, size= NONE, choices= NONE)</li>
 <li>Parameters: <ul>
 <li>type: "Form field type"; type=['short', 'mini', 'score', 'long', 'multiline', 'multipleChoice', 'checkAll']; required</li>
 
@@ -501,16 +1738,120 @@
 </ul>
 
 <br/>
+<h2>formCheckList</h2>
+<ul>
+<li>Show choices in a list with checkboxes</li>
+<li>Usage: formCheckList(choices, other=false)</li>
+<li>Parameters: <ul>
+<li>choices: "Choices separated by | character"; type=AstValString; required</li>
+
+<li>other: "Include an other option at end?"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>formLine</h2>
+<ul>
+<li>Single line form field</li>
+<li>Usage: formLine(margin="1in", pt=1, after= NONE)</li>
+<li>Parameters: <ul>
+<li>margin: "Margin to subtract from remainder of length on current line"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1in"</li>
+
+<li>pt: "Point thickness of line (default 1 for 1pt)"; type=AstValNumber; default="1"</li>
+
+<li>after: "Text to display at end of line"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>formNumber</h2>
+<ul>
+<li>Short number line or box</li>
+<li>Usage: formNumber(width="1cm", after= NONE)</li>
+<li>Parameters: <ul>
+<li>width: "Width of box"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1cm"</li>
+
+<li>after: "Text to display at end of line"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>formRadioList</h2>
+<ul>
+<li>Show choices in a list with checkboxes</li>
+<li>Usage: formRadioList(choices, other=false)</li>
+<li>Parameters: <ul>
+<li>choices: "Choices separated by | character"; type=AstValString; required</li>
+
+<li>other: "Include an other option at end?"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>formShort</h2>
+<ul>
+<li>Short line form field</li>
+<li>Usage: formShort(width="2in", pt=1, after= NONE)</li>
+<li>Parameters: <ul>
+<li>width: "Width of short form"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="2in"</li>
+
+<li>pt: "Point thickness of line (default 1 for 1pt)"; type=AstValNumber; default="1"</li>
+
+<li>after: "Text to display at end of line"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>formText</h2>
+<ul>
+<li>Multi line text form field</li>
+<li>Usage: formText(lines=2, width= NONE, pt=0.5)</li>
+<li>Parameters: <ul>
+<li>lines: "Number of lines"; type=AstValNumber; default="2"</li>
+
+<li>width: "Width of form line"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>pt: "Point thickness of line (default 0.5 for 0.5pt)"; type=AstValNumber; default="0.5"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>format</h2>
 <ul>
 <li>Format text</li>
-<li>Usage: format(style, box="None", symbol="None"): {targetblock}</li>
+<li>Usage: format(style="font", font= NONE, size= NONE, hyphenate=true, box= NONE, textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE): {targetblock}</li>
 <li>Parameters: <ul>
-<li>style: "style type"; type=['', 'radio', 'handwriting', 'typewriter', 'choice', 'warning', 'culture', 'dayTest']; required</li>
+<li>style: "style for formatting"; type=['', 'font', 'radio', 'news', 'handwriting', 'typewriter', 'choice', 'warning', 'culture', 'dayTest', 'quote', 'tornYellow', 'tornGray', 'compact', 'ttcompact']; default="font"</li>
 
-<li>box: "[true, false, stylename]"; type=[<class 'lib.casebook.jrastvals.AstValBool'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+<li>font: "font id previously set with defineFont()"; type=AstValString</li>
+
+<li>size: "size of font from "; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>hyphenate: "set to false to avoid splitting end of line words"; type=AstValBool; default="True"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
 
 <li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
 
 <li>:{targetblock} - a braced group of text to operate on</li>
 
@@ -519,30 +1860,76 @@
 </ul>
 
 <br/>
-<h2>gaintag</h2>
+<h2>formatList</h2>
 <ul>
-<li>Mark a tag</li>
-<li>Usage: gaintag(id)</li>
+<li>format a (numbered) list</li>
+<li>Usage: formatList(indent=true, divider= NONE): {targetblock}</li>
 <li>Parameters: <ul>
-<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+<li>indent: "Indent the paragraphs?"; type=AstValBool; default="True"</li>
+
+<li>divider: "Divider to use between items"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>golead</h2>
+<h2>gainDecoy</h2>
+<ul>
+<li>Create and have the player gain a decoy red herring tag</li>
+<li>Usage: gainDecoy(id="", box= NONE, deadline=-1, obfuscatedLabel= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; default=""</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>deadline: "Deadline label describing the tag"; type=AstValNumber; default="-1"</li>
+
+<li>obfuscatedLabel: "Override default (document) obfuscated label; set to 'label' to use the label"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>gainTag</h2>
+<ul>
+<li>Mark a tag</li>
+<li>Usage: gainTag(id, box= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>get</h2>
+<ul>
+<li>Gets a variable if its set, or default val if not</li>
+<li>Usage: get(var, val)</li>
+<li>Parameters: <ul>
+<li>var: "The variable name to set"; type=AstValIdentifier; required</li>
+
+<li>val: "The default value if the variable is not set"; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>goLead</h2>
 <ul>
 <li>Add text to go to lead</li>
-<li>Usage: golead(id, page="True", href="True", showLabel="False", back="False")</li>
+<li>Usage: goLead(id, style="default", back=false)</li>
 <li>Parameters: <ul>
 <li>id: "ID of lead"; type=AstValString; required</li>
 
-<li>page: "Show page number?"; type=AstValBool; default="True"</li>
-
-<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
-
-<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+<li>style: "style to show lead info"; type=['default', 'full', 'nolabel', 'plainid', 'page', 'pageparen', 'pagenum']; default="default"</li>
 
 <li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
 
@@ -551,34 +1938,145 @@
 </ul>
 
 <br/>
-<h2>hastag</h2>
+<h2>hasTag</h2>
 <ul>
 <li>Check if user has tag</li>
-<li>Usage: hastag(id, check="all")</li>
+<li>Usage: hasTag(id, check="all", box= NONE, noif=false)</li>
 <li>Parameters: <ul>
 <li>id: "ID of tag"; type=AstValString; required</li>
 
-<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
+<h2>headerHere</h2>
+<ul>
+<li>Signify that the lead header should go HERE (instead of at top of lead)</li>
+<li>Usage: headerHere()</li>
+</ul>
+
+<br/>
 <h2>image</h2>
 <ul>
 <li>Insert an image</li>
-<li>Usage: image(path, width="", height="", borderWidth="0", padding="0")</li>
+<li>Usage: image(path, style= NONE, width= NONE, height= NONE, borderWidth= NONE, padding= NONE, align= NONE, caption= NONE, captionPos="bottom", captionSize= NONE, rule=false, wrap=false)</li>
 <li>Parameters: <ul>
 <li>path: "Relative path to file image"; type=AstValString; required</li>
 
-<li>width: "Width (e.g. 3in)"; type=AstValString; default=""</li>
+<li>style: "Choose from a preset style"; type=['frame', 'plain', 'bordered']</li>
 
-<li>height: "Height (e.g. 3in)"; type=AstValString; default=""</li>
+<li>width: "Width (fraction where 0.5 is half page width) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
 
-<li>borderWidth: "border width (in points; 0 for none)"; type=AstValNumber; default="0"</li>
+<li>height: "Height (fraction where 0.5 is half page height; use 'remaining' to size to remaining space on page)"; type=AstValString</li>
 
-<li>padding: "padding width (in points; 0 for none)"; type=AstValNumber; default="0"</li>
+<li>borderWidth: "border width (in points; 0 for none); default 0"; type=AstValNumber</li>
+
+<li>padding: "padding width (in points; 0 for none); default 0"; type=AstValNumber</li>
+
+<li>align: "Alignment"; type=['left', 'center', 'right']</li>
+
+<li>caption: "caption to show under image"; type=AstValString</li>
+
+<li>captionPos: "Position for caption'"; type=['top', 'bottom']; default="bottom"</li>
+
+<li>captionSize: "Size of caption (default='normal')"; type=AstValString</li>
+
+<li>rule: "put a side rule on either side of the image"; type=AstValBool; default="False"</li>
+
+<li>wrap: "Wrap subsequent text around image (must use align left)"; type=[<class 'lib.casebook.jrastvals.AstValBool'>, <class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>imageBehind</h2>
+<ul>
+<li>put an image behind text or other contents</li>
+<li>Usage: imageBehind(path, width=1, opacity=1.0, padding=0.025, height= NONE, scale="stretch", align="center", shadow=false, caption= NONE, captionPos="top", captionSize= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to file image"; type=AstValString; required</li>
+
+<li>width: "Width (fraction where 0.5 is half page width) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1"</li>
+
+<li>opacity: "fraction (0 to 1)"; type=AstValNumber; default="1.0"</li>
+
+<li>padding: "padding fraction (default 0.025)"; type=AstValNumber; default="0.025"</li>
+
+<li>height: "Force height (fraction of page; leave blank to match text"; type=AstValNumber</li>
+
+<li>scale: "Scaling mode "; type=['zoom', 'stretch', 'image']; default="stretch"</li>
+
+<li>align: "Alignment"; type=['center', 'left']; default="center"</li>
+
+<li>shadow: "Add drop shadow to image background?"; type=AstValBool; default="False"</li>
+
+<li>caption: "caption to show under image"; type=AstValString</li>
+
+<li>captionPos: "Position for caption"; type=['top', 'bottom']; default="top"</li>
+
+<li>captionSize: "Size of caption; default='normal'"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>imageMask</h2>
+<ul>
+<li>mask text with an image pair; useful for things like a burned note effect</li>
+<li>Usage: imageMask(path, width=1, align="center", caption= NONE, captionPos="bottom", captionSize= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to file image"; type=AstValString; required</li>
+
+<li>width: "Width (fraction where 0.5 is half page width) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1"</li>
+
+<li>align: "Alignment"; type=['center', 'left']; default="center"</li>
+
+<li>caption: "caption to show under image"; type=AstValString</li>
+
+<li>captionPos: "Position for caption"; type=['top', 'bottom']; default="bottom"</li>
+
+<li>captionSize: "Size of caption (default='normal')"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>imageOverlay</h2>
+<ul>
+<li>put an image in fromt of text or other contents</li>
+<li>Usage: imageOverlay(path, width=1, height, opacity=1.0, align="center", caption= NONE, captionPos="top", captionSize= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>path: "Relative path to file image"; type=AstValString; required</li>
+
+<li>width: "Width (fraction where 0.5 is half page width) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; default="1"</li>
+
+<li>height: "Height (fraction of page or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]; required</li>
+
+<li>opacity: "fraction (0 to 1)"; type=AstValNumber; default="1.0"</li>
+
+<li>align: "Alignment"; type=['center', 'left']; default="center"</li>
+
+<li>caption: "caption to show under image"; type=AstValString</li>
+
+<li>captionPos: "Position for caption"; type=['top', 'bottom']; default="top"</li>
+
+<li>captionSize: "Size of caption; default='normal'"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
 
 </ul>
 </li>
@@ -588,7 +2086,7 @@
 <h2>inline</h2>
 <ul>
 <li>Create inline</li>
-<li>Usage: inline(link="", label="", time="None", timePos="", demerits="0", unless="", back="False", mLabel=""): {targetblock}</li>
+<li>Usage: inline(link="", label="", time= NONE, timePos="", demerits=0, why="", back=false, mLabel=""): {targetblock}</li>
 <li>Parameters: <ul>
 <li>link: "Text link"; type=AstValString; default=""</li>
 
@@ -600,7 +2098,7 @@
 
 <li>demerits: "Demerit checkboxes"; type=AstValNumber; default="0"</li>
 
-<li>unless: "Unless text"; type=AstValString; default=""</li>
+<li>why: "why text (shown after demerit instruction)"; type=AstValString; default=""</li>
 
 <li>back: "direct them to return after visiting inline lead?"; type=AstValBool; default="False"</li>
 
@@ -616,7 +2114,7 @@
 <h2>inlineHint</h2>
 <ul>
 <li>Create inline</li>
-<li>Usage: inlineHint(link="", label="", time="None", timePos="", demerits="2", back="False", mLabel=""): {targetblock}</li>
+<li>Usage: inlineHint(link="", label="", time= NONE, timePos="", demerits=2, why="", back=false, mLabel=""): {targetblock}</li>
 <li>Parameters: <ul>
 <li>link: "Text link"; type=AstValString; default=""</li>
 
@@ -627,6 +2125,8 @@
 <li>timePos: "Position to add time instruction"; type=['', 'start', 'end']; default=""</li>
 
 <li>demerits: "Demerit checkboxes"; type=AstValNumber; default="2"</li>
+
+<li>why: "why text (shown after demerit instruction)"; type=AstValString; default=""</li>
 
 <li>back: "direct them to return after visiting inline lead?"; type=AstValBool; default="False"</li>
 
@@ -639,14 +2139,175 @@
 </ul>
 
 <br/>
+<h2>instructionsEndLastDay</h2>
+<ul>
+<li>Display boilerplate instructions to wrap up your case</li>
+<li>Usage: instructionsEndLastDay(day, overtime=false, demerits= NONE, goLead= NONE)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+<li>overtime: "Allow player to go into overtime"; type=AstValBool; default="False"</li>
+
+<li>demerits: "Demerits for going into overtime"; type=AstValNumber</li>
+
+<li>goLead: "id of lead to go to to end case"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>instructionsEvening</h2>
+<ul>
+<li>Display boilerplate instructions about how an evening event works</li>
+<li>Usage: instructionsEvening(day, next, reputationBonus=true, final=false)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+<li>next: "Next lead to go to after they finish"; type=AstValString; required</li>
+
+<li>reputationBonus: "Instruct them about reputation bonuses"; type=AstValBool; default="True"</li>
+
+<li>final: "Final evening"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>instructionsIrps</h2>
+<ul>
+<li>Display boilerplate instructions about irps</li>
+<li>Usage: instructionsIrps(start= NONE, gain= NONE, use=false, lastUse=false, max= NONE, when= NONE)</li>
+<li>Parameters: <ul>
+<li>start: "Tell player they are starting with this number of IRPs"; type=AstValNumber</li>
+
+<li>gain: "Tell player they are gaining this number of IRPs"; type=AstValNumber</li>
+
+<li>use: "Tell player to use them now"; type=AstValBool; default="False"</li>
+
+<li>lastUse: "Is it players last chance to use irps"; type=AstValBool; default="False"</li>
+
+<li>max: "Max irps player may spend now"; type=AstValNumber</li>
+
+<li>when: "When they can read/visit the leads? (blank for no comment)"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>instructionsPostQuestionsResume</h2>
+<ul>
+<li>Display boilerplate instructions to let player go back and read leads again</li>
+<li>Usage: instructionsPostQuestionsResume(day, demerits=0, tag= NONE, halve=true)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+<li>demerits: "Demerits for going into overtime"; type=AstValNumber; default="0"</li>
+
+<li>tag: "tagid to make them mark if they choose to skip bonus day"; type=AstValString</li>
+
+<li>halve: "Tell them to halve their score if they change"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>instructionsScheduledEvent</h2>
+<ul>
+<li>Display boilerplate instructions not to read entry unless triggering an event</li>
+<li>Usage: instructionsScheduledEvent()</li>
+</ul>
+
+<br/>
+<h2>instructionsStartDay</h2>
+<ul>
+<li>Tell the player some brief instructions of how to play using new event system</li>
+<li>Usage: instructionsStartDay(day, box="default", bonus=false, bonusReputation=0, bonusTag= NONE)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+<li>box: "Box style"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValBool'>]; default="default"</li>
+
+<li>bonus: "Is this a bonus day?"; type=AstValBool; default="False"</li>
+
+<li>bonusReputation: "reputation for skipping bonus day"; type=AstValNumber; default="0"</li>
+
+<li>bonusTag: "tag to make them mark if they choose to skip bonus day"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>leave</h2>
+<ul>
+<li>Text saying to leave because there is nothing for you here</li>
+<li>Usage: leave(reason= NONE, otherwise=true)</li>
+<li>Parameters: <ul>
+<li>reason: "Reason player should leave"; type=AstValString</li>
+
+<li>otherwise: "Show a divider and otherwise"; type=AstValBool; default="True"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>lederLine</h2>
+<ul>
+<li>Display right-aligned element</li>
+<li>Usage: lederLine(leftText, rightText)</li>
+<li>Parameters: <ul>
+<li>leftText: "Text for left side"; type=AstValString; required</li>
+
+<li>rightText: "Text for right side"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>lipsum</h2>
 <ul>
 <li>Add some test text</li>
-<li>Usage: lipsum(start="1", end="-1")</li>
+<li>Usage: lipsum(start=1, end=-1, length=0)</li>
 <li>Parameters: <ul>
 <li>start: "starting paragraph index"; type=AstValNumber; default="1"</li>
 
 <li>end: "ending paragraph index"; type=AstValNumber; default="-1"</li>
+
+<li>length: "maxlimum length in characters (0 for no limit)"; type=AstValNumber; default="0"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logic</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logic(target="", label="")</li>
+<li>Parameters: <ul>
+<li>target: "target lead or concept"; type=AstValString; default=""</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>logicConcept</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicConcept(target="", label="")</li>
+<li>Parameters: <ul>
+<li>target: "target lead or concept"; type=AstValString; default=""</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
 
 </ul>
 </li>
@@ -656,9 +2317,9 @@
 <h2>logicFollowedBy</h2>
 <ul>
 <li>Add mindmap node</li>
-<li>Usage: logicFollowedBy(target, label="")</li>
+<li>Usage: logicFollowedBy(source, label="")</li>
 <li>Parameters: <ul>
-<li>target: "Lead id"; type=AstValString; required</li>
+<li>source: "Lead id"; type=AstValString; required</li>
 
 <li>label: "Link label"; type=AstValString; default=""</li>
 
@@ -721,6 +2382,20 @@
 </ul>
 
 <br/>
+<h2>logicProceed</h2>
+<ul>
+<li>Add mindmap node</li>
+<li>Usage: logicProceed(target= NONE, label="")</li>
+<li>Parameters: <ul>
+<li>target: "target lead or concept"; type=AstValString</li>
+
+<li>label: "Link label"; type=AstValString; default=""</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>logicSuggestedBy</h2>
 <ul>
 <li>Add mindmap node</li>
@@ -752,9 +2427,9 @@
 <h2>marginNote</h2>
 <ul>
 <li>Add a short bit of text to the left or right margin; note that this doesn't seem to work right currently; left margins not showing?</li>
-<li>Usage: marginNote(position="left"): {targetblock}</li>
+<li>Usage: marginNote(pos="left"): {targetblock}</li>
 <li>Parameters: <ul>
-<li>position: "position of note"; type=['left', 'right']; default="left"</li>
+<li>pos: "position of note"; type=['left', 'right']; default="left"</li>
 
 <li>:{targetblock} - a braced group of text to operate on</li>
 
@@ -766,27 +2441,35 @@
 <h2>mark</h2>
 <ul>
 <li>Mark checkboxes</li>
-<li>Usage: mark(demerits="0", culture="0", extra="0", type="None", count="0")</li>
+<li>Usage: mark(type= NONE, count=0, demerits=0, culture=0, reputation=0, extra=0, helpful= NONE, why= NONE, upto=false)</li>
 <li>Parameters: <ul>
+<li>type: "type of mark to make"; type=AstValString</li>
+
+<li>count: "How many to mark"; type=AstValNumber; default="0"</li>
+
 <li>demerits: "Demerits to mark"; type=AstValNumber; default="0"</li>
 
 <li>culture: "Culture boxes to mark"; type=AstValNumber; default="0"</li>
 
+<li>reputation: "Reputation boxes to mark"; type=AstValNumber; default="0"</li>
+
 <li>extra: "Extra boxes to mark"; type=AstValNumber; default="0"</li>
 
-<li>type: "Mark type"; type=AstValString</li>
+<li>helpful: "Instruct to mark only if helpful"; type=AstValBool</li>
 
-<li>count: "How many to mark"; type=AstValNumber; default="0"</li>
+<li>why: "Label clarifying why"; type=AstValString</li>
+
+<li>upto: "Say up to (max)"; type=AstValBool; default="False"</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>mentiontags</h2>
+<h2>mentionTags</h2>
 <ul>
 <li>Just list some tags by their obfuscated ids (e.g. used when listing tags available for completionists)</li>
-<li>Usage: mentiontags(tags="")</li>
+<li>Usage: mentionTags(tags="")</li>
 <li>Parameters: <ul>
 <li>tags: "list of tags"; type=AstValString; default=""</li>
 
@@ -795,24 +2478,239 @@
 </ul>
 
 <br/>
-<h2>missingtag</h2>
+<h2>missingTag</h2>
 <ul>
 <li>Is player missing a tag</li>
-<li>Usage: missingtag(id, check="all")</li>
+<li>Usage: missingTag(id, check="all", box= NONE, noif=false)</li>
 <li>Parameters: <ul>
 <li>id: "ID of tag"; type=AstValString; required</li>
 
-<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>onday</h2>
+<h2>modifyText</h2>
+<ul>
+<li>modify text</li>
+<li>Usage: modifyText(case= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>case: "force case to uppercase, titlecase, or sentence case? [upper|title|sentence]"; type=['lower', 'upper', 'title', 'sentence']</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsArticle</h2>
+<ul>
+<li>an article</li>
+<li>Usage: newsArticle(style= NONE, block= NONE, dropCaps= NONE, headline= NONE, byline= NONE, headlineStyle= NONE, bylineStyle= NONE, divider= NONE, effectsOn= NONE, size= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "style variant"; type=AstValString</li>
+
+<li>block: "require this entire article to fit in a single block (column) together, dont split it"; type=AstValBool</li>
+
+<li>dropCaps: "Drop Caps style"; type=['letter', 'word']</li>
+
+<li>headline: "headline text"; type=AstValString</li>
+
+<li>byline: "byline text"; type=AstValString</li>
+
+<li>headlineStyle: "headline style variant"; type=AstValString</li>
+
+<li>bylineStyle: "byline style variant"; type=AstValString</li>
+
+<li>divider: "true to show divider at end of article, or specifiy divider id"; type=[<class 'lib.casebook.jrastvals.AstValBool'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>effectsOn: "use in interior commands like effectUp"; type=AstValBool</li>
+
+<li>size: "base font size"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsBannerBox</h2>
+<ul>
+<li>banner bax for right hand margin</li>
+<li>Usage: newsBannerBox(): {targetblock}</li>
+</ul>
+
+<br/>
+<h2>newsByLine</h2>
+<ul>
+<li>byline for article</li>
+<li>Usage: newsByLine(style="script", fit=false, bold=true): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "style variant"; type=AstValString; default="script"</li>
+
+<li>fit: "should force to fit on one line?"; type=AstValBool; default="False"</li>
+
+<li>bold: "bold text?"; type=AstValBool; default="True"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsEndLine</h2>
+<ul>
+<li>helper to jsut say continued on Page X</li>
+<li>Usage: newsEndLine(text= NONE)</li>
+<li>Parameters: <ul>
+<li>text: "text string (e.g. Continued on Page Four)"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsGroup</h2>
+<ul>
+<li>group of articles</li>
+<li>Usage: newsGroup(columns=3, raggedColumns= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>columns: "number of columns"; type=AstValNumber; default="3"</li>
+
+<li>raggedColumns: "disable column balancing?"; type=AstValBool</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsHeadline</h2>
+<ul>
+<li>headline for article</li>
+<li>Usage: newsHeadline(style="Large", fit=false, bold= NONE, underline= NONE, italic= NONE, case= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "style variant"; type=AstValString; default="Large"</li>
+
+<li>fit: "should force to fit on one line?"; type=AstValBool; default="False"</li>
+
+<li>bold: "bold text?"; type=AstValBool</li>
+
+<li>underline: "underline text?"; type=AstValBool</li>
+
+<li>italic: "italic text?"; type=AstValBool</li>
+
+<li>case: "force case to uppercase, titlecase, or sentence case? [upper|title|sentence]"; type=['lower', 'upper', 'title', 'sentence']</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsPaper</h2>
+<ul>
+<li>a newspaper page</li>
+<li>Usage: newsPaper(style="nyTimes", day= NONE, date= NONE, dateString= NONE, dateStringExtra= NONE, columns= NONE, raggedColumns= NONE, priceString= NONE, issueString= NONE, bannerPath= NONE, bannerLines=true, font= NONE, fontSize= NONE, landscape=false, parSpaceHead=0.4, parSpaceBody=0.6, lineSpace=1.2, articleStyle= NONE, headlineStyle= NONE, bylineStyle= NONE, dropCaps= NONE, dropCapsMulti="none", indent=true, block= NONE, divider= NONE, effectsOn= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>style: "style variant"; type=AstValString; default="nyTimes"</li>
+
+<li>day: "day number"; type=AstValNumber</li>
+
+<li>date: "date as string"; type=AstValString</li>
+
+<li>dateString: "arbitrary date string"; type=AstValString</li>
+
+<li>dateStringExtra: "arbitrary date string to add to date"; type=AstValString</li>
+
+<li>columns: "number of columns"; type=AstValNumber</li>
+
+<li>raggedColumns: "disable column balancing?"; type=AstValBool</li>
+
+<li>priceString: "price string (right hand margin)"; type=AstValString</li>
+
+<li>issueString: "issue string (left hand margin)"; type=AstValString</li>
+
+<li>bannerPath: "Relative path to file image"; type=AstValString</li>
+
+<li>bannerLines: "Put issue text etc inside banner lines below banner? If false they will be set above the banner bottom margin"; type=AstValBool; default="True"</li>
+
+<li>font: "font id"; type=AstValString</li>
+
+<li>fontSize: "size in points"; type=AstValString</li>
+
+<li>landscape: "display paper in landscape mode?"; type=AstValBool; default="False"</li>
+
+<li>parSpaceHead: "Change paragraph spacing for headline"; type=AstValNumber; default="0.4"</li>
+
+<li>parSpaceBody: "Change paragraph spacing for body of article"; type=AstValNumber; default="0.6"</li>
+
+<li>lineSpace: "Change line spacing"; type=AstValNumber; default="1.2"</li>
+
+<li>articleStyle: "article style variant"; type=AstValString</li>
+
+<li>headlineStyle: "headline style variant"; type=AstValString</li>
+
+<li>bylineStyle: "byline style variant"; type=AstValString</li>
+
+<li>dropCaps: "Drop Caps style for articles"; type=['letter', 'word', 'none', 'bold']</li>
+
+<li>dropCapsMulti: "how to handle multiple paragraphs"; type=['none', 'wrap', 'gap']; default="none"</li>
+
+<li>indent: "indent paragraphs?"; type=AstValBool; default="True"</li>
+
+<li>block: "require this all articles fit in a single (column) without splitting contents over a column"; type=AstValBool</li>
+
+<li>divider: "true to show divider at end of article, or specifiy divider id"; type=[<class 'lib.casebook.jrastvals.AstValBool'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>effectsOn: "use in interior commands like effectUp"; type=AstValBool</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>newsRule</h2>
+<ul>
+<li>an image for an article</li>
+<li>Usage: newsRule(style="nytimes")</li>
+<li>Parameters: <ul>
+<li>style: "style variant"; type=AstValString; default="nytimes"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>onAfterDay</h2>
+<ul>
+<li>Text saying if on or after day</li>
+<li>Usage: onAfterDay(day)</li>
+<li>Parameters: <ul>
+<li>day: "Day number"; type=AstValNumber; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>onDay</h2>
 <ul>
 <li>Text saying if on day</li>
-<li>Usage: onday(day)</li>
+<li>Usage: onDay(day)</li>
 <li>Parameters: <ul>
 <li>day: "Day number"; type=AstValNumber; required</li>
 
@@ -831,7 +2729,7 @@
 <h2>pageBackground</h2>
 <ul>
 <li>Set the current page background (useful for covers, etc.)</li>
-<li>Usage: pageBackground(path, opacity="1.0")</li>
+<li>Usage: pageBackground(path, opacity=1.0)</li>
 <li>Parameters: <ul>
 <li>path: "Relative path to image OR pdf file to use as the background image"; type=AstValString; required</li>
 
@@ -854,6 +2752,18 @@
 </ul>
 
 <br/>
+<h2>pointsLine</h2>
+<ul>
+<li>Display a line with form after leder</li>
+<li>Usage: pointsLine(text)</li>
+<li>Parameters: <ul>
+<li>text: "Text for left side"; type=AstValString; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>print</h2>
 <ul>
 <li>print value</li>
@@ -866,18 +2776,97 @@
 </ul>
 
 <br/>
-<h2>reflead</h2>
+<h2>questionAnswer</h2>
+<ul>
+<li>Display answer to a question</li>
+<li>Usage: questionAnswer(id= NONE, summary= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>id: "Id of the question (like Q1)"; type=AstValString</li>
+
+<li>summary: "Override summary"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>questionTotal</h2>
+<ul>
+<li>Display a line for them to record their total score from questions</li>
+<li>Usage: questionTotal()</li>
+</ul>
+
+<br/>
+<h2>quote</h2>
+<ul>
+<li>Quote format text</li>
+<li>Usage: quote(cite="", style="default", font= NONE, size= NONE, box= NONE, textColor= NONE, symbol= NONE, symbolColor= NONE, pos= NONE, width= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>cite: "citation credit (author); only used for quote type"; type=AstValString; default=""</li>
+
+<li>style: "style variant"; type=AstValString; default="default"</li>
+
+<li>font: "font id previously set with defineFont()"; type=AstValString</li>
+
+<li>size: "size of font"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>textColor: "color of Text"; type=AstValString</li>
+
+<li>symbol: "symbol"; type=AstValString</li>
+
+<li>symbolColor: "symbol color"; type=AstValString</li>
+
+<li>pos: "position alignment of enclosing box"; type=AstValString</li>
+
+<li>width: "Width as a decimal percentage (0.1 to 1.0) or string ending in [in|cm]"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>redact</h2>
+<ul>
+<li>redact some text so it is unreadable</li>
+<li>Usage: redact(text= NONE): {targetblock}</li>
+<li>Parameters: <ul>
+<li>text: "Text to redact if you don't want to put it in a target block"; type=AstValString</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>referDb</h2>
+<ul>
+<li>Lookup a lead by NAME and display a link to it</li>
+<li>Usage: referDb(id= NONE, style="default")</li>
+<li>Parameters: <ul>
+<li>id: "search string to look for"; type=AstValString</li>
+
+<li>style: "style to show lead info"; type=['default', 'full', 'nolabel', 'plainid', 'page', 'pageparen', 'pagenum']; default="default"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>referLead</h2>
 <ul>
 <li>Add text to refer to lead</li>
-<li>Usage: reflead(id, page="True", href="True", showLabel="False", back="False")</li>
+<li>Usage: referLead(id, style="default", back=false)</li>
 <li>Parameters: <ul>
 <li>id: "ID of lead"; type=AstValString; required</li>
 
-<li>page: "Show page number?"; type=AstValBool; default="True"</li>
-
-<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
-
-<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+<li>style: "style to show lead info"; type=['default', 'full', 'nolabel', 'plainid', 'page', 'pageparen', 'pagenum']; default="default"</li>
 
 <li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
 
@@ -886,32 +2875,65 @@
 </ul>
 
 <br/>
-<h2>requiretag</h2>
+<h2>referTag</h2>
 <ul>
-<li>Tell user they should leave if they dont have tag and come back when they do</li>
-<li>Usage: requiretag(id, check="all")</li>
+<li>refer to tag(s) by its obfuscated label</li>
+<li>Usage: referTag(id, combine="all")</li>
 <li>Parameters: <ul>
 <li>id: "ID of tag"; type=AstValString; required</li>
 
-<li>check: "check style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+<li>combine: "combine style [and,or] for multiple tags"; type=['', 'any', 'all']; default="all"</li>
 
 </ul>
 </li>
 </ul>
 
 <br/>
-<h2>returnlead</h2>
+<h2>renderFunctionTargets</h2>
 <ul>
-<li>Add text to go to lead</li>
-<li>Usage: returnlead(id="None", page="True", href="True", showLabel="False", back="False")</li>
+<li>render function targets at this location</li>
+<li>Usage: renderFunctionTargets()</li>
+</ul>
+
+<br/>
+<h2>requireTag</h2>
+<ul>
+<li>Tell user they should leave if they dont have tag and come back when they do</li>
+<li>Usage: requireTag(id, check="all", box= NONE, noif=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>reserveLead</h2>
+<ul>
+<li>Reserve a lead from the unused list so it will not be used by the auto lead generator</li>
+<li>Usage: reserveLead(id= NONE)</li>
 <li>Parameters: <ul>
 <li>id: "ID of lead"; type=AstValString</li>
 
-<li>page: "Show page number?"; type=AstValBool; default="True"</li>
+</ul>
+</li>
+</ul>
 
-<li>href: "Hyperlink clickable"; type=AstValBool; default="True"</li>
+<br/>
+<h2>returnLead</h2>
+<ul>
+<li>Add text to go to lead</li>
+<li>Usage: returnLead(id= NONE, style="default", back=false)</li>
+<li>Parameters: <ul>
+<li>id: "ID of lead"; type=AstValString</li>
 
-<li>showLabel: "Show label"; type=AstValBool; default="False"</li>
+<li>style: "style to show lead info"; type=['default', 'full', 'nolabel', 'plainid', 'page', 'pageparen', 'pagenum']; default="default"</li>
 
 <li>back: "tell them to come back after they visit lead"; type=AstValBool; default="False"</li>
 
@@ -920,12 +2942,16 @@
 </ul>
 
 <br/>
-<h2>separator</h2>
+<h2>scheduleIrp</h2>
 <ul>
-<li>separator insert</li>
-<li>Usage: separator(style="None")</li>
+<li>Boilerplate language to schedule an irp expenditure to read a lead</li>
+<li>Usage: scheduleIrp(lead, cost=1, when= NONE)</li>
 <li>Parameters: <ul>
-<li>style: "Separator style"; type=AstValString</li>
+<li>lead: "What lead player should read at schedule time"; type=AstValString; required</li>
+
+<li>cost: "Cost in IRP"; type=AstValNumber; default="1"</li>
+
+<li>when: "When they can read/visit the lead"; type=[<class 'lib.casebook.jrastvals.AstValNumber'>, <class 'lib.casebook.jrastvals.AstValString'>]</li>
 
 </ul>
 </li>
@@ -946,10 +2972,76 @@
 </ul>
 
 <br/>
+<h2>setDefault</h2>
+<ul>
+<li>Sets a variable to a value IF its not already set</li>
+<li>Usage: setDefault(var, val)</li>
+<li>Parameters: <ul>
+<li>var: "The variable name to set"; type=AstValIdentifier; required</li>
+
+<li>val: "The new value for the variable"; required</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>setTrack</h2>
+<ul>
+<li>set track value</li>
+<li>Usage: setTrack(id, val="", min= NONE, max= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "track id (A,B,C,D)"; type=AstValString; required</li>
+
+<li>val: "value to set"; type=[<class 'lib.casebook.jrastvals.AstValString'>, <class 'lib.casebook.jrastvals.AstValNumber'>]; default=""</li>
+
+<li>min: "min value"; type=AstValNumber</li>
+
+<li>max: "max value"; type=AstValNumber</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>strikeCircledTag</h2>
+<ul>
+<li>instruct user to strike a circled tag and then extra</li>
+<li>Usage: strikeCircledTag(id, check="all", box= NONE, noif=false): {targetblock}</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag"; type=AstValString; required</li>
+
+<li>check: "check style for multiple tags"; type=['', 'any', 'all']; default="all"</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+<li>noif: "hide the preliminary if"; type=AstValBool; default="False"</li>
+
+<li>:{targetblock} - a braced group of text to operate on</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>strikeTag</h2>
+<ul>
+<li>Strike through a tag</li>
+<li>Usage: strikeTag(id, box= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
 <h2>symbol</h2>
 <ul>
 <li>Insert symbol (unicode/icon) text</li>
-<li>Usage: symbol(id, color="None", size="None")</li>
+<li>Usage: symbol(id, color= NONE, size= NONE)</li>
 <li>Parameters: <ul>
 <li>id: "Symbol id"; type=AstValString; required</li>
 
@@ -972,9 +3064,37 @@
 <h2>toc</h2>
 <ul>
 <li>Generate and insert table of contents</li>
-<li>Usage: toc(columns="None")</li>
+<li>Usage: toc(columns= NONE)</li>
 <li>Parameters: <ul>
-<li>columns: "Number of columns for table of contents"; type=AstValNumber</li>
+<li>columns: "Number of columns for table of contents (leave blank for automatic based on page width)"; type=AstValNumber</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>underlineTag</h2>
+<ul>
+<li>Underline a tag</li>
+<li>Usage: underlineTag(id, box= NONE)</li>
+<li>Parameters: <ul>
+<li>id: "ID of tag (or list of ids)"; type=AstValString; required</li>
+
+<li>box: "box style"; type=AstValString</li>
+
+</ul>
+</li>
+</ul>
+
+<br/>
+<h2>vspace</h2>
+<ul>
+<li>add or remove vertical space</li>
+<li>Usage: vspace(amount, force=false)</li>
+<li>Parameters: <ul>
+<li>amount: "postive to add space, negative to remove; should be formatted as a number and then 'em' or 'pt' (eg. -5.5pt)"; type=AstValString; required</li>
+
+<li>force: "force the space and dont allow latex to tweak"; type=AstValBool; default="False"</li>
 
 </ul>
 </li>

@@ -8,19 +8,49 @@ from mistletoe import HtmlRenderer
 import html
 from itertools import chain
 from urllib.parse import quote
+import re
+
 from mistletoe import block_token
 from mistletoe import span_token
 from mistletoe.block_token import HtmlBlock
 from mistletoe.span_token import HtmlSpan
 from mistletoe.base_renderer import BaseRenderer
 
+# for underline support
+from mistletoe.span_token import SpanToken, add_token
+from mistletoe import span_token
 
+
+
+# adding support for underline
+class MyUnderline(SpanToken):
+    pattern = re.compile(r'__(.+?)__')  # Use re.compile to define the regex pattern
+    parse_inner = True  # Allows parsing of nested elements
+    parse_group = 1  # Specifies which regex group contains the content
+
+    def __init__(self, match):
+        pass
+    @classmethod
+    def read(cls, match):
+        return cls(target=match.group(1))
+
+
+# register globally (does not work, calling below)
+add_token(MyUnderline)
+    
+    
+    
 class JrHtmlRenderer(HtmlRenderer):
 #    def __init__(self, *extras, html_escape_double_quotes=False, html_escape_single_quotes=False, process_html_tokens=True, **kwargs):
 #        super().__init__(chain((), extras), html_escape_double_quotes, html_escape_single_quotes, process_html_tokens, **kwargs)
 
     def __init__(self, *extras, **kwargs):
         super().__init__(*extras, **kwargs)
+        # underline support
+        # doesnt seem to do anything
+        self.render_map["MyUnderline"] = self.render_underline
+        # needed?
+        #self.document.add_token(MyUnderline) 
 
 
     # block automatic list numbering
@@ -113,3 +143,10 @@ class JrHtmlRenderer(HtmlRenderer):
             addToToc = True
 
         return template.format(level=token.level, inner=inner)
+
+
+
+    def render_underline(self, token):
+        return f"<u>{self.render_inner(token)}</u>"
+
+

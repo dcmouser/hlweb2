@@ -20,7 +20,8 @@ def convertPdfFileToImageFile(sourcePdfFilePath, destinationImageFilePath, outpu
 
     # create teh IMAGES (this will not save them yet)
     #retv = convert_from_path(sourcePdfFilePath, dpi, None, 0, 0, outputExtension, poppler_path=poppler_path)
-    retv = convert_from_path(sourcePdfFilePath, dpi, poppler_path=poppler_path)
+    timeoutSecs = 10
+    retv = convert_from_path(sourcePdfFilePath, dpi, poppler_path=poppler_path, first_page=1, last_page=1, timeout=timeoutSecs)
     if (len(retv)>0):
         img = retv[0]
         jrfuncs.deleteFilePathIfExists(destinationImageFilePath)

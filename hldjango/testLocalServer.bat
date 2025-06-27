@@ -1,0 +1,1 @@
+python code/manage.py runserver_local_servestatic 0.0.0.0:8000 --noreload --settings hldjango.settingsdir.jrlocal_win10

@@ -1,0 +1,3 @@
+Type : Tented Arch
+Loop  : 113	173
+Delta : 113	234

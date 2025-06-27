@@ -1,0 +1,39 @@
+
+% see https://stackoverflow.com/questions/2553392/latex-rule-filling-the-line for /hrulefill replacement with thickness option
+\newcommand{\cbRuleFill}[2][0em]{\leaders\hbox{\rule[#1]{1pt}{#2}}\hfill}
+\newcommand{\cbRuleFillb}[2][0em]{\leavevmode\leaders\hbox{\rule[#1]{1pt}{#2}}\hfill\kern0pt}
+%\newcommand{\cbFormIndent}{\hspace*{0.25cm}}
+\newcommand{\cbFormIndent}{\hspace*{0.03\columnwidth}}
+
+
+% a form rule line that player can write on, of a specific width 
+\newcommand{\cbFormLine}[2]{
+    \rule[-0.25em]{#1}{#2}
+}
+
+
+% a form rule line that player can write on, using REMAINDER of the width on the current page, minus some margin
+\newcommand{\cbFormRemainderLine}[2]{
+    \cbRuleFill[-0.25em]{#2}
+}
+
+
+
+% form checlist, cbFormListCheck (uses the enumitem package)
+\newlist{cbFormListCheck}{itemize}{1}
+\setlist[cbFormListCheck]{label=\faSquare[regular], beginpenalty=10000, midpenalty=10000}
+
+
+
+% form radiolist, cbFormListRadio (uses the enumitem package)
+\newlist{cbFormListRadio}{itemize}{1}
+\setlist[cbFormListRadio]{label=\faCircle[regular], beginpenalty=10000, midpenalty=10000}
+
+
+% form other line in a cbFormListCheck
+% cbFormOther
+\newcommand{\cbFormOther}{
+Other: \cbFormLine{2in}{1pt}
+}
+
+

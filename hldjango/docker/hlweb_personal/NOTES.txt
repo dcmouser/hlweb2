@@ -1,5 +1,0 @@
-This is the docker you can use to test on a local pc building before going through trouble of web version
-After you build and run, open browser at:
-http://localhost/games
-
-Default initial superuser is: ADMIN / ADMIN

@@ -11,6 +11,8 @@ from django.utils.encoding import escape_uri_path
 # python modules
 import os
 
+from lib.jr import jrdfuncs
+
 
 # register template tags / functions
 register = template.Library()
@@ -112,4 +114,9 @@ def jrActiveUrl(context, urlPartials, css_class=None, inactive_class='', strict=
 @register.filter
 def justfilename(value):
     return os.path.basename(value)
+
+@register.filter
+def userIsAuthenticatedAndGadmin(user):
+    # Implement your logic here
+    return jrdfuncs.userIsAuthenticatedAndGadmin(user)
 

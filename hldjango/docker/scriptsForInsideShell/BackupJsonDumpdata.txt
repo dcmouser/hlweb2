@@ -1,0 +1,4 @@
+python manage.py dumpdata accounts > mybak_accounts.json
+python manage.py dumpdata core > mybak_core.json
+python manage.py dumpdata gadmin > mybak_gadmin.json
+python manage.py dumpdata games > mybak_games.json

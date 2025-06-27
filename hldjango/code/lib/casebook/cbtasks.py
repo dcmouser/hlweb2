@@ -9,6 +9,9 @@ from .casebookDefines import *
 from lib.jr import jrfuncs
 from lib.jr.jrfuncs import jrprint
 
+# python modules
+import logging
+import json
 
 
 # task helpers
@@ -26,6 +29,7 @@ class CbTaskLatex(CbTask):
 		    "latexRunViaExePath": DefCbRenderDefault_latexRunViaExePath,
 		    "latexExtraRuns": DefCbRenderDefault_latexExtraRuns,
             "latexQuietMode": DefCbRenderDefault_latexQuietMode,
+            "latexCompiler": DefCbRenderDefault_latexCompiler,
             # 
             "outputSuffix": DefCbRenderDefault_outputSuffix,
             "outputSubdir": DefCbRenderDefault_outputSubdir,
@@ -45,6 +49,11 @@ class CbTaskLatex(CbTask):
 
 
     def renderToPdf(self, suffixedOutputPath, suffixedBaseFileName, flagDebug, renderSectionName):
+
+        logger = logging.getLogger("app")
+        msg = "Running renderToPdf {}/{}".format(suffixedOutputPath, suffixedBaseFileName)
+        logger.debug(msg)
+
         # now run the renderer
         renderDoc = self.getRenderer()
         # set options AGAIN; this will OVERWRITE any options set by casebook code that got executed during interpret build stage before rendering, and allow the task to overwrite those values
@@ -58,6 +67,8 @@ class CbTaskLatex(CbTask):
         return [retv, fileList]
 
 
+    def getTaskOptions(self):
+        return self.taskOptions
 
 
 

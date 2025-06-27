@@ -2,25 +2,11 @@
 
 
 {% block content %}
-<p>This is the New York Noir Web Services Website {{versionString}}. </p>
-<p>This website facilitate the construction of case game books for the New York Noir Mysteries game.</p>
-<p>Please contact us if you would like to author games for New York Noir Mysteries and need an author account.</p>
-<p></p>
 
-<h2>Documentation for Casebook Syntax</h2>
-<ul>
-<li>Cases for New York Noir are written in a custom markup language called <a href="https://docs.google.com/document/d/1cSOF75-341V9mbW2D6o__ErDuTtgkmoulFWOyPbb2uk/edit?usp=sharing" target="_blank">Casebook</a>.</li>
-</ul>
+{{ pageHtml |safe }}
 
-<h2>Other Links</h2>
-<ul>
-<li>Visit the BoardGameGeek <a href="https://boardgamegeek.com/boardgame/418459/new-york-noir-mysteries-high-and-low" target="_blank">game page for New York Noir</a>.</li>
-<li>Download and play <a href="https://boardgamegeek.com/thread/3276594/play-the-wrong-book-case-now" target="_blank">"The Wrong Book"</a> sample case.</li>
-<li>Watch on the Co-op for Two YouTube channel: <a href="https://www.youtube.com/watch?v=h9-hC6y8Uzk&list=PLUuYfoWEBEMVLSaeqiDm7ZqG0JnascxtI" target="_blank">New York Noir game design diary playlist</a>.</li>
-<li>Join the New York Noir <a href="https://discord.gg/fgyp9ZBE9Y" target="_blank">Discord chat server</a>.</li>
-<li>Contact me (Jesse Reichler) via email at <a href="mailto:jessereichler@gmail.com" target="_blank">jessereichler@gmail.com</a>.</li>
-<!--<li><a href="http://highandlow.s3-website-us-east-1.amazonaws.com/" target="_blank">Experimental New York Noir online directory</a></li>-->
-</ul>
+<h2>Version History</h2>
+<div class="jrVersionHistoryPre">{{ versionHistory }}</div>
 
 
 {% endblock content %}

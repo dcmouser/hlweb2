@@ -1,23 +1,38 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
-from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
-
+from django.http import HttpResponseRedirect, Http404
+from django.db.models import Q
+from django.db.models import F, Func, Value
+from django.db.models.functions import NullIf
+from django.db.models.expressions import OrderBy
+from django.db.models import Case, When, Value, CharField
+#
+from django.template.loader import render_to_string
+from django.http import HttpResponseForbidden
+from django.core.exceptions import ValidationError
+from django.http import FileResponse
+#
+from django.conf import settings
 
 # python modules
 import os
 import uuid
 
+# for downloading image files as zip
+import zipfile
+from io import BytesIO
+
+
 # user modules
 from .models import Game, GameFile
 from .forms import GameFileMultipleUploadForm, GameFormForEdit, GameFormForCreate, GameFormForChangeDir
 from . import gamefilemanager
-from lib.jr import jrdfuncs
+from lib.jr import jrdfuncs, jrfuncs
 
-
+from lib.casebook.casebookDefines import *
 
 
 
@@ -43,6 +58,63 @@ class GameListView(ListView):
     model = Game
     template_name = "games/gameList.html"
 
+    def get_queryset(self, *args, **kwargs): 
+        sort = self.request.GET.get('sort', 'admin')
+        onlyPublic = self.request.GET.get('onlyPublic', False)
+        #
+        # basic query
+        qs = super(GameListView, self).get_queryset()
+        # now filter
+        requestUser = self.request.user
+        if (onlyPublic) or (not requestUser.is_authenticated):
+            qs = Game.objects.filter(Q(isPublic=True))
+        else:
+            isAdmin = jrdfuncs.userIsAuthenticatedAndGadmin(requestUser)
+            if (isAdmin):
+                # show them full list
+                pass
+            else:
+                # show them THEIR games and PUBLIC games
+                qs = Game.objects.filter(Q(owner=requestUser) | Q(isPublic=True))
+        #
+        # new sortable
+        sort_map = {
+            'owner': {'primary': 'owner'},
+            'title': {'primary': 'title'},
+            'created': {'primary': 'created', 'descending': True},
+            'modified': {'primary': 'modified', 'descending': True},
+            'default': {'primary': 'adminSortKey'},
+            'campaign': {'primary': 'campaignName','secondary':'campaignPosition'}
+        }
+        sort_field = sort_map.get(sort, {'primary':'adminSortKey'})
+        #
+        primary = sort_field["primary"]
+        secondary = sort_field["secondary"] if ("secondary" in sort_field) else None
+        descending = sort_field["descending"] if ("descending" in sort_field) else False
+        #
+        # this code forces blank values for fields to sort at bottom (even in case of empty string); this is important when sorting by something like campaign or adminSortKey where blank values should be lower
+        if (secondary is None):
+            qs = qs.order_by(
+                OrderBy(F(primary), descending=descending, nulls_last=True)
+            )
+        else:
+            qs = qs.order_by(
+                OrderBy(NullIf(F(primary), Value('')), descending=descending, nulls_last=True),
+                OrderBy(NullIf(F(secondary), Value('')), nulls_last=True),
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_sort'] = self.request.GET.get('sort', 'admin')
+        context['current_onlyPublic'] = self.request.GET.get('onlyPublic', False)
+        requestUser = self.request.user
+        return context
+
+
+
+
+
 
 class GameDetailView(UserPassesTestMixin, DetailView):
     model = Game
@@ -59,7 +131,9 @@ class GameDetailView(UserPassesTestMixin, DetailView):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
         # true if the game is public OR we are the owner
-        return (obj.owner == self.request.user) or (obj.isPublic)
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user) or (obj.isPublic))
+
+
 
 
 
@@ -70,6 +144,13 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = "games.add_game"
     template_name = "games/gameCreate.html"
     #fields = ["name", "preferredFormatPaperSize", "preferredFormatLayout", "isPublic", "text"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add the URL to the context
+        context['sampleStartingTemplateUrl'] = DefCbDefine_NewGameStartingSourceTemlateUrl
+        context['simpleStartingTemplateUrl'] = DefCbDefine_NewGameSimpleSourceTemlateUrl
+        return context
 
     def form_valid(self, form):
         # force owner field to logged in creating user
@@ -85,6 +166,25 @@ class GameCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         #self.object.subdirname = uuid.uuid4()
         return response
 
+    def get_initial(self):
+        """
+        Returns the initial data to use for forms on this view.
+        """
+        initial = super().get_initial()
+        text = "// For a mostly blank starting game template see: " + DefCbDefine_NewGameStartingSourceTemlateUrl + "\n"
+        text += "// For a short but fully working sample case see: " + DefCbDefine_NewGameSimpleSourceTemlateUrl + "\n"
+        initial['text'] = text + "\n\n"
+        return initial
+
+    def handle_no_permission(self):
+        # You can render a custom template or return any HttpResponse here
+        if self.raise_exception or self.request.user.is_authenticated:
+            #context = self.get_context_data()
+            context = {}
+            content = render_to_string("games/missingPermissionToCreateGame.html", context, self.request)
+            return HttpResponseForbidden(content)
+        return super().handle_no_permission()
+
 
 
 
@@ -94,6 +194,16 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = GameFormForEdit
     template_name = "games/gameEdit.html"
 
+    def get_form_kwargs(self):
+        # we need a custom get_form_kwargs function so that we can add ownerId to it
+        """Pass the owner_id to the form."""
+        kwargs = super(GameEditView, self).get_form_kwargs()
+        if self.object:  # Check if the object exists
+            kwargs['ownerId'] = self.object.owner.id
+        # request user
+        kwargs['requestUser'] = self.request.user  # Pass user to the form
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         # override to add context
         context = super().get_context_data(**kwargs)
@@ -104,8 +214,7 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.owner == self.request.user)
-
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user))
 
     def form_valid(self, form):
         game = self.object
@@ -119,7 +228,7 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if ("slug" in form.changed_data):
             game.flagSlugChanged = True
 
-        # save
+        # save -- BUT we have a problem, if there is an error for a field that is dynamically set from contents options, it will LOOK bad to the validator even though we are going to replace it
         response = super(GameEditView, self).form_valid(form)
 
         # now check if there is an error in settings
@@ -147,11 +256,10 @@ class GameEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             #return response
 
         # error; report it
-        jrdfuncs.addFlashMessage(self.request, "There was an error parsing the game text settings. Your changes have been saved but game will not build until these are fixed.  See 'last build log' for details.", True)
+        jrdfuncs.addFlashMessage(self.request, "There was an error parsing the game text settings. Your changes have been saved but game will not built until these are fixed.  See 'last build log' for details: {}".format(game.lastBuildLog), True)
         # and redirect to edit page
         url =  reverse_lazy("gameEdit", kwargs={'slug':game.slug})
         return HttpResponseRedirect(url)
-
 
 
 
@@ -175,7 +283,7 @@ class GameChangeDirView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.owner == self.request.user)
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user))
 
 
     def form_valid(self, form):
@@ -229,7 +337,7 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.owner == self.request.user)
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user))
 
     def form_valid(self, form):
         # now delete folders
@@ -254,7 +362,7 @@ class GameVersionFileListView(LoginRequiredMixin, UserPassesTestMixin, DetailVie
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.owner == self.request.user)
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user))
 
 
 
@@ -272,7 +380,7 @@ class GameGenerateView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj.owner == self.request.user)
+        return (jrdfuncs.userOwnsObjectOrStrongerPermission(obj, self.request.user))
 
     def post(self, request, *args, **kwargs):
         # handle BUILD request
@@ -325,7 +433,7 @@ def gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, keyname):
 def gameSetFileExtraGameContextAndCheckGameOwner(gameFileViewInstance):
     game = gameFileViewHelperGetQuaryArgGameObj(gameFileViewInstance, 'slug')
     gameFileViewInstance.extra_context={'game': game}
-    return (game.owner == gameFileViewInstance.request.user)
+    return jrdfuncs.userOwnsObjectOrStrongerPermission(game, gameFileViewInstance.request.user)
 
 
 class GameFilesListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -373,6 +481,43 @@ class GameFilesReconcileView(LoginRequiredMixin, UserPassesTestMixin, DetailView
 
 
 
+
+class GameFilesDownloadView(LoginRequiredMixin, UserPassesTestMixin, View):
+    # helper view to download all uploaded files for a game in a zip
+    model = GameFile
+
+    # is user allowed to look at the file list for this game?
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameSetFileExtraGameContextAndCheckGameOwner(self)
+    
+    def post(self, request, *args, **kwargs):
+        # ask the game to build a zip file of images in debug directory
+        game = self.extra_context['game']
+        retDict = game.zipImageFilesIntoDebugDirectory(request)
+
+        filePath = jrfuncs.getDictValueOrDefault(retDict, "filePath", None)
+        fileName = jrfuncs.getDictValueOrDefault(retDict, "fileName", None)
+        if (filePath is None):
+            # set flash messages
+            errorMessage = jrfuncs.getDictValueOrDefault(retDict, "error", "error unknown")
+            msg = "Error, failed to generate zip file ({}).".format(errorMessage)
+            jrdfuncs.addFlashMessage(request, msg, False)
+            # redirect to file list
+            return redirect("gameFileList", slug=game.slug)
+    
+        # Open the temporary zip file for reading in binary mode.
+        zip_file_handle = open(filePath, 'rb')
+
+        # Create a FileResponse to stream the file to the client.
+        response = FileResponse(
+            zip_file_handle,
+            as_attachment=True,
+            filename=fileName,
+            content_type='application/zip'
+        )
+        return response
+    
 
 
 
@@ -456,7 +601,7 @@ def gameFileSetExtraGameContextAndCheckGameOwner(gameFileViewInstance):
     obj = gameFileViewInstance.get_object()
     game = obj.game
     gameFileViewInstance.extra_context={'game': game}
-    return (game.owner == gameFileViewInstance.request.user)
+    return jrdfuncs.userOwnsObjectOrStrongerPermission(game, gameFileViewInstance.request.user)
 
 
 
@@ -516,7 +661,6 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = GameFile
     template_name = "games/gameFileDelete.html"
 
-
     def get_success_url(self):
         # success after delete goes to file list of game
         game = self.extra_context['game']
@@ -526,8 +670,6 @@ class GameFileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         return gameFileSetExtraGameContextAndCheckGameOwner(self)
-
-
 
 
 
@@ -556,3 +698,46 @@ class GamePlayView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         obj = self.get_object()
         return (obj.isPublic == True)
 
+
+
+
+
+
+
+
+
+
+
+class GameFileEffectView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = GameFile
+    template_name = "games/gameFileDetail.html"
+
+    def test_func(self):
+        # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
+        return gameFileSetExtraGameContextAndCheckGameOwner(self)
+
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action", "")
+        result = self.performAction(request, action)
+        return result
+
+
+    def performAction(self, request, action):
+        # ok get the parent game, and the path of the image we are working with
+        game = gameFile.game
+        gameFile = self.get_object()
+        relativePath = gameFile.getPath()
+
+        retv = game.runEffectOnImageFileAddOrReplaceGameFile(action, relativePath, "suffixShort", True)
+        success = retv["success"]
+        message = retv["message"]
+        # new game file if succeeded, or default back to current one on error
+        gameFile = jrfuncs.getDictValueOrDefault(retv, "gameFile", gameFile)
+
+        # show message
+        jrdfuncs.addFlashMessage(self.request, message, not success)
+
+        # redirect to image view
+        url =  reverse_lazy("gameFileDetail", kwargs={'pk':gameFile.pk})
+        return HttpResponseRedirect(url)

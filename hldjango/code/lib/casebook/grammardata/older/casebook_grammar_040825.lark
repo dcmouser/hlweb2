@@ -1,0 +1,474 @@
+// EBNF grammar for storybook syntax
+// Jesse Reichler 7/5/24
+//
+// Philosophy of design:
+// 1. Plaintext/markdown makes up most of contents, it should not require any special syntax
+// 2. Other stuff should like like traditional code
+// 3. Should be an easy way to enclose arbitrary text in a "block" (using braces)
+// 4. Function calls with named arguments offer maximal flexibility with simple unified syntax
+// 5a. The one exception to our clean unified programming language syntax comes in Entry Headers, which have an alternate shorthand syntax for doing common things; this is motivated in part by readability
+// 5b. A unified function-call based method is also available for entry headers (see below)
+//
+// NOTES:
+// I recently changed the use of brace blocks {} to be ONLY allowed at the end of and part of function calls; we need to make sure this doesn't break anything from when we allowed it as a generic kind of block
+//
+// for lark grammar examples see https://github.com/lark-parser/lark/blob/master/examples/advanced/python2.lark
+// commons: https://github.com/lark-parser/lark/blob/master/lark/grammars/common.lark
+//
+// NOTES: the grammar is significantly more messy because we do not ignore NEWLINES as most languages do
+//  this is done so we can match some rules against newlines, and preserver newlines in our text
+//  because of this there are probably unusual places one might add linebreaks that would parse fine in a standard language but will trigger syntax errors here
+//  in particular in the middle of expressions, which is sometimes done to handle complex expressions; we probably want to go tweak the expression syntax to support that
+
+
+
+
+
+
+
+start: preliminary_matter* entry_collection*
+
+
+
+preliminary_matter: (newline* text_block? newline*)*
+
+
+
+
+
+
+
+?entry_collection: level1_entry
+
+level1_entry: level1_entry_head entry_body (level2_entry)*
+level2_entry: level2_entry_head entry_body (level3_entry)*
+level3_entry: level3_entry_head entry_body
+
+
+level1_entry_head.2: "#" entry_id_opt_label? entry_options? _NEWLINE -> entry_header
+// OLD Note that parent entries MUST speciufy their entry type (in caps)
+// e.g.: # DAY_SECTION Day 1
+// e.g.: # DAY_SECTION D2 "Day 2" $(sort="index)
+
+
+level2_entry_head.2: "##" entry_id_opt_label? entry_options? _NEWLINE -> entry_header
+// Child entries default to untyped (they can be assumed from the section type)
+// e.g.: ## NW 44 (Home of Sherlock Holmes) 
+// e.g.: ## 4-3233 The New York Public Library $(font="large")
+
+
+level3_entry_head.2: "###" entry_id_opt_label? entry_options? _NEWLINE -> entry_header
+
+
+// level 1 entry types
+!level1_entry_type_unused: "SETUP"
+ | "OPTIONS"
+ | "COVER"
+ | "FRONT"
+ | "HINTS"
+ | "DOCUMENTS"
+ | "LEADS"
+ | "DAY_SECTION"
+ | "GENERIC"
+ | "END"
+
+
+
+
+
+
+//entry_id_opt_label: entry_id? entry_label?
+entry_id_opt_label: entry_id | (entry_id entry_label) | entry_linelabel
+
+!entry_id.2: ID_TEXT | string
+
+!entry_label.3: string
+
+
+
+
+
+
+
+
+entry_options: _NEWLINE* "$(" [argument_list] ")"
+
+
+
+
+
+entry_body: [blockseq_with_newlines] _NEWLINE*
+
+
+
+
+
+
+
+
+
+// for parsing only overview options quickly, this ONLY grabs sections of certain type (OPTIONS, SETUP) and gobbles the rest as one big regex
+// this is a bit more convoluted than it would otherwise be to make it conform with rules of normal entries
+// but the idea is that you can parse the SAME document, but starting with token "overview_start" and it will much more efficiently only grab sections with OVERVIEW_ID_TEXT
+overview_start: preliminary_matter* overview_entry_collection* end_matter*
+?overview_entry_collection: overview_level1_entry
+overview_level1_entry: overview_level1_entry_head entry_body (level2_entry)*
+overview_level1_entry_head.2: "#" overview_level1_id entry_options?
+overview_level1_id: overview_entry_id? entry_label?
+!overview_entry_id: OVERVIEW_ID_TEXT
+//
+// only rab sections with this ID
+OVERVIEW_ID_TEXT: "OPTIONS"
+//
+end_matter: GOBBLE_REMAINDER
+GOBBLE_REMAINDER: /[\s\S]+/
+
+
+
+
+
+
+
+
+
+
+//block: function_call | text_block | control_statement | expression
+block: function_call | text_block | control_statement
+
+
+blockseq_with_newlines: (newline* block)+
+blockseq_req_newline: (newline* block)+ newline
+blockseq_ignore_pre_newlines.8: _NEWLINE* block (newline* block)* _NEWLINE*
+
+
+// there are some cases, like an if statement, where, IF a brace block is not used, we want to greedy consume (the best we can do is consume until a newline, since lark doesnt let us explicitly resolve ambiguities to be maximally greedy for this rule)
+?brace_group_or_blockseq: brace_group | blockseq_with_newlines
+?brace_group_or_newline_blockseq: brace_group | blockseq_req_newline
+multi_brace_group: (brace_group (_NEWLINE* "," _NEWLINE* brace_group)*)
+brace_group: _NEWLINE* "{" [blockseq_ignore_pre_newlines] "}"
+
+
+
+
+
+
+
+
+
+// this is our MAIN normal human text
+// this tries to match any string of characters that do NOT include $ followed immediately by (letter OR open paren which is what we use to distinguish function calls), and cannot include open or close brace {}
+// NOTE WE ALSO FORBID the // and /* and */ substrings that mark comments
+// ATTN TODO: support ESCAPED characters of \$ and \{ and \}
+// ATTN: new, no newlines allowed since we now preserver NEWLINE tokens
+// ATTN: this now needs to be fixed to allow // when not preceded by whitespace since we now reject such as being comments
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+
+// new, reject lines starting with "# " and "## " since these should be caught as headers
+// ATTN: i think this needs to be fixed to only ignore # and ## at START of line
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|^#\s|^##\s|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|#\s|##\s|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+text_block: (/(?!#{1,2}\s)[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+
+
+// for ## and ### labels that can be ANYTHING
+//nonstringtextline: (/[ \t]*((?!(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/)
+entry_linelabel: (/(?![\s#])[ \t]*((?!(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/)
+
+
+
+?rawtext_block.5: "<<<" /((?!>>>)[\s\S])+/ ">>>"
+
+
+
+
+
+
+
+// See syntax for maybe_placeholders so that we get a NONE on a blank argument list
+// ATTN: i disabled to ability to use a '$function: blocks ' without braces because real text can want to use colon after function call
+function_call: "$" FUNCTION_NAME "(" [argument_list] ")" (":" multi_brace_group)? _NEWLINE?
+
+
+
+// e.g.: $warning("You cannot go back!", fontSize=25)
+// e.g.: $format("typewriter", fontSize=25): { You cannot go back! }
+
+
+
+
+
+
+argument_list: positional_argument_list | named_argument_list | positional_argument_list "," named_argument_list
+positional_argument_list: positional_argument ("," positional_argument)*
+named_argument_list: named_argument ("," named_argument)*
+// e.g.: 1, 2, 3, style="bold", size="large", capitalize=true
+
+
+?positional_argument: expression
+
+?named_argument: argument_assignment
+
+argument_assignment: _NEWLINE* argument_name _NEWLINE* "=" expression
+?argument_name: SIMPLE_NAME
+
+
+
+
+
+
+
+
+
+
+
+
+control_statement: if_statement_root | for_statement
+
+
+
+?if_statement_root: "$if" if_statement
+
+if_statement: _NEWLINE* "(" expression ")" _NEWLINE* ":" _NEWLINE* if_consequence
+
+if_consequence: brace_group_or_newline_blockseq
+	| brace_group_or_blockseq (elif_statement | else_statement)
+
+elif_statement: "$elif" if_statement
+
+else_statement: "$else" ":" brace_group_or_newline_blockseq
+
+
+
+
+for_statement: "$for" _NEWLINE* "(" for_expression ")" _NEWLINE* ":" _NEWLINE* brace_group
+?for_expression: for_expression_in
+for_expression_in: SIMPLE_NAME "in" expression
+
+
+
+
+
+
+
+
+
+boolean.3: "true" -> boolean_true
+	| "false" -> boolean_false
+
+
+
+string:  STRING_TRIPLE_DOUBLE_QUOTE | STRING_TRIPLE_SINGLE_QUOTE | STRING_DOUBLE_QUOTE | STRING_SINGLE_QUOTE | UNICODE_STRING
+
+
+
+
+
+
+
+
+
+
+// Strings with suppoert for embedded escaped quotes but not newlines
+// ATTN: these do not allow newlines (gives simpler errors but user will have to use escapes if they want to embed newlines)
+STRING_DOUBLE_QUOTE: "\"" /(\\.|[^"\r\n])*/ "\""
+STRING_SINGLE_QUOTE: "'" /(\\.|[^'\r\n])*/ "'"
+
+
+// Triple quotes support embedded newlines
+STRING_TRIPLE_DOUBLE_QUOTE.2: "\"\"\"" /[\S\s]*/ "\"\"\""
+STRING_TRIPLE_SINGLE_QUOTE.2: "'''" /[\S\s]*/ "'''"
+
+
+// google doc forces these balanced unicode strings with different starts and ends; the only benefit is we get balanced quotes; we treat them like double quoted string
+// currently not enforcing strict balancing inside quoted string in CODE
+// NOTE that this has nothing to do with quotes used in TEXT blocks, which the parser completely passes through
+UNICODE_STRING_STRICT: /[\u201C](?:\\.|[^[\u201C\u201D\r\n])*[\u201D]/
+UNICODE_STRING: /[\u201C\u201D](?:\\.|[^[\u201C\u201D\r\n])*[\u201C\u201D]/
+
+
+
+
+
+
+
+
+
+SIMPLE_NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+// note that we need to block true/false constants
+IDENTIFIER.1: /(?!\btrue\b|\bfalse\b)[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+//IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+
+// FUNCTION_NAME is same as dotted name but can't use reserved words
+FUNCTION_NAME: /(?!\bif\b|\belif\b|\belse\b|\bfor\b)[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+
+// ID_TEXT is a bit more permissive since we can restrict its context and because we want to allow some additional characters
+ID_TEXT: /(?!(\$\())[ \w_\-\.]+/
+
+
+NONE: "None"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// EXPRESSIONS
+// ATTN: all of these need to be adapted to permit _NEWLINE* inside them (insignificant newlines)
+// ATTN: we need to check these for precdence since I have added rules
+
+expression: sum
+
+
+// based on https://github.com/lark-parser/lark/blob/master/lark/grammars/python.lark
+// note tht i have combined conditional and aritmetic expressions into one here, so it would be valid to have an expression (1 + (2<3) / (!5))
+// but we can adopt the c formalism of all conditionals evaluating to a number 0 or 1 and then use them in arithmetic, and similarly 0 evaluates to false and everything else to true
+// ATTN: TODO - should we use common.SIGNED_NUMBER instead of common.NUMBER
+
+?sum: product
+	| sum "+" product   -> add
+  | sum "-" product   -> sub
+  | sum "||" product   -> or
+  | sum "&&" product   -> and
+
+?product: atom
+  | product "*" atom  -> mul
+  | product "/" atom  -> div
+  | product "<" atom  -> lessthan
+  | product "<=" atom  -> lessthanequal
+  | product ">" atom  -> greaterthan
+  | product ">=" atom  -> greaterthanequal
+  | product "==" atom  -> equal
+  | product "!=" atom  -> notequal
+  | product "in" atom -> in
+
+?atom: NUMBER -> number
+  | "-" atom         -> neg
+  | "!" atom         -> not
+  | function_call
+  | "(" expression ")"
+  | boolean -> boolean
+  | string
+  | IDENTIFIER -> identifier
+  | NONE -> none
+  | collection_list
+  | collection_dict
+
+
+collection_list: "[" [positional_argument_list] "]"
+collection_dict: "{" [collection_dict_contents] "}"
+
+?collection_dict_contents: collection_dict_assignment ("," collection_dict_assignment)*
+collection_dict_assignment: string ":" expression
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// COMMENTS SINGLE LINE EVERYTHING AFTER //
+
+
+// OLD: problem is that it caught urls like http:// etc
+// NEW now requires a whitespace before the // or starting a line
+COMMENT.4: /(?<!\S)\/\/(.*)/ _NEWLINE
+
+
+// BLOCK COMMMENT -- note that in order to make it work we forbid /* and */ in a comment block, which prevents the ability to do nested comments, but also saved us from too greedy nested comments
+// HOWEVER, nested might work due to recursive ignoring of comments??
+// OLD COMMENT_BLOCK.4: "/*" /(?!\/\*|\*\/)(.|\n|\r)*/ "*/"
+// OLD 2 COMMENT_BLOCK.4: "/*" /(?!\/\*|\*\/)([\s\S]*)/ "*/"
+COMMENT_BLOCK.4: "/*" /(?:(?!\/\*|\*\/)[\s\S])*/ "*/"
+
+%ignore COMMENT
+%ignore COMMENT_BLOCK
+
+
+
+
+
+
+
+
+// TEMPLATES
+// ATTN: cant get this to work
+// from https://github.com/lark-parser/lark/blob/master/lark/grammars/python.lark
+_commaseplist{item}: item ("," item)*
+
+
+
+
+
+
+// IMPORTS
+
+%import common.NUMBER
+%import common.SIGNED_NUMBER
+
+// ATTEMPT AT UNICODE SUPPORT
+%import unicode.WS
+%import unicode.WS_INLINE
+
+
+
+
+
+// DIRECTIVES
+// WE PRESERVE NEWLINE TOKENS SO WE ONLINE IGNORE WS_INLINE INSTEAD OF WS AS NORMAL
+%ignore WS_INLINE
+
+
+// NEWLINE TOKENS (we use underscore _ to try to not add them to tree)
+_CR : /\r/
+_LF : /\n/
+
+
+// We use lowercase newline rule when we want it to APPEAR in the tree because it may be textually significant (but the token use is underscored so it doesnt render the actual linefeed)
+newline: _NEWLINE
+
+// we use _NEWLINE in a rule when we dont want it to show in the tree
+_NEWLINE: _CR? _LF
+
+

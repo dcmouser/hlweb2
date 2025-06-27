@@ -14,12 +14,22 @@
             "justMyCode": true
         },
         {
-            "name": "Run local django server",
+            "name": "Run local django server (serve static)",
             "preLaunchTask": "Clear terminal",
             "type": "debugpy",
             "request": "launch",
             "program": "./code/manage.py",
-            "args": ["runserver","0.0.0.0:8000", "--noreload", "--settings", "hldjango.settingsdir.jrlocal_win10"],
+            "args": ["runserver_local_servestatic","0.0.0.0:8000", "--noreload", "--settings", "hldjango.settingsdir.jrlocal_win10"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run local django server (no static)",
+            "preLaunchTask": "Clear terminal",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "./code/manage.py",
+            "args": ["runserver_local","0.0.0.0:8000", "--noreload", "--settings", "hldjango.settingsdir.jrlocal_win10"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

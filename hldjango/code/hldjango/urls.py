@@ -18,7 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 
 
+
 urlpatterns = [
+    # django-dbbackup-ui (6/9/25)
+    path("admin/backups/", include("dbbackup_ui.urls")),
+
     # django admin
     path("admin/", admin.site.urls),
 

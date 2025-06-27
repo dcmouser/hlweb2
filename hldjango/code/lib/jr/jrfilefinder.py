@@ -11,7 +11,7 @@ import os
 
 
 class JrFileFinder:
-    def __init__(self, options, sourceLabel):
+    def __init__(self, options, sourceLabel, locationClass):
         self.fileDict = {}
         self.useCount = {}
         self.extensionList = []
@@ -21,9 +21,15 @@ class JrFileFinder:
         #self.onDuplicate = "replace"
         self.options = options
         self.sourceLabel = sourceLabel
+        self.locationClass = locationClass
 
     def getSourceLabel(self):
         return self.sourceLabel
+    
+    def setLocationClass(self, val):
+        self.locationClass = val
+    def getLocationClass(self):
+        return self.locationClass
 
     def setExtensionList(self, inList):
         self.extensionList = inList
@@ -34,7 +40,7 @@ class JrFileFinder:
     def clearExtensionList(self):
         self.extensionList = []
     def addExtensionListImages(self):
-        addList = [".png", ".jpg", ".jpeg", ".tiff", ".gif"]
+        addList = [".png", ".jpg", ".jpeg", ".tiff", ".gif", ".pdf"]
         self.addExtensionList(addList)
     def addExtensionListPdf(self):
         addList = [".pdf"]
@@ -49,6 +55,9 @@ class JrFileFinder:
     def clearDirectoryList(self):
         self.directoryList = []
 
+    def getFileDict(self):
+        return self.fileDict
+
     def resetUsageCount(self):
         self.useCount = {}
     
@@ -57,8 +66,16 @@ class JrFileFinder:
 
 
 
-    def canonicalName(self, name):
+    def canonicalName(self, path):
         # canonicalize BOTH files found, AND names we look for, so that they are same format
+
+        # split into path and name
+        if ("/" in path) or ("\\" in path):
+            [directory, name] = os.path.split(path)
+        else:
+            directory = None
+            name = path
+
         flagStripExtensions = self.options["stripExtensions"]
 
         # lowercase
@@ -104,7 +121,13 @@ class JrFileFinder:
         # spaces to _
         name = name.replace(' ' , '_')
 
-        return name
+        if (directory is not None):
+            newPath = directory + "/" + name
+        else:
+            newPath = name
+
+        return newPath
+
 
     def findFullPath(self, name, flagMarkUsage=False, flagRevertToPrefix=False):
         paths = self.findImagesForName(name, flagMarkUsage, flagRevertToPrefix)
@@ -116,7 +139,10 @@ class JrFileFinder:
 
 
     def findImagesForName(self, name, flagMarkUsage, flagRevertToPrefix):
-        name = self.canonicalName(name)
+        # ATTN: TODO - this whole filefinder class is fucking ridiculous with the canonical naming and search; rewrite it and make searching for a non-exact file match a special function
+
+        if (name not in self.fileDict):
+            name = self.canonicalName(name)
 
         if (not name in self.fileDict) and (flagRevertToPrefix):
             # try to find a prefix
@@ -186,21 +212,24 @@ class JrFileFinder:
                 relPath = jrfuncs.canonicalFilePath(relPath)
                 baseName = prefixAdd + relPath
 
-                if (baseName in self.fileDict):
-                    # base name already found, so ADD this target image as a second option
-                    if (self.onDuplicate == 'list'):
-                        self.fileDict[baseName].append(filePath)
-                    elif (self.onDuplicate == 'replace'):
-                        self.fileDict[baseName] = [filePath]
-                    else:
-                        raise Exception("Got more than 1 file for JrFileFinder with the same base name: {}.".format(baseName))
-                else:
-                    # add it
-                    self.fileDict[baseName] = [filePath]
-                #
-                #jrprint('Adding entry for {} pointing to "{}".'.format(baseName, filePath))
+                # add it
+                self.addFile(baseName, filePath)
 
 
+    def addFile(self, baseName, filePath):
+        if (baseName in self.fileDict):
+            # base name already found, so ADD this target image as a second option
+            if (self.onDuplicate == 'list'):
+                self.fileDict[baseName].append(filePath)
+            elif (self.onDuplicate == 'replace'):
+                self.fileDict[baseName] = [filePath]
+            else:
+                raise Exception("Got more than 1 file for JrFileFinder with the same base name: {}.".format(baseName))
+        else:
+            # add it
+            self.fileDict[baseName] = [filePath]
+        #
+        #jrprint('Adding entry for {} pointing to "{}".'.format(baseName, filePath))
 
 
     def reportUnusedImages(self):
@@ -221,3 +250,70 @@ class JrFileFinder:
                 path = path.replace("\\" , "/")
                 unusedItemList.append([k, path])
         return unusedItemList
+    
+
+    def getUnusedFileCount(self):
+        unusedFiles = self.getUnusedFiles()
+        return len(unusedFiles)
+
+
+
+    def deleteAllFiles(self, optionDryRun, excludeList, optionTruncateExcludes):
+        # walk file list and delete all
+        totalCount = self.getCount()
+        deletedCount = 0
+        failedCount = 0
+        truncatedCount = 0
+        deletedList = []
+        failedList = []
+        for k,v in self.fileDict.items():
+            path = v[0]
+            try:
+                if (k in excludeList):
+                    jrfuncs.truncateFileIfExists(path)
+                    truncatedCount += 1
+                else:
+                    if (optionDryRun):
+                        jrprint("Dry run would delete: {}.".format(path))
+                    else:
+                        jrfuncs.deleteFilePathIfExists(path)
+                    deletedList.append(path)
+                    deletedCount += 1
+            except Exception as e:
+                failedList.append(path)                
+                failedCount += 1
+        
+        summary = "Deleted {} of {} files.".format(deletedCount, totalCount)
+        if (truncatedCount>0):
+            summary += " Truncated {}.".format(truncatedCount)
+        if (failedCount>0):
+            summary += " Failed to delete {}.".format(failedCount)
+        if (optionDryRun):
+            summary += " DRY RUN MODE ENABLED - NO ACTUAL FILES DELETED."
+        #
+        return {"summary": summary, "deleted": deletedList, "failed": failedList}
+
+
+
+
+
+    def getFileListWithSizeAndTime(self):
+        fileList = []
+        # walk file list add size and date
+        for k,v in self.fileDict.items():
+            path = v[0]
+            try:
+                fileSize = os.path.getsize(path)
+                fileTime = os.path.getmtime(path)
+            except Exception as e:
+                fileSize = 0
+                fileTime = 0
+            fentry = {
+                "baseName": k,
+                "path": path,
+                "fileSize": fileSize,
+                "fileTime": fileTime,
+            }
+            fileList.append(fentry)
+        #
+        return fileList

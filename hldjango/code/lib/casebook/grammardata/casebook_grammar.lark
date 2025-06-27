@@ -1,5 +1,5 @@
 // EBNF grammar for storybook syntax
-// Jesse Reichler 7/5/24
+// Jesse Reichler 7/5/24 - 6/24/25
 //
 // Philosophy of design:
 // 1. Plaintext/markdown makes up most of contents, it should not require any special syntax
@@ -30,7 +30,7 @@ start: preliminary_matter* entry_collection*
 
 
 
-preliminary_matter: (newline* text_block newline*)*
+preliminary_matter: (newline* text_block? newline*)*
 
 
 
@@ -46,7 +46,7 @@ level3_entry: level3_entry_head entry_body
 
 
 level1_entry_head.2: "#" entry_id_opt_label? entry_options? _NEWLINE -> entry_header
-// Note that parent entries MUST speciufy their entry type (in caps)
+// OLD Note that parent entries MUST specify their entry type (in caps)
 // e.g.: # DAY_SECTION Day 1
 // e.g.: # DAY_SECTION D2 "Day 2" $(sort="index)
 
@@ -78,10 +78,11 @@ level3_entry_head.2: "###" entry_id_opt_label? entry_options? _NEWLINE -> entry_
 
 
 //entry_id_opt_label: entry_id? entry_label?
-entry_id_opt_label: entry_id | (entry_id entry_label)
+entry_id_opt_label: entry_id | (entry_id entry_label) | entry_linelabel
 
-!entry_id: ID_TEXT | string
-!entry_label: string
+!entry_id.2: ID_TEXT | string
+
+!entry_label.3: string
 
 
 
@@ -137,7 +138,7 @@ block: function_call | text_block | control_statement
 
 blockseq_with_newlines: (newline* block)+
 blockseq_req_newline: (newline* block)+ newline
-blockseq_ignore_pre_newlines.8: _NEWLINE* block (newline* block)* _NEWLINE?
+blockseq_ignore_pre_newlines.8: _NEWLINE* block (newline* block)* _NEWLINE*
 
 
 // there are some cases, like an if statement, where, IF a brace block is not used, we want to greedy consume (the best we can do is consume until a newline, since lark doesnt let us explicitly resolve ambiguities to be maximally greedy for this rule)
@@ -159,8 +160,25 @@ brace_group: _NEWLINE* "{" [blockseq_ignore_pre_newlines] "}"
 // NOTE WE ALSO FORBID the // and /* and */ substrings that mark comments
 // ATTN TODO: support ESCAPED characters of \$ and \{ and \}
 // ATTN: new, no newlines allowed since we now preserver NEWLINE tokens
+// ATTN: this now needs to be fixed to allow // when not preceded by whitespace since we now reject such as being comments
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
 
-text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+// new, reject lines starting with "# " and "## " since these should be caught as headers
+// ATTN: i think this needs to be fixed to only ignore # and ## at START of line
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|^#\s|^##\s|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+//text_block: (/[ \t]*((?!(\$[a-zA-Z_(])|#\s|##\s|\$\(|[{}]|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+
+// NEW 6/14/25 attempt to not eat spaces before comments
+//text_block: (/(?!#{1,2}\s)[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|(?:^|\s+)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+text_block: (/(?!#{1,2}\s)[ \t]*((?!(\$[a-zA-Z_(])|\$\(|[{}]|(?:^|\s+)\/\/|(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/) |  rawtext_block
+
+
+// for ## and ### labels that can be ANYTHING
+//nonstringtextline: (/[ \t]*((?!(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/)
+entry_linelabel: (/(?![\s#])[ \t]*((?!(?<!\S)\/\/|\/\*|\*\/|<<<|>>>)[^\r\n])+/)
+
+
 
 ?rawtext_block.5: "<<<" /((?!>>>)[\s\S])+/ ">>>"
 
@@ -257,7 +275,7 @@ string:  STRING_TRIPLE_DOUBLE_QUOTE | STRING_TRIPLE_SINGLE_QUOTE | STRING_DOUBLE
 // Strings with suppoert for embedded escaped quotes but not newlines
 // ATTN: these do not allow newlines (gives simpler errors but user will have to use escapes if they want to embed newlines)
 STRING_DOUBLE_QUOTE: "\"" /(\\.|[^"\r\n])*/ "\""
-STRING_SINGLE_QUOTE: "\''" /(\\.|[^'\r\n])*/ "\''"
+STRING_SINGLE_QUOTE: "'" /(\\.|[^'\r\n])*/ "'"
 
 
 // Triple quotes support embedded newlines
@@ -292,7 +310,7 @@ FUNCTION_NAME: /(?!\bif\b|\belif\b|\belse\b|\bfor\b)[a-zA-Z_][a-zA-Z0-9_]*(?:\.[
 ID_TEXT: /(?!(\$\())[ \w_\-\.]+/
 
 
-NULL: "null"
+NONE: "None"
 
 
 
@@ -352,7 +370,7 @@ expression: sum
   | boolean -> boolean
   | string
   | IDENTIFIER -> identifier
-  | NULL -> null
+  | NONE -> none
   | collection_list
   | collection_dict
 
@@ -394,10 +412,21 @@ collection_dict_assignment: string ":" expression
 
 
 // COMMENTS SINGLE LINE EVERYTHING AFTER //
-COMMENT.4: "//" /(.)*/ _NEWLINE
+
+
+// OLD: problem is that it caught urls like http:// etc
+// PREV NEW now requires a whitespace before the // or starting a line
+// COMMENT.4: /(?<!\S)\/\/(.*)/ _NEWLINE
+// NEW 6/14/25 we need to CAPTURE any preceding space as part of the comment so we get the proper end of line
+//COMMENT.4: /(?:^|\s+)\/\/(.*)/ _NEWLINE
+COMMENT.4: /(?<!\S)\s*\/\/(.*)/ _NEWLINE
+
+
 // BLOCK COMMMENT -- note that in order to make it work we forbid /* and */ in a comment block, which prevents the ability to do nested comments, but also saved us from too greedy nested comments
 // HOWEVER, nested might work due to recursive ignoring of comments??
-COMMENT_BLOCK.4: "/*" /(?!\/\*|\*\/)(.|\n|\r)*/ "*/"
+// OLD COMMENT_BLOCK.4: "/*" /(?!\/\*|\*\/)(.|\n|\r)*/ "*/"
+// OLD 2 COMMENT_BLOCK.4: "/*" /(?!\/\*|\*\/)([\s\S]*)/ "*/"
+COMMENT_BLOCK.4: "/*" /(?:(?!\/\*|\*\/)[\s\S])*/ "*/"
 
 %ignore COMMENT
 %ignore COMMENT_BLOCK

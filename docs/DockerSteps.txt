@@ -1,0 +1,56 @@
+cd hldjango
+RUN: poetry shell
+RUN: poetry export --without-hashes --format=requirements.txt > requirements.txt
+(this gets us the most recent requirements.txt)
+
+EDIT textlive_install.sh and ADD LATEX PACKAGES
+
+Start docker desktop app
+cd docker/hlweb_production_remote
+Edit docker-compose.yml and update docker image versoin # 
+Run: docker compose build --no-cache
+Run exportDockerImageToTar.bar which runs: docker image save -o hlweb_production_remote.tar jreichler/hlweb_production_remote
+
+(now we have a 3gb file hlweb_production_remote.tar which we need to get on the docker server)
+
+Ftp files hlweb_production_remote.tar and Docker-compose.yml to digital ocean droplet (this will take a long time).
+
+ssh/telnet into digital ocean droplet (or run shell from web interface)
+cd /root/jr/hlweb_production_remote
+
+There are two .sh scripts i have written and uploaded to the digital ocean droplet (copies in hlweb_production_remote/ directory)
+Remove all existing docker images, etc.:
+Run ./script_rmalldockers.sh 
+
+(this will kill the docker running on the digital ocean droplet (http://www.nycnoir.org))
+
+But does it leave lots of files and old images?
+RUN: docker ps -a -q
+(to see)
+
+Run:  docker system prune --all --force
+(see https://forums.docker.com/t/docker-no-space-left-on-device/69205/2)
+
+Then load the image?
+Run: ./script_loadimage.sh
+
+Run: docker compose up &
+Ctrl+Z, BG to send it into background
+
+
+
+
+Running docker errors:
+Got this error in startup script grabbing certificate -- not sure what went wrong (10/25/24):
+lweb_production_remote  | Running certbot script to generate ssl keys using letsencrypt and certbot..
+hlweb_production_remote  | Invoking letsencrypt certbot for nycnoir.org ...
+hlweb_production_remote  | Saving debug log to /var/log/letsencrypt/letsencrypt.log
+hlweb_production_remote  | Account registered.
+hlweb_production_remote  | Requesting a certificate for nycnoir.org and www.nycnoir.org
+hlweb_production_remote  | An unexpected error occurred:
+hlweb_production_remote  | AttributeError: can't set attribute
+hlweb_production_remote  | Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+hlweb_production_remote  | Copying letsencrypt keys to /ssl
+hlweb_production_remote  | cp: cannot stat '/etc/letsencrypt/live/nycnoir.org/fullchain.pem': No such file or directory
+hlweb_production_remote  | cp: cannot stat '/etc/letsencrypt/live/nycnoir.org/privkey.pem': No such file or directory
+hlweb_production_remote  | ---------------------------------------------------------------------------

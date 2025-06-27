@@ -26,29 +26,68 @@
 
 <div class="gameEntry">
     <span class="monitor_game" id="monitor_game_{{ game.pk }}" data-gameid="{{ game.pk }}" data-modified="{{ game.modified|date:'U' }}"></span>
-    <h2>{{ game.name }} ({{ game.title }})</h2>
+    {% if game.title != "" %}
+        <h2>{{ game.title }}</h2>
+    {% else %}
+        <h2>{{ game.name }}</h2>
+    {% endif %}
+
+    <!-- if game.owner.pk == request.user.pk -->
+    {% if game|userOwnsObjectOrStrongerPermission:user %}
+        <a href="{% url 'gameEdit' game.slug %}" class="btn btn-info" role="button">Edit</a>
+        <a href="{% url 'gameGenerate' game.slug %}" class="btn btn-info" role="button">Generated files</a>
+        <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
+        <a href="{% url 'gameVersionFileList' game.slug %}" class="btn btn-info" role="button">Previous versions</a>
+        <!--
+        <a href="{% url 'gamePlay' game.slug %}" class="btn btn-info" role="button">Play</a>
+        -->
+        <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button">Delete</a>
+    {% endif %}
+
+
     <p>
         <b>Summary:</b> {{ game.summary }}<br/>
-        <b>Owner:</b> {{ game.owner }}<br/>
         <b>Lead stats:</b> {{ game.leadStats }}<br/>
+        <b>Author(s):</b> {{ game.authors }}<br/>
+        <b>Game system:</b> {{ game.gameSystem }}<br/>
+
+        {% if game.campaignName %}
+        <b>Campaign:</b> {{ game.campaignName }}
+            {% if game.campaignPosition %}
+                (part {{ game.campaignPosition }})
+            {% endif %}
+        <br/>
+        {% endif %}
+
+        {% if game.gameDate != "" %}
+            <b>Game date:</b> {{ game.gameDate }}<br/>
+        {% endif %} 
+        {% if game.cautions != "" %}
+            <b>Additional credits:</b> {{ game.extraCredits }}<br/>
+        {% endif %}
+        <b>Difficulty:</b> {{ game.difficulty }}/5<br/>
+        <b>Duration:</b> {{ game.duration }} hours<br/>
+        {% if game.cautions != "" %}
+            <b>Cautions:</b> {{ game.cautions }}<br/>
+        {% endif %}
+        <b>Version:</b> {{ game.version }} ({{ game.versionDate }})<br/>      
+        <b>Game status:</b> {{ game.status }}<br/>
         <b>Published:</b> {% gamePublishInfoString game %}<br/>
+        <b>Owner account:</b> {{ game.owner }}<br/>
+        <b>Created:</b> {{ game.created|niceGameDateFormat }}<br/>
+        <b>Modified:</b> {{ game.modified|niceGameDateFormat }}<br/>
     </p>
 </div>
 
 
 <h3>Published Files:</h3>
-{% fileUrlList user game.pk "published" "noInfo" %}
+{% fileUrlList user game.pk "published" "noInfo,noCover" %}
+
+<h3>Additional Instructions</h3>
+<div class="gameIstructions">
+{% markdownGameInstructions game %}
+</div>
 
 
-{% if game.owner.pk == request.user.pk %}
-    <a href="{% url 'gameEdit' game.slug %}" class="btn btn-info" role="button">Edit</a>
-    <a href="{% url 'gameGenerate' game.slug %}" class="btn btn-info" role="button">Generated files</a>
-    <a href="{% url 'gameFileList' game.slug %}" class="btn btn-info" role="button">Uploaded files ({{ gameFileListCount }})</a>
-    <a href="{% url 'gameVersionFileList' game.slug %}" class="btn btn-info" role="button">Previous versions</a>
-    <!--
-    <a href="{% url 'gamePlay' game.slug %}" class="btn btn-info" role="button">Play</a>
-    -->
-    <a href="{% url 'gameDelete' game.slug %}" class="btn btn-info" role="button">Delete</a>
-    {% endif %}
 
 {% endblock content %}

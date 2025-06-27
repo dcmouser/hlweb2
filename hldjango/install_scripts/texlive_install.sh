@@ -60,6 +60,8 @@ tlmgr install collection-fontsrecommended
 # PACKAGE INSTALL LIST UPDATED 10/25/24 - NOTE THIS REQUIRED LOTS OF TRIAL AND ERROR BUILDING LOCAL HLWEB_PERSONAL and testing a build of wrongbook_partial, and then checking log for latex build errors about missing sty files that required manually adding package
 # for some reason accessory packages with sty files are not being found during this tlmgr install, so i have to search web for what packages have them, etc.
 tlmgr install \
+  xelatex \
+  xetex \
 	hyperref \
 	ulem \
 	graphicx \
@@ -122,7 +124,26 @@ tlmgr install \
 	longfbox \
 	lettrine \
 	lipsum \
-	marginnote
+	marginnote \
+  picinpar \
+  yfonts \
+	float \
+	caption \
+	needspace \
+	eso-pic \
+	lscape \
+	etoolbox \
+	fontspec \
+	ninecolors \
+	xcolor \
+	censor \
+	pbox \
+	tokcycle \
+	ulem \
+	soul \
+	wrapfig \
+	tabularx
+
 
 
 # Keep no backups (not required, simply makes cache bigger)

@@ -1,0 +1,33 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+
+{% block content %}
+{% if result %}
+<div>
+    RESULT OF ACTION: {{ result }}
+</div>
+<hr/>
+{% endif %}
+
+
+<h1>New York Noir Maintenance Actions</h1>
+<ul>
+    <li>
+        <form method="post" id="exportDocs">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <input type="hidden" id="action" name="action" value="exportDocs">
+            <button type="submit">Export Docs</button>
+        </form>
+    </li>
+    <li>
+        Download database backup: <a href="/admin/backups/backup-database-and-media/" target="_blank">here</a>.
+    </li>
+</ul>
+{% endblock content %}

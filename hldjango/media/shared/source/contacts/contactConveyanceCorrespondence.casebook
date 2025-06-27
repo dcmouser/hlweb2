@@ -1,0 +1,12 @@
+// Transportation, Travel, Communications Contact Reference
+//* $referDb("Office of Conveyance and Correspondence: Office of Conveyance and Correspondence")
+* $referDb("Drivers License & Vehicle Registration: NYC Department of Motor Vehicles (DMV)")
+* $referDb("Parking ticket records: NYC Department of Parking Enforcement")
+* $referDb("International travel records: Passport Bureau at Treasury Building")
+* $referDb("Taxi & limo licensing: Taxi and Limousine Commission")
+* $referDb("Public and Interstate Transportation: Port Authority of NY")
+* $referDb("Foreign Countries (travel, criminal histories, etc.): See Consulates")
+* $referDb("Centralized taxi info: Central Cab Coordinator")
+* $referDb("Centralized telegram/telegraph records: Western Union Telegraph Building")
+* $referDb("Local telegram/telegraph records: See Neighborhood Telegraph Stations")
+* $referDb("Telephone records: New York Bell Telephone")

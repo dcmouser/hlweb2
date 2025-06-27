@@ -1,0 +1,358 @@
+# Swedish translation for the casebook application.
+# Copyright (C) 2025 ORGANIZATION
+# Grok 3 <grok3@xai.com>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-03-03 05:06-0600\n"
+"PO-Revision-Date: 2025-03-03 12:00+0100\n"
+"Last-Translator: Grok 3 <grok3@xai.com>\n"
+"Language-Team: Swedish <sv@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+#: code/lib/casebook\cbfuncs_core1.py:1327
+msgid "SUMMARY"
+msgstr "SAMMANFATTNING"
+
+#: code/lib/casebook\cbfuncs_core1.py:1333
+msgid "Author"
+msgstr "Författare"
+
+#: code/lib/casebook\cbfuncs_core1.py:1334
+msgid "Status"
+msgstr "Status"
+
+#: code/lib/casebook\cbfuncs_core1.py:1337
+msgid "Additional credits"
+msgstr "Ytterligare erkännanden"
+
+#: code/lib/casebook\cbfuncs_core1.py:1339
+msgid "Web"
+msgstr "Webb"
+
+#: code/lib/casebook\cbfuncs_core1.py:1341
+msgid "Keywords"
+msgstr "Nyckelord"
+
+#: code/lib/casebook\cbfuncs_core1.py:1343
+msgid "Difficulty"
+msgstr "Svårighetsgrad"
+
+#: code/lib/casebook\cbfuncs_core1.py:1344
+msgid "Playtime"
+msgstr "Speltid"
+
+#: code/lib/casebook\cbfuncs_core1.py:1346
+msgid "Cautions"
+msgstr "Varningar"
+
+#: code/lib/casebook\cbfuncs_core1.py:1347
+msgid "Build tool"
+msgstr "Byggverktyg"
+
+#: code/lib/casebook\cbfuncs_core1.py:1348
+msgid "Typesetting"
+msgstr "Typografi"
+
+#: code/lib/casebook\cbfuncs_core1.py:1349
+msgid "Compiled"
+msgstr "Kompilerad"
+
+#: code/lib/casebook\cbfuncs_core1.py:1452
+msgid "Return to"
+msgstr "Återvänd till"
+
+#: code/lib/casebook\cbfuncs_core1.py:1471
+msgid "go to"
+msgstr "gå till"
+
+#: code/lib/casebook\cbfuncs_core1.py:1478
+msgid "and then return here"
+msgstr "och sedan återvänd hit"
+
+#: code/lib/casebook\cbfuncs_core1.py:1550
+msgid "and then return back here"
+msgstr "och sedan återvänd hit igen"
+
+#: code/lib/casebook\cbfuncs_core1.py:1719
+msgid "If you still need help, as a last resort"
+msgstr "Om du fortfarande behöver hjälp, som en sista utväg"
+
+#: code/lib/casebook\cbfuncs_core1.py:1724
+msgid "visit the following lead where this item is obtained"
+msgstr "besök följande ledtråd där detta föremål kan hämtas"
+
+#: code/lib/casebook\cbfuncs_core1.py:1726
+msgid "visit one or more of the following leads where this item is obtained"
+msgstr "besök en eller flera av följande ledtrådar där detta föremål kan hämtas"
+
+#: code/lib/casebook\cbfuncs_core1.py:2185
+#: code/lib/casebook\cbfuncs_core1.py:2324
+msgid "before"
+msgstr "före"
+
+#: code/lib/casebook\cbfuncs_core1.py:2186
+#: code/lib/casebook\cbfuncs_core1.py:2322
+msgid "after"
+msgstr "efter"
+
+#: code/lib/casebook\cbfuncs_core1.py:2190
+msgid "If it is"
+msgstr "Om det är"
+
+#: code/lib/casebook\cbfuncs_core1.py:2190
+msgid "day"
+msgstr "dag"
+
+#: code/lib/casebook\cbfuncs_core1.py:2237
+msgid "**must** be {} before you may end"
+msgstr "**måste** vara {} innan du kan avsluta"
+
+#: code/lib/casebook\cbfuncs_core1.py:2238
+msgid "You should note this in your case log in some way to avoid having to consult this list while playing"
+msgstr "Du bör anteckna detta i din falloggbok på något sätt för att slippa konsultera denna lista under spelets gång"
+
+#: code/lib/casebook\cbfuncs_core1.py:2239
+msgid "Record in your case log that"
+msgstr "Anteckna i din falloggbok att"
+
+#: code/lib/casebook\cbfuncs_core1.py:2241
+msgid "**must** have been {} before you ended"
+msgstr "**måste** ha varit {} innan du avslutade"
+
+#: code/lib/casebook\cbfuncs_core1.py:2242
+msgid "If you have missed {}, return to searching for leads until you find all of them (if stuck, consult the hints section)"
+msgstr "Om du har missat {}, återvänd till att söka efter ledtrådar tills du hittar alla (om du fastnar, konsultera tipssektionen)"
+
+#: code/lib/casebook\cbfuncs_core1.py:2242
+msgid "it"
+msgstr "det"
+
+#: code/lib/casebook\cbfuncs_core1.py:2242
+msgid "one or more"
+msgstr "en eller flera"
+
+#: code/lib/casebook\cbfuncs_core1.py:2243
+msgid "You should have noted in your case log that"
+msgstr "Du borde ha antecknat i din falloggbok att"
+
+#: code/lib/casebook\cbfuncs_core1.py:2255
+msgid "There are no items that must be {} before the end of **day {}**."
+msgstr "Det finns inga föremål som måste vara {} före slutet av **dag {}**."
+
+#: code/lib/casebook\cbfuncs_core1.py:2258
+msgid "The following {} {} **day {}**. {}"
+msgstr "Följande {} {} **dag {}**. {}"
+
+#: code/lib/casebook\cbfuncs_core1.py:2277
+msgid "THE CLOCK IS TICKING!"
+msgstr "KLOCKAN TICKAR!"
+
+#: code/lib/casebook\cbfuncs_core1.py:2279
+msgid "**day {}** start{} at **{}** and end{} at **{}**."
+msgstr "**dag {}** börja{} kl **{}** och sluta{} kl **{}**."
+
+#: code/lib/casebook\cbfuncs_core1.py:2282
+msgid "the required item"
+msgstr "det obligatoriska föremålet"
+
+#: code/lib/casebook\cbfuncs_core1.py:2284
+msgid "all of the required items"
+msgstr "alla obligatoriska föremål"
+
+#: code/lib/casebook\cbfuncs_core1.py:2285
+msgid "If you have *not* {} {} listed above by **{}**, you enter **overtime**.  In overtime there is no limit to how many leads you may visit, time does not advance, and your day ends once you find {}."
+msgstr "Om du *inte* har {} {} listade ovan före **{}**, går du in i **övertid**. På övertid finns ingen gräns för hur många ledtrådar du kan besöka, tiden går inte framåt, och din dag slutar när du hittar {}."
+
+#: code/lib/casebook\cbfuncs_core1.py:2287
+msgid "Keep track of what time you visit each lead, until you reach (or pass) **{}**, after which your day ends."
+msgstr "Håll koll på vilken tid du besöker varje ledtråd, tills du når (eller passerar) **{}**, varefter din dag slutar."
+
+#: code/lib/casebook\cbfuncs_core1.py:2303
+msgid "**Note**: There are specific hints available for each of the the day's required items (see table of contents)."
+msgstr "**Notera**: Det finns specifika tips tillgängliga för vart och ett av dagens obligatoriska föremål (se innehållsförteckningen)."
+
+#: code/lib/casebook\cbfuncs_core1.py:2310
+msgid "However, if you need guidance on where to focus your efforts on any given day"
+msgstr "Men om du behöver vägledning om var du ska fokusera dina ansträngningar på en given dag"
+
+#: code/lib/casebook\cbfuncs_core1.py:2312
+msgid "you can drop by your old police precinct in the Financial District for some advice"
+msgstr "kan du svänga förbi din gamla polisstation i finansdistriktet för lite råd"
+
+#: code/lib/casebook\cbfuncs_core1.py:2313
+msgid "you can catch the chief on his break and get his advice without penalty"
+msgstr "kan du träffa chefen på hans paus och få hans råd utan straff"
+
+#: code/lib/casebook\cbfuncs_core1.py:2318
+msgid "if you arrive"
+msgstr "om du anländer"
+
+#: code/lib/casebook\cbfuncs_core1.py:2320
+msgid "between"
+msgstr "mellan"
+
+#: code/lib/casebook\cbfuncs_core1.py:2369
+msgid ""
+"Stop reading this case book now, and begin searching for leads in the directories.\n"
+"\n"
+"Continue to the next page only when you are ready to end"
+msgstr ""
+"Sluta läsa denna fallbok nu och börja söka efter ledtrådar i katalogerna.\n"
+"\n"
+"Fortsätt till nästa sida endast när du är redo att avsluta"
+
+#: code/lib/casebook\cbfuncs_core1.py:2370
+msgid "Proceed only when you are ready to begin"
+msgstr "Fortsätt endast när du är redo att börja"
+
+#: code/lib/casebook\cbfuncs_core1.py:2371
+msgid "The case is nearing an end. You will have another chance to search for leads, but in the meantime, turn to"
+msgstr "Fallet närmar sig sitt slut. Du kommer att få en till chans att söka efter ledtrådar, men under tiden, vänd dig till"
+
+#: code/lib/casebook\cbfuncs_core1.py:2372
+msgid "Proceed only when you are ready to answer questions."
+msgstr "Fortsätt endast när du är redo att svara på frågor."
+
+#: code/lib/casebook\cbfuncs_core1.py:2373
+msgid "Once you have answered all questions on the previous page(s) you may continue to the next page."
+msgstr "När du har svarat på alla frågor på föregående sida(or) kan du fortsätta till nästa sida."
+
+#: code/lib/casebook\cbfuncs_core1.py:2374
+msgid ""
+"WARNING! Do **not** read through the rest of this document like a book from beginning to end. Lead entries are meant to be read individually only when you look up a lead by its number.\n"
+"\n"
+"Close this book now and follow rulebook instructions for looking up leads."
+msgstr ""
+"VARNING! Läs **inte** igenom resten av detta dokument som en bok från början till slut. Ledtrådsinlägg är avsedda att läsas individuellt endast när du slår upp en ledtråd efter dess nummer.\n"
+"\n"
+"Stäng denna bok nu och följ regelbokens instruktioner för att slå upp ledtrådar."
+
+#: code/lib/casebook\cbfuncs_core1.py:2375
+msgid "Do **not** access the documents section unless directed to retrieve a specific document."
+msgstr "Gå **inte** in i dokumentsektionen om du inte har fått instruktioner att hämta ett specifikt dokument."
+
+#: code/lib/casebook\cbfuncs_core1.py:2376
+msgid "Do **not** access the hints section except when looking up a specific hint from the table of contents at the start of this case book."
+msgstr "Gå **inte** in i tipssektionen förutom när du slår upp ett specifikt tips från innehållsförteckningen i början av denna fallbok."
+
+#: code/lib/casebook\cbfuncs_core1.py:2377
+msgid ", and found the day's required **{} item{}**."
+msgstr ", och hittat dagens obligatoriska **{} föremål{}**."
+
+#: code/lib/casebook\cbfuncs_core1.py:2377
+msgid "Proceed only after you have completed searching for leads on"
+msgstr "Fortsätt endast efter att du har slutfört sökandet efter ledtrådar på"
+
+#: code/lib/casebook\cbfuncs_core1.py:2378
+msgid "Proceed only after you are ready to continue."
+msgstr "Fortsätt endast efter att du är redo att fortsätta."
+
+#: code/lib/casebook\cbfuncs_core1.py:2381
+msgid "Proceed only when you are ready to proceed to **Late Night** activities."
+msgstr "Fortsätt endast när du är redo att gå vidare till **sent natt**-aktiviteter."
+
+#: code/lib/casebook\cbfuncs_core1.py:2382
+msgid "Proceed only after you have finished resolving any special **Late Night** actions described on the previous pages."
+msgstr "Fortsätt endast efter att du har slutfört att lösa eventuella särskilda **sent natt**-åtgärder som beskrivs på föregående sidor."
+
+#: code/lib/casebook\cbfuncs_core1.py:2383
+msgid "Once you have resolved the previous page you may continue to the next page."
+msgstr "När du har löst föregående sida kan du fortsätta till nästa sida."
+
+#: code/lib/casebook\cbfuncs_core1.py:2384
+msgid "Once you have answered all questions on the previous page(s) you may turn the page for the **conclusion to the case**."
+msgstr "När du har svarat på alla frågor på föregående sida(or) kan du vända blad för **slutsatsen till fallet**."
+
+#: code/lib/casebook\cbfuncs_core1.py:2385
+msgid "Do **not** turn the page until you are ready to begin wrapping up your case."
+msgstr "Vänd **inte** blad förrän du är redo att börja avsluta ditt fall."
+
+#: code/lib/casebook\cbfuncs_core1.py:2386
+msgid "Your case has ended, there is nothing more to read."
+msgstr "Ditt fall har avslutats, det finns inget mer att läsa."
+
+#: code/lib/casebook\cbfuncs_core1.py:2387
+msgid "Stop reading this case book now, and begin searching for leads in the directories."
+msgstr "Sluta läsa denna fallbok nu och börja söka efter ledtrådar i katalogerna."
+
+#: code/lib/casebook\cbfuncs_core1.py:2408
+msgid "STOP!"
+msgstr "STOPP!"
+
+#: code/lib/casebook\cbfuncs_core1.py:2429
+msgid "NOTE: If you’ve been playing for a couple of hours, now might be a good time to take a break before continuing..."
+msgstr "NOTERA: Om du har spelat i ett par timmar kan det nu vara en bra tid att ta en paus innan du fortsätter..."
+
+#: code/lib/casebook\cbfuncs_core1.py:2450
+msgid "Continue to next entry"
+msgstr "Fortsätt till nästa inlägg"
+
+#: code/lib/casebook\cbfuncs_core2.py:1027
+msgid "In your case log, record that the current value of **track {}** is: **{}**."
+msgstr "Anteckna i din falloggbok att det aktuella värdet för **spår {}** är: **{}**."
+
+#: code/lib/casebook\cbfuncs_core2.py:1031
+msgid "In your case log, **reduce** the current value of **track {}** by **{}**"
+msgstr "I din falloggbok, **minska** det aktuella värdet för **spår {}** med **{}**"
+
+#: code/lib/casebook\cbfuncs_core2.py:1036
+msgid "In your case log, **increase** the current value of **track {}** by **+{}**"
+msgstr "I din falloggbok, **öka** det aktuella värdet för **spår {}** med **+{}**"
+
+#: code/lib/casebook\cbfuncs_core2.py:1038
+msgid ", but not greater than "
+msgstr ", men inte större än "
+
+#: code/lib/casebook\cbfuncs_core_support.py:124
+msgid "Mark {} {} checkbox{} in your case log"
+msgstr "Markera {} {} kryssruta{} i din falloggbok"
+
+#: code/lib/casebook\cbfuncs_core_support.py:822
+msgid "have"
+msgstr "har"
+
+#: code/lib/casebook\cbfuncs_core_support.py:824
+#: code/lib/casebook\cbfuncs_core_support.py:826
+msgid "have *not*"
+msgstr "har *inte*"
+
+#: code/lib/casebook\cbfuncs_core_support.py:827
+msgid ", stop reading now, and return here after you have."
+msgstr ", sluta läsa nu och återvänd hit efter att du har gjort det."
+
+#: code/lib/casebook\cbfuncs_core_support.py:842
+msgid "If you {} {}"
+msgstr "Om du {} {}"
+
+#: code/lib/casebook\cbfuncs_core_support.py:850
+msgid "**both**"
+msgstr "**båda**"
+
+#: code/lib/casebook\cbfuncs_core_support.py:852
+msgid "**all**"
+msgstr "**alla**"
+
+#: code/lib/casebook\cbfuncs_core_support.py:853
+msgid "and"
+msgstr "och"
+
+#: code/lib/casebook\cbfuncs_core_support.py:855
+msgid "*any*"
+msgstr "*någon*"
+
+#: code/lib/casebook\cbfuncs_core_support.py:856
+msgid "or"
+msgstr "eller"
+
+#: code/lib/casebook\cbfuncs_core_support.py:865
+msgid "If you {} {} {} of the the following {} items ({})"
+msgstr "Om du {} {} {} av följande {} föremål ({})"
+
+#: code/lib/casebook\cbfuncs_core_support.py:1292
+msgid "Time advances {} minutes."
+msgstr "Tiden går framåt {} minuter."

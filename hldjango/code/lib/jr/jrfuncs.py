@@ -7,9 +7,7 @@ import re
 import csv
 import copy
 import time
-import html
 import io
-import datetime
 import zipfile
 from functools import reduce
 import random
@@ -18,7 +16,7 @@ import math
 import traceback
 import glob
 from pathlib import Path
-
+from datetime import datetime
 
 
 
@@ -26,6 +24,7 @@ from pathlib import Path
 LogFilePath = 'logs'
 moduleLogFile = None
 moduleErrorPrintCount = 0
+logFileAnnounceString = None
 
 def setLogFileDir(path):
     global LogFilePath
@@ -49,10 +48,14 @@ def calcLogFilePath():
 
 def openLogFile():
     global moduleLogFile
+    global logFileAnnounceString
     filePath = calcLogFilePath()
     encoding = 'utf-8'
     moduleLogFile = open(filePath, 'a+', encoding=encoding)
     print('\n\n>LOGGING TO: {}..'.format(filePath)+'\n')
+    if (logFileAnnounceString is not None) and (logFileAnnounceString != ""):
+        # write the log file announce; this is done delayed to avoid an empty log file if nothing else is logged
+        print(logFileAnnounceString, file=moduleLogFile)
     return moduleLogFile
 
 def getOpenLogFile():
@@ -64,6 +67,13 @@ def getOpenLogFile():
 def incLogErrorPrintCount():
     global moduleErrorPrintCount
     moduleErrorPrintCount += 1
+
+def setLogFileAnnounceString(msg):
+    global logFileAnnounceString
+    logFileAnnounceString = msg
+    if (msg is not None) and (msg != ""):
+        # print it to console right away but delay sending it to log file
+        print(msg)
 #---------------------------------------------------------------------------
 
 
@@ -117,8 +127,11 @@ def copyFile(sourcePath, destPath, fname):
 
 def copyFilePath(sourcePath, destPath):
     #jrprint('Asked to copy file from "{}" to "{}".'.format(sourcePath, destPath))
+    # Exception will be thrown on error
     shutil.copy2(sourcePath, destPath)
+    #
     return True
+
 
 def renameFile(sourcePath, destPath):
     shutil.move(sourcePath, destPath)
@@ -136,7 +149,6 @@ def deleteDirPathIfExists(dirPath):
         shutil.rmtree(dirPath + "/")
         return True
     return False
-
 
 
 def deleteExtensionFilesIfExists(baseDir, baseFileName, extensionList):
@@ -174,6 +186,30 @@ def deleteFilePattern(baseDir, filePattern):
     for filePath in glob.glob(baseDir + "/" + filePattern):
         #jrprint("Would delete {}.".format(filePath))
         os.unlink(filePath)
+
+
+def splitFilePathToPathAndFile(filePath):
+    dirPath, filename = os.path.split(filePath)
+    if (not dirPath.endswith("/")):
+        dirPath += "/"
+    dirPath = dirPath.replace("\\","/")
+    return [dirPath, filename]
+
+
+def splitFileNameToExtension(filename):
+    base_name, extension = os.path.splitext(filename)
+    return [base_name, extension]
+
+def truncateFileIfExists(filePath):
+    if (not pathExists(filePath)):
+        return False
+    try:
+        # Truncate the file to the first 100 bytes
+        with open(filePath, "r+") as file:
+            file.truncate()
+    except Exception as e:
+        return False
+    return True
 #---------------------------------------------------------------------------
 
 
@@ -188,6 +224,9 @@ def removeLeadingZeros(val):
         val = '0'
     return val
 
+def removeLeadingZerosAnywhere(val):
+    clean = re.sub(r'(?<!\d)0+(?=\d)', '', val)
+    return clean
 
 def zeropadIfNumber(text,digits):
     if (text==''):
@@ -543,6 +582,36 @@ def getDictValueFromTrueFalse(thedict, key, defaultVal):
     if (val=='false'):
         return False
     raise Exception('Bad code path should not happen.') 
+
+def getDictValueIsNonBlankFalse(thedict, key):
+    if (not key in thedict):
+        return False
+    val = thedict[key]
+    if (val is None) or (val=="") or (val=="false") or (val==False):
+        return False
+    return True
+
+
+def overrideIfNone(val, key, thedict, defaultVal = None):
+    if (val is not None):
+        return val
+    return getDictValueOrDefault(thedict, key, defaultVal)
+
+
+def overideBlankOptions(options, newOptions, flagAddIfMissing):
+    # any key in newOptions which is missing or BLANK, replace with new value
+    for key in newOptions.keys():
+        if (newOptions[key] is not None):
+            if ((key not in options) and flagAddIfMissing) or ((key in options) and (options[key] is None)):
+                options[key] = newOptions[key]
+
+
+def getOverrideWithDictValueIfBlank(thedict, key, existingVal, defaultVal=None):
+    if (existingVal is not None):
+        return existingVal
+    if (key in thedict):
+        return thedict[key]
+    return defaultVal
 #---------------------------------------------------------------------------
 
 
@@ -608,10 +677,10 @@ def kludgeFixWeirdBusinessNames(name):
 
 
 #---------------------------------------------------------------------------
-def splitStringIntoList(text, separator):
+def splitStringIntoList(text, divider):
     if (type(text) is not str):
         return text
-    textList = text.split(separator)
+    textList = text.split(divider)
     textList = [f for f in textList if (f!='')]
     return textList
 #---------------------------------------------------------------------------
@@ -1314,18 +1383,18 @@ def escapedCharacterConvert(charc):
 
 # ---------------------------------------------------------------------------   
 def getNiceCurrentDateTime():
-    return getNiceDateTime(datetime.datetime.now())
+    return getNiceDateTime(datetime.now())
 
 def getNiceDateTime(dt):
-    return dt.strftime('%A, %B %d at %I:%M %p')
+    return dt.strftime('%A, %B %d, %Y at %I:%M %p')
 
 def getNiceDateTimeCompact(dt):
     #return dt.strftime('%a, %b %d at %#I:%M %p')
-    return dt.strftime('%a, %b %d at %I:%M %p')
+    return dt.strftime('%a, %b %d, %Y at %I:%M %p')
 
 
 def getNiceCurrentDate():
-    dt = datetime.datetime.now()
+    dt = datetime.now()
     return dt.strftime('%A, %B %d')
 
 
@@ -1349,11 +1418,13 @@ def plurals(amount, ifMoreThanOneText):
         return ifMoreThanOneText
 
 
-def singularPlurals(amount, singularText, pluralText):
+def singularPlurals(amount, singularText, pluralText, bothText):
     amount = int(amount)
     if (amount==1):
         return singularText
     else:
+        if (amount==2) and (bothText is not None) and (bothText!=""):
+            return bothText
         return pluralText
 
 
@@ -1382,8 +1453,27 @@ def makeNiceCommaAndOrList(strList, lastWord):
 
 # ---------------------------------------------------------------------------
 def uppercaseFirstLetter(text):
-    text = text[0].upper() + text[1:]
-    return text
+    pos = 0
+    # skip over markdown adjustments
+    while ((pos<len(text)) and (text[pos] in "_*")):
+        pos += 1
+    if (pos>=len(text)):
+        return text
+    ntext = replaceCharInString(text, pos, text[pos].upper())
+    return ntext
+
+def lowercaseFirstLetter(text):
+    pos = 0
+    # skip over markdown adjustments
+    while ((pos<len(text)) and (text[pos] in "_*")):
+        pos += 1
+    if (pos>=len(text)):
+        return text
+    ntext = replaceCharInString(text, pos, text[pos].lower())
+    return ntext
+
+def replaceCharInString(text, pos, c):
+    return text[:pos] + c + text[pos+1:]
 # ---------------------------------------------------------------------------
 
 
@@ -1443,7 +1533,7 @@ def zipFileList(fileList, outputPath, baseFilename, optionAddDateToZipFileName, 
     # special zip instruction
     optionZipSuffix = ""
     if (optionAddDateToZipFileName):
-        nowTime = datetime.datetime.now()
+        nowTime = datetime.now()
         optionZipSuffix += nowTime.strftime('_%Y%m%d')
     if (len(fileList)>0):
         zipFilePath = makeZipFile(fileList, outputPath, baseFilename + optionZipSuffix)
@@ -1538,7 +1628,10 @@ def exceptionPlusSimpleTraceback(e, contextStr):
     tracebackLines = traceback.format_exception(e)
     #tracebackLines = traceback.format_exception(e, limit = 2)
     tracebackText = "\n".join(tracebackLines)
-    msg = "ERROR, exception while {}: {}. Traceback: {}".format(contextStr, repr(e), tracebackText)
+    if (hasattr(e, "prettyPrint")):
+        msg = "ERROR, exception while {}: {}\n----------------------------------------\n{}".format(contextStr, e.prettyPrint(), tracebackText)
+    else:
+        msg = "ERROR, exception while {}: {}.\nTraceback: {}".format(contextStr, repr(e), tracebackText)
     return msg
 # ---------------------------------------------------------------------------
 
@@ -1600,6 +1693,16 @@ def boolFromStr(v):
     if (v=="false"):
         return False
     return None
+
+def is_number(v):
+    return isinstance(v, (int, float))
+
+def makeInt(v):
+    if (isinstance(v, (int))):
+        return v
+    if (isinstance(v, (float))):
+        return int(v)
+    return intOrFloatFromStr(v)
 # ---------------------------------------------------------------------------
 
 
@@ -1648,17 +1751,27 @@ def calcTextPositionStyle(text):
     return 'linestart'
 
 
-def modifyTextToSuitTextPositionStyle(text, textPositionStyle, linestartPrefix, flagPeriodIfStandalone):
+def modifyTextToSuitTextPositionStyle(text, textPositionStyle, linestartPrefix, flagPeriodIfStandalone, flagShiftUp, flagShiftDown):
     if (len(text)==0):
         return text
     #
+
+    if (text.startswith("if")):
+        jrprint("ATTN: DEBUG BREAK")
+
     c = text[0]
+    c2 = text[1] if (len(text)>1) else '.'
+    #
     if (textPositionStyle in ['linestart', 'sentence']):
-        if (c.isalpha):
-            text= c.upper() + text[1:]
+        # uppercase it at start
+        if (flagShiftUp):
+            if (c.isalpha()):
+                text= c.upper() + text[1:]
     elif (textPositionStyle in ['linestart', 'midsentence']):
-        if (c.isalpha()):
-            text = c.lower() + text[1:]
+        # lowercase it in middle of sentence
+        if (flagShiftDown):
+            if (c.isalpha() and c2.isalpha()):
+                text = c.lower() + text[1:]
     #
     if (textPositionStyle == 'linestart'):
         text = linestartPrefix + text
@@ -1724,13 +1837,21 @@ def dictToHtmlPre(data):
 
 
 # ---------------------------------------------------------------------------
-def smartSplitTextForDropCaps(text):
+def smartSplitTextForDropCaps(text, dropCapsStyle):
     # return [firstChar, upperCaseText, remainder]
+
+    # ATTN: this was causing trouble
+    if (False):
+        text = text.strip()
+    else:
+        # we want to trip the LEFT side of spaces only
+        text = text.lstrip()
+
     if (len(text)==0):
-        return None
+        return [None,None,None]
     firstChar = text[0]
     # find first punctuation
-    stopChars = [".",",",'"', "“", ":"]
+    stopChars = [".",",",'"', "“", ":", " "]
     textlen = len(text)
     stopIndex = None
     for i in range(1,textlen):
@@ -1751,4 +1872,404 @@ def quoteStringsForDisplay(val):
     if (isinstance(val,str)):
         return '"' + val + '"'
     return val
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+def callSetIfValNotNone(func, val):
+    # simple wrapper that only invoked a setter if the value is not none
+    if (val is not None):
+        func(val)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+def niceDayDateStr(dayDate, flagYear, flagAddTh):
+    if (flagYear):
+        if (flagAddTh):
+            text = dayDate.strftime(f'%A, %B {addOrdinalSuffixToDay(dayDate.day)}, %Y').lstrip("0")
+        else:
+            text = dayDate.strftime(f'%A, %B {dayDate.day}, %Y').lstrip("0")
+    else:
+        if (flagAddTh):
+            text = dayDate.strftime(f'%A, %B {addOrdinalSuffixToDay(dayDate.day)}').lstrip("0")
+        else:
+            text = dayDate.strftime(f'%A, %B {dayDate.day}').lstrip("0")            
+    return text
+
+def shortDayDateStr(dayDate, flagYear):
+    if (flagYear):
+        text = dayDate.strftime(f'%a, %b {addOrdinalSuffixToDay(dayDate.day)}, %Y').lstrip("0")
+    else:
+        text = dayDate.strftime(f'%a, %b {addOrdinalSuffixToDay(dayDate.day)}').lstrip("0")          
+    text = removeLeadingZerosAnywhere(text)
+    return text
+
+def niceTimeDayStr(dayDate):
+    if (dayDate.minute==0):
+        # no minutes needed
+        text = dayDate.strftime(f'%I %p').lstrip("0")
+    else:
+        text = dayDate.strftime(f'%I:%M %p').lstrip("0")
+    return text
+
+def niceDayDateTimeStr(dayDate, flagYear, flagAddTh):
+    dayDateStr = niceDayDateStr(dayDate, flagYear, flagAddTh)
+    timeStr = niceTimeDayStr(dayDate)
+    return timeStr + " - " + dayDateStr
+
+def addOrdinalSuffixToDay(day):
+    if 4 <= day <= 20 or 24 <= day <= 30:
+        suffix = 'th'
+    else:
+        suffix = ['st', 'nd', 'rd'][day % 10 - 1]
+    return str(day) + suffix
+
+def makeDateTimeFromString(dateStr, expectedFormat):
+    dayDate = datetime.strptime(dateStr, expectedFormat)
+    return dayDate
+
+def calcModificationDateOfFile(path):
+    mod_time = os.path.getmtime(path)
+    return mod_time
+
+def calcModificationDateOfFileOrZero(path):
+    try:
+        mod_time = os.path.getmtime(path)
+        return mod_time
+    except Exception as E:
+        return 0
+
+
+def calcModificationDateOfFileAsNiceString(path):
+    mod_time = calcModificationDateOfFile(path)
+    return niceFileDateStr(mod_time)
+
+
+def niceFileDateStr(fileTime):
+    dayDate = datetime.fromtimestamp(fileTime)
+    return niceDayDateTimeStr(dayDate, True, False)
+
+def calcHowLongAgoFileModifiedInSeconds(path):
+    # Get the current time
+    now = datetime.now()
+    mod_time = datetime.fromtimestamp(os.path.getmtime(path))
+    # Calculate the difference in seconds
+    time_diff = (now - mod_time).total_seconds()
+    return time_diff
+
+def calcHowLongAgoFileModifiedAsNiceString(path):
+    seconds = calcHowLongAgoFileModifiedInSeconds(path)
+    return niceElapsedTimeStr(seconds)
+
+
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def combineTwoStringLabels(val1, val2, left, right, na):
+    # simple combine like val1 (val2)
+    if (val1 is None):
+        val1=""
+    if (val2 is None):
+        val2=""
+    if (val1=="") and (val2==""):
+        return na
+    if (val1 == val2):
+        return val1
+    if (val2==""):
+        return val1
+    if (val1==""):
+        return val2
+    return val1 + left + val2 + right
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+# with help of chatgpt
+def estimateCostInYear(year, yearPriceData):
+    # Data points as (year, price) tuples
+
+    # If the year is outside the range of provided data, return a message
+    if year < yearPriceData[0][0]:
+        return round(yearPriceData[0][1])
+    if year > yearPriceData[-1][0]:
+        return round(yearPriceData[-1][1])
+    
+    # Find the segment that contains the year for interpolation
+    for i in range(len(yearPriceData) - 1):
+        if yearPriceData[i][0] <= year <= yearPriceData[i+1][0]:
+            # Extract the points (x0, y0) and (x1, y1)
+            x0, y0 = yearPriceData[i]
+            x1, y1 = yearPriceData[i + 1]
+            
+            # Calculate the interpolated price using the formula for linear interpolation
+            # y = y0 + (y1 - y0) * ((x - x0) / (x1 - x0))
+            price = y0 + (y1 - y0) * ((year - x0) / (x1 - x0))
+            return round(price)
+    
+    # Edge case if the year matches the last data point exactly
+    if year == yearPriceData[-1][0]:
+        return round(yearPriceData[-1][1])
+
+
+
+
+def int_to_roman(input):
+    """ Convert an integer to a Roman numeral. """
+    if not isinstance(input, type(1)):
+        raise TypeError("expected integer, got {}".format(type(input)))
+    if not 0 < input < 4000:
+        raise ValueError("Argument must be between 1 and 3999")
+    ints = (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1)
+    nums = ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I')
+    result = []
+    for i in range(len(ints)):
+        count = int(input / ints[i])
+        result.append(nums[i] * count)
+        input -= ints[i] * count
+    return ''.join(result)
+
+
+def estimateIssueAndVolume(dayDate, firstDate, firstNumber, firstVolume):
+  
+    # Define the start date and the initial issue number
+    start_date = firstDate
+    initial_issue_number = firstNumber
+    
+    # Calculate the difference in days between the start date and the given date
+    delta = dayDate - start_date
+    
+    # Calculate the issue number
+    issue_number = initial_issue_number + delta.days
+
+    # roman numeral volume
+    startYear = firstDate.year
+    volume_number = firstVolume + (dayDate.year - startYear)
+    roman_volume = int_to_roman(volume_number)
+    
+    return [issue_number, roman_volume]
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def convertToIntIfPossible(val):
+    try:
+        return int(val)
+    except ValueError:
+        return None
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def dictToCommaString(dict):
+    # Create a list of "key=value" strings for each key, value pair in the dictionary
+    items = [f"{key}={value}" for key, value in dict.items()]
+    # Join all items in the list with a comma
+    return ", ".join(items)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+def replaceFractionalHourTime(dt, fractionalHours):
+    # note this will not change the existing datetime object but create a new one and return it
+
+    # Extract the integer part for the hour
+    hours = int(fractionalHours)
+    
+    # Calculate the minutes from the fractional part
+    minutes = int((fractionalHours - hours) * 60)
+    
+    # Replace the hour and minute in the original datetime
+    return dt.replace(hour=hours, minute=minutes, second=0)
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+# help from chatgpt
+def convertStringToHoursMinsNumberIfNeeded(timeStr):
+    # if the val is a string, then we expect of the form ("8:30 am")
+    if (not isinstance(timeStr,str)):
+        return timeStr
+
+    # Normalize the string by removing spaces and converting to lowercase
+    timeStr = timeStr.replace(" ", "").lower()
+    
+    # Regular expression to match the hour and optional minutes and AM/PM
+    match = re.match(r'(\d{1,2})(?::(\d{2}))?(am|pm)?', timeStr)
+    if not match:
+        raise ValueError("Invalid time format, expecting something like '8:00 am'")
+    
+    hour, minutes, period = match.groups()
+    hour = int(hour)
+    minutes = int(minutes) if minutes else 0
+    
+    # Adjust hour for AM/PM
+    if period == 'pm' and hour != 12:
+        hour += 12
+    elif period == 'am' and hour == 12:
+        hour = 0
+
+    # Convert time to decimal
+    return hour + (minutes / 60.0)
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# chatgpt
+def is_serializable(obj):
+    """ Check if an object is JSON serializable. """
+    try:
+        json.dumps(obj)
+        return True
+    except (TypeError, OverflowError):
+        return False
+
+def print_serializable_attributes(obj, indent=2):
+    """ Recursively print all serializable attributes of an object. """
+    # If the object itself is serializable, simply print it
+    if is_serializable(obj):
+        print('  ' * indent + str(obj))
+    else:
+        # Otherwise, iterate through its attributes if possible
+        if hasattr(obj, '__dict__'):
+            for key, value in obj.__dict__.items():
+                print('  ' * indent + f"{key}:")
+                print_serializable_attributes(value, indent + 1)
+        elif isinstance(obj, dict):
+            for key, value in obj.items():
+                print('  ' * indent + f"{key}:")
+                print_serializable_attributes(value, indent + 1)
+        elif isinstance(obj, (list, tuple, set)):
+            for item in obj:
+                print_serializable_attributes(item, indent + 1)
+        else:
+            print('  ' * indent + "Non-serializable object")
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def replaceStrings(text, replaceDict):
+    for key in replaceDict.keys():
+        text = text.replace(key, replaceDict[key])
+    return text
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+def addSuffixToPath(path, suffix):
+    # add suffix to file preserve extension
+    base, ext = os.path.splitext(path)
+    newPath = f"{base}{suffix}{ext}"
+    return newPath
+
+def getBaseFileName(path):
+    return os.path.basename(path)
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def applyCaseChange(text, caseOption):
+    if (caseOption=="") or (caseOption is None):
+        return text
+    if (caseOption=="upper"):
+        return text.upper()
+    if (caseOption=="lower"):
+        return text.lower()
+    if (caseOption=="title"):
+        return text.title()
+    if (caseOption=="capitalize"):
+        return text.capitalize()
+    if (caseOption=="unchanged"):
+        return text
+    raise Exception("Case modification mode not understood: '{}'.".format(caseOption))
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+def mergeOveridePipeFeatureString(featureString1, featureString2):
+    features = featureString1.split("|") if (featureString1 is not None) else []
+    features2 = featureString2.split("|") if (featureString2 is not None) else []
+    for feature in features2:
+        if (feature not in features):
+            features.append(feature)
+    combinedFeatureString = "|".join(features)
+    return combinedFeatureString
+
+def mergeOveridePipeFeatureStringFromDict(defDict, key, val):
+    return mergeOveridePipeFeatureString(getDictValueOrDefault(defDict, key, None), val)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+def startsWithAny(text, textList):
+    for item in textList:
+        if (text.startswith(item)):
+            return True
+    return False
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def mergeVarValPairStringIntoDict(finalDict, assignmentString, presetDict):
+    assignments = assignmentString.split("|") if (assignmentString is not None) else []
+    if (len(assignments)==0):
+        return
+    for assignment in assignments:
+        if (assignment==""):
+            continue
+        # split into var=val
+        parts = assignment.split("=")
+        if (len(parts)!=2):
+            raise Exception("String should be in format var=val|var=val|... but instead got '{}'".format(assignmentString))
+        varName = parts[0].strip()
+        val = parts[1].strip()
+        if (varName=="preset"):
+            # recurively fill from preset
+            if (not (val in presetDict)):
+                raise Exception("Preset '{}' not found; should be from {} inside varvalPair '{}'.".format(val, presetDict.keys(), assignmentString))
+            presetDictStr = presetDict[val]
+            mergeVarValPairStringIntoDict(finalDict, presetDictStr, presetDict)
+        else:
+            # set val
+            finalDict[varName] = val
+
+
+def parseVarValStringAsNumber(v):
+    return intOrFloatFromStr(v)
+
+def parseVarValStringAsBool(v):
+    if (v=="false") or (v=="") or (v is None) or (v=="False") or (v==False):
+        return False
+    return True
+
+# ---------------------------------------------------------------------------
+
+
+
+# ---------------------------------------------------------------------------
+def expandUserEscapeChars(text):
+    if (text is None) or (text==""):
+        return text
+    text = text.replace("\\n", "\n")
+    text = text.replace("\\t", "\t")
+    return text
 # ---------------------------------------------------------------------------

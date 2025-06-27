@@ -2,6 +2,7 @@
 from .jrastfuncs import wrapValIfNotAlreadyWrapped, unwrapIfWrappedVal
 from .jrastvals import AstValObject
 from .jriexception import *
+from .jrastutilclasses import JrINote
 
 # my libs
 from lib.jr import jrfuncs
@@ -18,6 +19,8 @@ from lib.jr.jrfuncs import jrprint
 
 from .casebookDefines import *
 
+# python modules
+import difflib
 
 
 
@@ -98,8 +101,10 @@ class JrCbEnvironment:
                 # warning
                 self.logEnvWarningWithPreviousValue("Runtime warning; declaring a variable '{}' which will shadow an existing variable in parent scope".format(identifierName), sloc, envVar)
         # create it
-        self.envDict[identifierName] = JrEnvVar(sloc, identifierName, description, val, isConstant)
+        self.createEnvVar(sloc, identifierName, description, val, isConstant)
 
+    def createEnvVar(self, sloc, identifierName, description, val, isConstant):
+        self.envDict[identifierName] = JrEnvVar(sloc, identifierName, description, val, isConstant)
 
     # set a value; NOTE we require all variables to be declared before use so this is an error if it cannot be found in scope -- it won't be creatded
     def setEnvValue(self, sloc, identifierName, val, flagCheckConst):
@@ -107,6 +112,17 @@ class JrCbEnvironment:
         if (not envVar):
             # error does not exist
             raise self.makeEnvException("Runtime error; identifier '{}' has not been declared in this or any parent scope".format(identifierName), sloc)
+        if (flagCheckConst and envVar.getIsConstant()):
+            raise self.makeEnvExceptionWithPreviousValue("Runtime error; identifier {} has been declared constant and so cannot be reassigned".format(identifierName), sloc, envVar)
+        # set the non-const value
+        envVar.setValue(sloc, partList, val, flagCheckConst)
+
+
+    # set a value; NOTE we require all variables to be declared before use so this is an error if it cannot be found in scope -- it won't be creatded
+    def setCreateEnvValue(self, sloc, identifierName, val, flagCheckConst, isConstant):
+        [envVar, baseName, partList] = self.lookupJrEnvVar(sloc, identifierName, True)
+        if (not envVar):
+            return self.declareEnvVar(sloc, identifierName, "description n/a", val, isConstant)
         if (flagCheckConst and envVar.getIsConstant()):
             raise self.makeEnvExceptionWithPreviousValue("Runtime error; identifier {} has been declared constant and so cannot be reassigned".format(identifierName), sloc, envVar)
         # set the non-const value
@@ -197,11 +213,44 @@ class JrCbEnvironment:
     def getTagManager(self):
         return self.getInterp().getTagManager()
 
+    def getConceptManager(self):
+        return self.getInterp().getConceptManager()
+
     def getCheckboxManager(self):
         return self.getInterp().getCheckboxManager()
 
     def getBuildString(self):
-        return self.getInterp().getBuildString()
+        val = self.getInterp().getBuildString()
+        return val
+
+    def getQuestionManager(self):
+        return self.getInterp().getQuestionManager()
+
+
+    def getTypesetString(self, optionSimplified):
+        # add latex compiler info
+        task = self.getTask()
+        if (task is None):
+            return "n/a"
+        taskOptions = task.getTaskOptions()
+        #
+        doubledSided = jrfuncs.getDictValueOrDefault(taskOptions, "doubleSided", "sided")
+        latexPaperSize = jrfuncs.getDictValueOrDefault(taskOptions, "latexPaperSize", "papersize")
+        latexFontSize = jrfuncs.getDictValueOrDefault(taskOptions, "latexFontSize", "fontsize ")
+        taskBuildLabel = jrfuncs.getDictValueOrDefault(taskOptions, "label", "unlabeled")
+        latexCompiler = jrfuncs.getDictValueOrDefault(taskOptions, "latexCompiler", "unknown latex compiler")
+        if (doubledSided):
+            sidedLatex = "twosided"
+        else:
+            sidedLatex = "oneside"
+
+        if (optionSimplified):
+            val = "{}pt {} {} ({})".format(latexFontSize, latexPaperSize, sidedLatex, latexCompiler)
+        else:
+            val = "{}pt {} {} - {} ({})".format(latexFontSize, latexPaperSize, sidedLatex, taskBuildLabel, latexCompiler)
+        #
+        return val
+
 
     def getFileManagerImagesCase(self):
         retv = self.getFileManager(DefFileManagerNameImagesCase)
@@ -219,19 +268,31 @@ class JrCbEnvironment:
         retv = self.getFileManager(DefFileManagerNamePdfsShared)
         return retv
     #
+    def getFileManagerFontsShared(self):
+        retv = self.getFileManager(DefFileManagerNameFontsShared)
+        return retv
+    #
     def getFileManager(self, fileManagerTypeStr):
         retv = self.getInterp().getFileManager(fileManagerTypeStr)
         return retv
 
 
-    def findFullPathImageOrPdf(self, path, flagMarkUsage):
-        managerIdList = [DefFileManagerNameImagesCase, DefFileManagerNameImagesShared, DefFileManagerNamePdfsCase, DefFileManagerNamePdfsShared]
-        for managerId in managerIdList:
-            manager = self.getFileManager(managerId)
-            fileFullPath = manager.findFullPath(path, flagMarkUsage)
-            if (fileFullPath is not None):
-                return [fileFullPath, manager.getSourceLabel()]
-        return [None, None]
+
+    def getGameModel(self):
+        task = self.getTask()
+        if (task is None):
+            return None
+        taskOptions = task.getTaskOptions()
+        gamePk = jrfuncs.getDictValueOrDefault(taskOptions, "gamePk", None)
+        # instantiate it from django
+        # ATTN: this is awkward, since normally casebook has no connection to django data
+        from games.models import Game
+        gameModel = Game.objects.get(pk=gamePk)
+        return gameModel
+
+
+
+
 
 
     def findEntryByIdPath(self, id, astloc):
@@ -279,6 +340,144 @@ class JrCbEnvironment:
             return versionstr
         versionStrSafe = "v"+jrfuncs.safeCharsForFilename(versionstr)
         return versionStrSafe
+
+
+    def findTagOrConcept(self, tagId, flagExceptionIfNotFound):
+        tagManager = self.getTagManager()
+        tag = tagManager.findTagById(tagId)
+        if (tag is not None):
+            return tag
+        tagManager = self.getConceptManager()
+        tag = tagManager.findTagById(tagId)
+        if (tag is not None):
+            return tag 
+        # not found
+        if (flagExceptionIfNotFound):
+            raise makeJriException("Tag not found '{}'.".format(tagId), None)
+        return None
+
+
+    def findDidYouMeanFunction(self, identifierName):
+        # return a string with a function name that they might have meant, with case ignored, etc. to suggest on error
+        # return NONE if none found
+
+        # split identifier into base and parts
+        [baseVarName, propertyParts] = self.splitIndentifierParts(identifierName)
+        baseVarNameLc = baseVarName.lower()
+
+        # try case insensitive
+        env = self
+        while (env is not None):
+            for k,v in env.envDict.items():
+                klc = k.lower()
+                if (klc == baseVarNameLc):
+                    return "'{}' (identifiers are case sensitive)".format(k)
+            env = env.parentEnv
+  
+        # try similar
+        env = self
+        bestSimilarity = 0
+        while (env is not None):
+            for k,v in env.envDict.items():
+                klc = k.lower()
+                matcher = difflib.SequenceMatcher(None, klc, baseVarNameLc)
+                # Get the ratio of similarity
+                similarity = matcher.ratio()
+                if (similarity > bestSimilarity):
+                    bestSimilarity = similarity
+                    bestIdentifier = v
+            env = env.parentEnv
+        
+        if (bestSimilarity>0):
+            return "{} (nearest match; {})".format(bestIdentifier.name, bestIdentifier.description)
+
+        return None
+
+
+
+
+#---------------------------------------------------------------------------
+# image file helper
+
+    def locateManagerFileWithUseNote(self, managerIdList, path, noteMessage, noteTypeStr, leadp, env, astloc, allowMissingFileJustWarn):
+        # find an image, return its path
+        # add a note about its use
+        # possibly support a warning without adding it
+
+        warningText = None
+        flagMarkUsage = True
+
+        # walk file manager helpers, take first find (usually case then fallback to shared)
+        fileFullPath = None
+        manager = None
+        for managerId in managerIdList:
+            manager = self.getFileManager(managerId)
+            fileFullPath = manager.findFullPath(path, flagMarkUsage)
+            if (fileFullPath is not None):
+                break
+
+        if (fileFullPath is None):
+            if (allowMissingFileJustWarn):
+                msg = "CASEBOOK WARNING: FILE MISSING for {} at '{}' in searched directories ({}), OPTIONS CONFIGURED TO SHOW WARNING: ".format(noteMessage, path, managerIdList)
+                warningText = msg
+            else:
+                raise makeJriException("File not found for {} at '{}' in searched directories ({}).".format(noteMessage, path, managerIdList), astloc)
+
+        # for debugging, whether it is local or shared
+        locationClass = manager.getLocationClass()
+        notePath = locationClass + "/" + path
+
+        # add note for debug report
+        if (noteTypeStr is not None):
+            msg = noteMessage + ': "{}"'.format(notePath)
+            msgLatex = noteMessage + ': "\\path{' + notePath + '}"'
+            extras = {"filePath": fileFullPath}
+            note = JrINote(noteTypeStr, leadp, msg, msgLatex, extras)
+            env.addNote(note)
+
+        return [fileFullPath, warningText]
+
+
+    def calcManagerIdListImage(self):
+        return [DefFileManagerNameImagesCase, DefFileManagerNameImagesShared]
+
+    def calcManagerIdListImageOrPdf(self):
+        return [DefFileManagerNameImagesCase, DefFileManagerNameImagesShared, DefFileManagerNamePdfsCase, DefFileManagerNamePdfsShared]
+
+    def calcManagerIdListPdf(self):
+        return [DefFileManagerNamePdfsCase, DefFileManagerNamePdfsShared]
+
+    def calcManagerIdListFont(self):
+        return [DefFileManagerNameFontsShared]
+
+    def calcManagerIdListSource(self):
+        return [DefFileManagerNameSourceCase, DefFileManagerNameSourceShared]
+#---------------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------------
+    def getVariablesWithValue(self, val):
+        # walk all visible variables and return a list of them that have the val
+        varList = {}
+        varListSaw = []
+
+        # search all jumping up hierarchy, but only checking deepest var per name
+        env = self
+        while (env is not None):
+            for k,v in env.envDict.items():
+                if (k not in varListSaw):
+                    valUnwrapped = v.getUnWrappedValue(None, None)
+                    if (valUnwrapped == val):
+                        varList[k]=v
+                    varListSaw.append(k)
+            env = env.parentEnv
+        
+        return varList
+#---------------------------------------------------------------------------
+
+
+
+
 
 
 
@@ -362,6 +561,11 @@ class JrEnvVar:
     def makeEnvVarException(self, msg, sloc):
         # ATTN: TODO can we add source location info?
         return makeJriException(msg, [sloc, self.getSloc()])
+
+
+
+
+
 
 
 

@@ -1,0 +1,39 @@
+name: hlweb_mylocalfiles
+
+services:
+
+  hlweb_production:
+    image: jreichler/${COMPOSE_PROJECT_NAME}:latest
+    container_name: ${COMPOSE_PROJECT_NAME}
+    build:
+      dockerfile: docker/${COMPOSE_PROJECT_NAME}/Dockerfile
+      context: ../../
+      tags:
+        - jreichler/${COMPOSE_PROJECT_NAME}:v4.19
+
+    #ATTN: This command will OVERRIDE any CMD in the Dockerfile; currently we use same values
+    #command: /install_scripts/run_mainservices.sh
+
+    
+    # disable for interactive shell testing
+    # restart: always
+
+
+    volumes:
+      # for this compose build we bind to our real directory for easier changing of code and reloading
+      - ../../code:/code
+      - ../../media/games:/media/games
+      - ../../db:/db
+      - ../../jrlogs:/jrlogs
+      - ../../letsencrypt:/etc/letsencrypt
+
+    ports:
+      # TIP: see also the Dockerfile for exposing ports
+      - "80:80"
+      - "443:443"
+      # 8000 should not be needed since we are accessing via nginx at 80 and 443
+      #- "8000:8000"
+
+
+    environment:
+      - COMPOSE_PROJECT_NAME

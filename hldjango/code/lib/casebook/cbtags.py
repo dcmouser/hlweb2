@@ -4,6 +4,17 @@
 from lib.jr import jrfuncs
 from lib.jr.jrfuncs import jrprint
 from .jriexception import *
+from .cbfuncs_core_support import parseTagListArg
+
+
+from .cbfuncs_core_support import calcMarkerActionDict
+
+# translation
+from .cblocale import _
+
+# python modules
+import math
+import random
 
 
 # defines
@@ -18,6 +29,10 @@ class CbTagManager:
         #
         self.tagLetterLabelsAvailable = []
         self.tagLetterStage = 0
+        self.didPostProcess = False
+        self.allTagLetters = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
+        self.obfuscatedIdPool = None
+        self.obfuscatedIdPoolNumberStages = 0
 
     def getTagDict(self):
         return self.tags
@@ -29,11 +44,11 @@ class CbTagManager:
         defaultLocation = env.getEnvValueUnwrapped(None, "documentData.defaultLocation", "back")
         return defaultLocation
 
-    def findOrDeclareTag(self, env, id, deadline, label, tagLocation, tagObfuscatedLabel, sloc, debugComment, leadp):
+    def findOrDeclareTag(self, env, id, deadline, label, tagLocation, tagObfuscatedLabel, tagDependencyString, sloc, debugComment, leadp):
         tag = self.findTagById(id)
         if (tag is not None):
             return tag
-        tag = self.declareTag(env, id, deadline, label, tagLocation, tagObfuscatedLabel, True, sloc, debugComment, leadp)
+        tag = self.declareTag(env, id, deadline, label, tagLocation, tagObfuscatedLabel, tagDependencyString, True, sloc, debugComment, leadp, False)
         return tag
 
     def findTagById(self, id):
@@ -41,21 +56,61 @@ class CbTagManager:
             return self.tags[id]
         return None
 
-    def declareTag(self, env, id, deadline, label, tagLocation, tagObfuscatedLabel, flagErrorIfExists, sloc, debugComment, leadp):
+    def findTagByObfuscatedId(self, obfuscatedId):
+        for tagId,tag in self.tags.items():
+            tagObfuscatedId = tag.getObfuscatedLabel()
+            if (obfuscatedId==tagObfuscatedId):
+                return tag
+        # not found
+        return None
+
+
+    def addTagToTags(self, id, tag):
+        self.tags[id] = tag
+
+    def declareTag(self, env, id, deadline, label, tagLocation, tagObfuscatedLabel, tagDependencyString, flagErrorIfExists, sloc, debugComment, leadp, optionLateAutoDeclare):
         tag = self.findTagById(id)
         if (tag is not None):
             if (flagErrorIfExists):
                 raise makeJriException("Tag declaration when tag ({}) already exists".format(id), sloc)
             return tag
-        if (tagLocation is not None):
-            location = tagLocation
-        else:
-            location = self.getDefaultLocation(env)
+        if (tagLocation is None):
+            tagLocation = self.getDefaultLocation(env)
         # parse tag to extract tag type and properid
-        [tagType, tagProperId, obfuscatedLabel, isCustomObfuscatedLabel, documentNumber] = self.parseDeclareTag(id, sloc, tagObfuscatedLabel)
-        # create tag
-        tag = CbTagItem(id, deadline, label, tagType, obfuscatedLabel, isCustomObfuscatedLabel, location, documentNumber)
-        self.tags[id] = tag
+        tag = self.parseDeclareCreateTag(id, sloc, env, tagObfuscatedLabel, tagDependencyString, tagLocation, deadline, label, optionLateAutoDeclare)
+
+        # add debug line
+        tag.addDebugUseLine(debugComment, sloc, leadp)
+        # return tag
+        return tag
+
+
+    def autoDeclareTag(self, id, autoDeclarePrefix, deadline, label, tagLocation, tagObfuscatedLabel, tagDependencyString, env, sloc, leadp):
+        # ensure it has a unique id
+        if (id==""):
+            id="auto"
+        for num in range(1,999):
+            constructedId = "{}.{}{}".format(autoDeclarePrefix, id, str(num))
+            existingTag = self.findTagById(constructedId)
+            if (existingTag is None):
+                break
+
+        debugComment = "auto declaring tag"
+        tag = self.declareTag(env, constructedId, deadline, label, tagLocation, tagObfuscatedLabel, tagDependencyString, True, sloc, debugComment, leadp, True)
+        #
+        return tag
+
+
+
+    def declareConcept(self, env, id, label, flagErrorIfExists, sloc, debugComment, leadp):
+        tag = self.findTagById(id)
+        if (tag is not None):
+            if (flagErrorIfExists):
+                raise makeJriException("Concept declaration when concept ({}) already exists".format(id), sloc)
+            return tag
+        # parse tag to extract tag type and properid
+        tag = self.parseDeclareCreateConcept(id, sloc, label)
+
         # add debug line
         tag.addDebugUseLine(debugComment, sloc, leadp)
         # return tag
@@ -63,10 +118,27 @@ class CbTagManager:
 
 
 
-    def parseDeclareTag(self, id, sloc, tagObfuscatedLabel):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def parseDeclareCreateTag(self, id, sloc, env, tagObfuscatedLabel, tagDependencyString, tagLocation, deadline, label, optionLateAutoDeclare):
         # all tags must be of the form PREFIX.PROPERID
         # where prefix is the tag "type" from a set list
-        documentNumber = None
+        #
         parts = id.split(".", 1)
         if (len(parts)!=2):
             msg = ("Tag id should be of the form PREFIX.ID where PREFIX is one of {}".format(DefTagTypes))
@@ -76,67 +148,88 @@ class CbTagManager:
         if (not tagType in DefTagTypes):
             msg = ("Tag id prefix not understood; PREFIX.ID should have PREFIX one of {}".format(DefTagTypes))
             raise makeJriException(msg, sloc)
+
+        # defaults
+        documentNumber = None
+        obfuscatedLabel = None
+        isCustomObfuscatedLabel = False
+
         # obfuscate label
         if (tagObfuscatedLabel is not None):
+            # explicitly set
             obfuscatedLabel = tagObfuscatedLabel
             isCustomObfuscatedLabel = True
+            needsPostProcess = False
         else:
-            [obfuscatedLabel,documentNumber]  = self.obfuscateId(tagProperId, tagType, sloc)
-            isCustomObfuscatedLabel = False
-
-        # return tuple
-        return [tagType, tagProperId, obfuscatedLabel, isCustomObfuscatedLabel, documentNumber]
-
-
-    def obfuscateId(self, tagProperId, tagType, sloc):
-        # create an obfuscated label
-        if (tagType == "doc"):
-            # documents are numbered
-            self.documentNumberIndex += 1
-            obfuscatedLabel = "{}".format(self.documentNumberIndex)
-            documentNumber = self.documentNumberIndex
-        elif (tagType in ["cond", "check", "trophy"]):
-            # these get letters
-            obfuscatedMarkerLetter = self.obfuscateIdAsLetterTag(tagProperId, tagType, sloc)
-            obfuscatedLabel = "{}".format(obfuscatedMarkerLetter)
-            documentNumber = None
-        else:
-            msg = ("Internal error; tagType ({}) not understood; should be from {}".format(tagType, DefTagTypes))
-            raise makeJriException(msg, sloc)
-        # return it
-        return [obfuscatedLabel, documentNumber]
-
-
-    def obfuscateIdAsLetterTag(self, tagProperId, tagType, sloc):
-        if (len(tagProperId)==0):
-            raise makeJriException("Tag cannot be blank after prefix.", sloc)
-        if (len(self.tagLetterLabelsAvailable)==0):
-            # refresh it
-            self.tagLetterStage += 1
-            if (self.tagLetterStage == 1):
-                suffix = ''
+            # needs auto number / obfuscated id
+            if (tagType == "doc"):
+                # documents are numbered and have fixed label
+                self.documentNumberIndex += 1
+                obfuscatedLabel = "{}".format(self.documentNumberIndex)
+                documentNumber = self.documentNumberIndex
+                needsPostProcess = False
+            elif (tagType in ["cond", "check", "trophy", "decoy"]):
+                # will need to be assigned later, so we leave it BLANK (NONE) for now
+                needsPostProcess = True
             else:
-                suffix = str(self.tagLetterStage)
-            self.tagLetterLabelsAvailable = list([item+suffix for item in 'ABCDEFGHJKLMNOPQRSTUVWXYZ'])
-        #
-        firstLetter = tagProperId[0].upper()
-        if (firstLetter in self.tagLetterLabelsAvailable):
-            letterLabel = firstLetter
+                msg = ("Internal error; tagType ({}) not understood; should be from {}".format(tagType, DefTagTypes))
+                raise makeJriException(msg, sloc)
+
+        # check dupe
+        if (obfuscatedLabel is not None):
+            existingTag = self.findTagByObfuscatedId(obfuscatedLabel)
+            if (existingTag is not None):
+                raise makeJriException("Error: Duplicate obfuscated label ({}) declared for marker.".format(obfuscatedLabel), sloc)
+
+        # create tag
+        tag = CbTagItem(id, deadline, label, tagType, tagLocation, documentNumber, needsPostProcess)
+        tag.setObfuscatedLabel(obfuscatedLabel, isCustomObfuscatedLabel)
+
+        # set tag dependencies for hints
+        tag.setDependencyListString(tagDependencyString)
+
+        if (self.didPostProcess):
+            # we already did post processing of tags, so we need to assign pending obfuscated label now
+            if (obfuscatedLabel is None):
+                if (optionLateAutoDeclare):
+                    tagData = env.getEnvValueUnwrapped(None, "tagData", None)
+                    tagMode = tagData["mode"]
+                    obfuscatedLabel = self.popObfuscatedTagLabel(env, tag, tagMode)
+                    tag.setObfuscatedLabel(obfuscatedLabel, False)
+                else:
+                    raise makeJriException("Error: declareCreated a later marker ({}) with a pending obfuscated label, but we have already run post-processess.".format(id), sloc)
+
+
+        # set it in our management
+        self.addTagToTags(id, tag)
+
+        return tag
+
+
+
+
+
+
+    def parseDeclareCreateConcept(self, id, sloc, label):
+        # all tags must be of the form PREFIX.PROPERID
+        # where prefix is the tag "type" from a set list
+        if (False):
+            parts = id.split(".", 1)
+            if (len(parts)!=2):
+                msg = ("Concept id should be of the form PREFIX.ID where PREFIX is one of {}".format(DefTagTypes))
+                raise makeJriException(msg, sloc)
+            tagType = parts[0]
+            tagProperId = parts[1]
         else:
-            # find nearest one HIGHER than it (wrapping around if needed)
-            letterLabel = None
-            for c in self.tagLetterLabelsAvailable:
-                if (c>firstLetter):
-                    # got it
-                    letterLabel = c
-                    break
-            if (letterLabel is None):
-                # we warp around
-                letterLabel = self.tagLetterLabelsAvailable[0]
-        #        
-        self.tagLetterLabelsAvailable.remove(letterLabel)
-        #return "Marker {}".format(letterLabel)
-        return letterLabel
+            tagType = "concept"
+            tagProperId = id
+
+        # create tag
+        tag = CbConceptItem(id, label, tagType)
+        self.addTagToTags(id, tag)
+
+        return tag
+
 
 
     def findDeadlineTags(self, dayNumber):
@@ -148,30 +241,222 @@ class CbTagManager:
         return tagList
 
 
-    def sortByTypeAndObfuscatedLabel(self, tagList):
-        tagListSorted = sorted(tagList, key=lambda tag: self.sortKeyTagByClassAndObfuscatedLabel(tag))
+
+    def sortByTypeAndId(self, tagList):
+        tagListSorted = sorted(tagList, key=lambda tag: self.sortKeyTagByClassAndId(tag))
+        return tagListSorted
+
+    def sortByTypeAndObfuscatedLabel(self, tagList, env, flagForceSort):
+        if (flagForceSort):
+            optionSortLabels = True
+        else:
+            tagData = env.getEnvValueUnwrapped(None, "tagData", None)
+            sortRequire = tagData["sortRequire"]
+            if (sortRequire):
+                optionSortLabels = True
+            else:
+                optionSortLabels = False
+        #
+        tagListSorted = sorted(tagList, key=lambda tag: self.sortKeyTagByClassAndObfuscatedLabel(tag, optionSortLabels))
         return tagListSorted
     
-    def sortKeyTagByClassAndObfuscatedLabel(self, tag):
-        keyString = tag.getTagTypeClassSortVal() + "_" + tag.getObfuscatedLabel()
+    def sortKeyTagByClassAndObfuscatedLabel(self, tag, optionSortLabels):
+        if (optionSortLabels):
+            keyString = tag.getTagTypeClassSortVal() + "_" + jrfuncs.zeroPadNumbersAnywhereInString(tag.getObfuscatedLabel(), 4)
+        else:
+            keyString = tag.getTagTypeClassSortVal()
+        return keyString
+
+    def sortKeyTagByClassAndId(self, tag):
+        keyString = tag.getTagTypeClassSortVal() + "_" + jrfuncs.zeroPadNumbersAnywhereInString(tag.getId(),4)
         return keyString
 
 
-    def findHintLeadForTag(self, env, renderdoc, tag):
+
+    def findHintLeadForTag(self, env, renderdoc, intag):
         # look for a lead which is the hint for this tag
-        leadList = renderdoc.calcFlatLeadList()
+        leadList = renderdoc.calcFlatLeadList(True)
         for lead in leadList:
             role = lead.getRole()
             if (role is None):
                 continue
             roleType = role["type"]
             if (roleType=="hint"):
-                if ("tag" in role):
-                    if (role["tag"]==tag):
-                        return lead
+                tag = jrfuncs.getDictValueOrDefault(role, "tag", None)
+                if (intag==tag) and (intag is not None):
+                    return lead
         return None
 
 
+    def postProcessTagsIfNeeded(self, env):
+        if (not self.didPostProcess):
+            self.postProcessTags(env)
+
+
+
+
+
+    def postProcessTags(self, env):
+        # this is our new function designed to sort tags in the order they were defined and use a more consistent predictable system
+
+        tagData = env.getEnvValueUnwrapped(None, "tagData", None)
+        tagMode = tagData["mode"]
+
+        # build out the initial pool
+        self.buildInitialObfuscatedLabelPool(env)
+
+        # assign obfuscated labels
+        for tagId, tag in self.tags.items():
+            if (not tag.getIsForwardFacingLetterTag()):
+                # doesnt need a label
+                continue
+            if (tag.getIsCustomObfuscatedLabel()):
+                # already has a label
+                continue
+            obfuscatedLabel = self.popObfuscatedTagLabel(env, tag, tagMode)
+            tag.setObfuscatedLabel(obfuscatedLabel, False)
+
+        # set flag saying we've sorted
+        self.didPostProcess = True
+
+        # let's do a sanity check also, by making sure no tags have same label
+        self.checkForDuplicateTags()
+
+
+    def buildInitialObfuscatedLabelPool(self, env):
+        # figure out about how many lettered labels we are going to need  to choose from, so we know if we need A1,A2,B1,... or jsut A1,B1,...
+        forwardFacingLetterTags = min(self.countForwardFacingLetterTags(),1)
+        allTagLettersCount = len(self.allTagLetters)
+        self.obfuscatedIdPoolNumberStages = math.ceil(forwardFacingLetterTags/allTagLettersCount)
+        # clear pool and build initial pool
+        self.obfuscatedIdPool = []
+        self.addObfuscatedLabelPoolLabels(env, 1, self.obfuscatedIdPoolNumberStages)
+
+
+    def addMoreToObfuscatedLabelPool(self, env):
+        # we can add to an empty obfuscated letter pool after post-processing, if we need to, if we want to support late generation of obfuscated labels
+        self.obfuscatedIdPoolNumberStages += 1
+        self.addObfuscatedLabelPoolLabels(env, self.obfuscatedIdPoolNumberStages, self.obfuscatedIdPoolNumberStages)
+
+
+    def addObfuscatedLabelPoolLabels(self, env, startnum, endnum):
+        # does the work of building out the obfuscated label pool
+        tagData = env.getEnvValueUnwrapped(None, "tagData", None)
+        alwaysNumber = tagData["alwaysNumber"]
+        consistentNumber = tagData["consistentNumber"]
+
+        for letter in self.allTagLetters:
+            for num in range(startnum, endnum+1):
+                if (alwaysNumber) or (num>1) or (consistentNumber and self.obfuscatedIdPoolNumberStages>1):
+                    numStr = str(num)
+                else:
+                    numStr = ""
+                potentialObfuscatedId = "{}{}".format(letter, numStr)
+                existingTag = self.findTagByObfuscatedId(potentialObfuscatedId)
+                if (existingTag is not None):
+                    # already exist
+                    continue
+                self.obfuscatedIdPool.append(potentialObfuscatedId)
+
+
+    def countForwardFacingLetterTags(self):
+        letteredTagCount = 0
+        for tagId, tag in self.tags.items():
+            if (tag.getIsForwardFacingLetterTag()):
+                letteredTagCount += 1
+        #
+        return letteredTagCount
+
+
+    def popObfuscatedTagLabel(self, env, tag, tagMode):
+        # first, we add to an empty obfuscated letter pool if we need to, if we want to support late generation of obfuscated labels
+        if (self.obfuscatedIdPool is None):
+            raise makeJriException("Error: the tag manager obfuscation pool has not been initialized during post-processing; this needs to happen before we can pop labels.", None)
+        if (len(self.obfuscatedIdPool)==0):
+            self.addMoreToObfuscatedLabelPool(env)
+
+        tagType = tag.getTagType()
+
+        # grab one
+        popIndex = None
+        if (tagMode=="sequential"):
+            # sequential
+            popIndex = 0
+        elif (tagMode=="random") or ((tagMode=="firstLetter") and (tagType=="decoy")):
+            # randomized label
+            popIndex = random.randint(0,len(self.obfuscatedIdPool)-1)
+        elif (tagMode=="firstLetter"):
+            # based on first letter
+            tagId = tag.getProperId()
+            firstLetter = tagId[0].upper()
+            nextBestIndex = None
+            for index,olabel in enumerate(self.obfuscatedIdPool):
+                olabelFirstLetter = olabel[0].upper()
+                popIndex = index
+                if (olabelFirstLetter >= firstLetter):
+                    # ok good enough (bigge or equal)
+                    break
+        else:
+            raise makeJriException("Tag mode not understood ({}).".format(tagMode), None)
+
+        # pop out the label and used it
+        obfuscatedLabel = self.obfuscatedIdPool.pop(popIndex)
+        return obfuscatedLabel
+
+
+
+
+    def checkForDuplicateTags(self):
+        obfuscatedLabels = {}
+        for tagId, tag in self.tags.items():
+            obfuscatedLabel = tag.getObfuscatedLabel()
+            if (obfuscatedLabel in obfuscatedLabels):
+                # duplicate
+                raise makeJriException("Found two tags with duplicate (obfuscated) label: '{}'.".format(obfuscatedLabel))
+
+
+    def getDocCount(self):
+        count = 0
+        for tagId, tag in self.tags.items():
+            if tag.getIsDoc():
+                count +=1
+        return count
+
+
+    def getMarkerCount(self):
+        count = 0
+        for tagId, tag in self.tags.items():
+            if not tag.getIsDoc():
+                count +=1
+        return count
+
+
+    def getDependencyTagListFromTag(self, tag, optionRecurse, env, astloc):
+        allTags = []
+        # get string list
+        aTagDependencyListString = tag.getDependencyListString(True)
+        if (aTagDependencyListString is None) or (aTagDependencyListString==""):
+            return []
+        # parse it and lookup tags
+        dependentTags = parseTagListArg(aTagDependencyListString, "", env, astloc, False)
+        for dtag in dependentTags:
+            if dtag not in allTags:
+                allTags.append(dtag)
+                if (optionRecurse):
+                    childTags = self.getDependencyTagListFromTag(dtag, True, env, astloc)
+                    for childTag in childTags:
+                        if (childTag not in allTags) and (childTag != tag):
+                            allTags.append(childTag)
+        return allTags
+
+
+
+    def getTagsGainedAtLead(self, lead):
+        tagsOut = []
+        for tagId, tag in self.tags.items():
+            if (tag.isGainedAtLead(lead)):
+                tagsOut.append(tag)
+        return tagsOut
 #---------------------------------------------------------------------------
 
 
@@ -185,20 +470,46 @@ class CbTagManager:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class CbTagItem:
-    def __init__(self, id, deadline, label, tagType, obfuscatedLabel, isCustomObfuscatedLabel, location, documentNumber):
+    def __init__(self, id, deadline, label, tagType, location, documentNumber, needsPostProcess):
         self.id = id
         self.deadline = deadline
         self.label = label
         self.tagType = tagType
-        self.setObfuscatedLabel(obfuscatedLabel, isCustomObfuscatedLabel)
+        self.obfuscatedLabel = None
         self.location = location
+        self.needsPostProcess = needsPostProcess
         self.debugUse = []
         self.gainLeads = []
         self.checkLeads = []
+        self.logicLeads = []
         self.documentNumber = documentNumber
+        self.dependencyTagListString = None
 
-    
+    def getIsForwardFacingLetterTag(self):
+        if (self.getIsDoc()):
+            return False
+        return True
+
     def addDebugUseLine(self, debugComment, sloc, leadp):
         debugEntryDict = {"comment": debugComment, "sloc": sloc, "lead": leadp}
         self.debugUse.append(debugEntryDict)
@@ -209,14 +520,25 @@ class CbTagItem:
         return self.id
     def getLabel(self):
         return self.label
+    def setLabel(self, label):
+        self.label = label
     def getObfuscatedLabel(self):
         return self.obfuscatedLabel
     def setObfuscatedLabel(self, val, flagIsCustom):
         self.obfuscatedLabel = val
-        self.customObfuscatedLabel = flagIsCustom
+        self.isCustomObfuscatedLabel = flagIsCustom
     def getIsCustomObfuscatedLabel(self):
-        return self.customObfuscatedLabel
+        return self.isCustomObfuscatedLabel
+    def getTagType(self):
+        return self.tagType
     
+    def getProperId(self):
+        id = self.id
+        parts = id.split(".", 1)
+        tagProperId = parts[1]
+        return tagProperId
+ 
+
     def getIsTagTypeDoc(self):
         return (self.tagType == "doc")
 
@@ -228,7 +550,7 @@ class CbTagItem:
     def getLocation(self):
         return self.location
     def getNiceLocationString(self):
-        location = self.location
+        location = self.getLocation()
         if (location=="back"):
             location = DefBackOfBookDocLocationString
         return location
@@ -237,8 +559,23 @@ class CbTagItem:
         label = self.id
         if (self.label is not None) and (self.label!=""):
             #label += " ("+self.label+")"
-            label += " "+self.label
+            label += " - "+self.label
         return label
+
+    def getNiceIdWithObfuscation(self):
+        label = self.id
+        label += " [" + self.getObfuscatedLabel() + "]"
+        return label
+    
+
+    def getNiceIdWithLabelAndObfuscation(self):
+        label = self.id
+        if (self.label is not None) and (self.label!=""):
+            #label += " ("+self.label+")"
+            label += " ("+self.label+")"
+        label += " [" + self.getObfuscatedLabel() + "]"
+        return label
+    
 
     def getMindMapNodeInfo(self):
         label = self.id
@@ -248,7 +585,6 @@ class CbTagItem:
         if (label is None) or (label==""):
             label = self.tagType
         label += "\n(" + self.getNiceObfuscatedLabelWithType(False, False) + ")"
-        label = label
         #
         mmInfo = {
             "id": "TAG.{}".format(self.id),
@@ -257,15 +593,18 @@ class CbTagItem:
             "subtype": self.tagType,
             "pointer": self,
             "mStyle": None,
+            "showDefault": True,
             }
         return mmInfo
 
 
     def getNiceObfuscatedLabelWithType(self, flagBoldMarkdown, reportMode):
-        if (self.getIsCustomObfuscatedLabel()):
+        if (self.getIsCustomObfuscatedLabel()) and (" " in self.getObfuscatedLabel()):
+            # IFF there is a space in the obfuscated label then assume it is a complete thing, and dont add "Marker " to front, etc.
             classNamePlus = ""
         else:
-            classNamePlus = jrfuncs.uppercaseFirstLetter(self.getTagTypeClass()) + " "
+            tagTypeClass = self.getTagTypeClass()
+            classNamePlus = jrfuncs.uppercaseFirstLetter(tagTypeClass) + " "
         label = jrfuncs.uppercaseFirstLetter(self.obfuscatedLabel)
         if (self.tagType == "doc"):
             pass
@@ -279,47 +618,21 @@ class CbTagItem:
         return classNamePlus + label
     
     
-    def getNiceGainedObfuscatedLabelWithType(self, flagBoldMarkdown, reportMode, optionIsGaining):
-        if (self.getIsCustomObfuscatedLabel()):
-            classNamePlus = ""
-        else:
-            classNamePlus = jrfuncs.uppercaseFirstLetter(self.getTagTypeClass()) + " "
-        label = jrfuncs.uppercaseFirstLetter(self.obfuscatedLabel)
-        if (self.tagType == "doc"):
-            if (optionIsGaining):
-                gainPlusString = "gained access to "
-            else:
-                gainPlusString = "previously acquired access to "
-            revealedLabel = self.getLabel()
-            # only show revealed label AFTER they have gained it if its custom label, in order to keep it a surprise
-            if (revealedLabel is not None) and (revealedLabel!="") and (not optionIsGaining or (not self.getIsCustomObfuscatedLabel())):
-                label += " ({})".format(revealedLabel)
-        else:
-            if (optionIsGaining):
-                gainPlusString = "gained "
-            else:
-                gainPlusString = "previously acquired "
-        if (reportMode):
-            label += " [{}]".format(self.getId())
-        if (flagBoldMarkdown):
-            return gainPlusString + "**" + classNamePlus + label + "**"
-        return gainPlusString + classNamePlus + label
 
 
-    def getInstructionText(self):
-        if (self.tagType == "doc"):
-            #retv = "please note this in your case log (unless you have gained access previously)"  
-            retv = "please note this in your case log"  
-        else:
-            #retv = "please circle this marker in your case log (unless you have gained access previously)"
-            retv = "please note this in your case log"
-        return retv
+
+
+
+    def isInBook(self):
+        if (self.tagType == "doc") and (self.location=="back"):
+            return True
+        return False
 
     def getWhereText(self):
         if (self.tagType == "doc"):
             niceLocation = self.getNiceLocationString()
             if (niceLocation!=""):
-                retv = ", which can be found {}".format(niceLocation)
+                retv = _("which can be found {}").format(niceLocation)
             else:
                 # no location
                 retv = ""
@@ -338,11 +651,16 @@ class CbTagItem:
 
     def getTagType(self):
         return self.tagType
+
     def getTagTypeClass(self):
         if (self.tagType=="doc"):
-            return "document"
+            return _("document")
         else:
-            return "marker"
+            return _("marker")
+    
+    def getIsDoc(self):
+        return (self.tagType=="doc")
+
     def getTagTypeClassSortVal(self):
         if (self.tagType=="doc"):
             return "Z_Document"
@@ -355,7 +673,8 @@ class CbTagItem:
         # add debug line
         self.addDebugUseLine("Tag gained", sloc, leadp)
         # add gain list
-        self.gainLeads.append(leadp)
+        recDict = {"lead":leadp, "keyword": keyword}
+        self.gainLeads.append(recDict)
         # mindmapper
         mindManager = env.getMindManager()
         mindManager.addLinkBetweenNodes(env, keyword, None, leadp, self)
@@ -365,21 +684,97 @@ class CbTagItem:
         # add debug line
         self.addDebugUseLine("Tag checked", sloc, leadp)
         # add gain list
-        self.checkLeads.append(leadp)
+        recDict = {"lead":leadp, "keyword": keyword}
+        self.checkLeads.append(recDict)
         # mindmapper
         mindManager = env.getMindManager()
         mindManager.addLinkBetweenNodes(env, keyword, None, leadp, self)
 
 
-    def getGainList(self):
-        return self.gainLeads
-    def getCheckList(self):
-        return self.checkLeads
+    def recordLogic(self, env, keyword, label, sloc, leadp):
+        self.addDebugUseLine("Logic relation ({})".format(label), sloc, leadp)
+        useDict = {
+                   "lead": leadp,
+                   "keyword": keyword,
+                   "label": label,
+                   }
+        self.logicLeads.append(useDict)
+
+
+    def recordLogicGeneric(self, env, keyword, label, sloc, target):
+        self.addDebugUseLine("Logic relation ({})".format(label), sloc, target)
+        useDict = {
+                   "target": target,
+                   "keyword": keyword,
+                   "label": label,
+                   }
+        self.logicLeads.append(useDict)
+
+
+    def getGainList(self, flagRemoveDuplicates):
+        leadList = self.gainLeads
+        if (not flagRemoveDuplicates):
+            return leadList
+        return self.uniqueLeadList(leadList)
+
+    def getCheckList(self, flagRemoveDuplicates):
+        leadList = self.checkLeads
+        if (not flagRemoveDuplicates):
+            return leadList
+        return self.uniqueLeadList(leadList)
+
+    def getLogicList(self, flagRemoveDuplicates):
+        leadList = self.logicLeads
+        if (not flagRemoveDuplicates):
+            return leadList
+        return self.uniqueLeadList(leadList)
+
+    def uniqueLeadList(self, leadList):
+        seen = set()
+        unique_list = [x for x in leadList if not (x["lead"] in seen or seen.add(x["lead"]))]
+        return unique_list
+
+    def setDependencyListString(self, val):
+        self.dependencyTagListString = val
+    def getDependencyListString(self, tagManager):
+        # return list of tag dependencies
+        return self.dependencyTagListString
+
+    def isGainedAtLead(self, lead):
+        for g in self.gainLeads:
+            if (g["lead"] == lead):
+                return True
+        return False
 
 
 
 
 
+class CbConceptItem(CbTagItem):
+    def __init__(self, id,  label, tagType):
+        super().__init__(id, None, label, tagType, None, False, None)
+        self.List = []
+
+    def getIsForwardFacingLetterTag(self):
+        return False
+
+    def getMindMapNodeInfo(self):
+        label = self.id
+        if (self.label is not None) and (self.label!=""):
+            label += "\n"+self.label
+        if (label is None) or (label==""):
+            label = self.tagType
+        #
+        mmInfo = {
+            "id": "CONCEPT.{}".format(self.id),
+            "label": label,
+            "type": "concept",
+            "subtype": self.tagType,
+            "pointer": self,
+            "mStyle": None,
+            "showDefault": True,
+            }
+        return mmInfo
 
 
 

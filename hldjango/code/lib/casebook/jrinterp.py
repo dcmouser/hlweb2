@@ -5,9 +5,11 @@ from lib.jr.ehelper import EHelper
 
 # jesse lark parser
 from lib.jrlark import jrlark
+import lark
 
 from lib.casebook.cbenvironment import JrCbEnvironment
 from .cbplugin import CbPluginManager
+from .jriexception import *
 
 # python modules
 import traceback
@@ -91,16 +93,18 @@ class JrInterpreter:
         self.notes.append(note)
     def getNotes(self):
         return self.notes
-    def getNotesFiltered(self, filterLead, filterTypeStr):
+    def getNotesFiltered(self, filterLead, typeFilter):
+        if (not isinstance(typeFilter, list)):
+            typeFilter = [typeFilter]
         filteredNoteList = []
-        for note in self.notes:
-            if (filterLead is not None):
-                if (filterLead != note.lead):
+        for tfilter in typeFilter:
+            for note in self.notes:
+                if (filterLead is not None):
+                    if (filterLead != note.lead):
+                        continue
+                if (tfilter is not None) and (tfilter != note.typeStr):
                     continue
-            if (filterTypeStr is not None):
-                if (filterTypeStr != note.typeStr):
-                    continue
-            filteredNoteList.append(note)
+                filteredNoteList.append(note)
         return filteredNoteList
 
 
@@ -178,12 +182,43 @@ class JrInterpreter:
                     # PART 1: Ask interpretter to parse
                     self.loadGrammarParseSourceFile(grammarFilePath, sourceFilePath, sourceFileText, startSymbol, encoding)
                 except Exception as e:
+                    origE = e
+                    e = self.improveParsingException(e)
+                    if (True):
+                        startPos = None
+                        if (hasattr(e, "pos_in_stream")):
+                            startPos = e.pos_in_stream
+                        elif (hasattr(origE, "pos_in_stream")):
+                            startPos = origE.pos_in_stream
+                        if (startPos is not None):
+                            msg = self.deepSource.extractHighlightedLineDebugMessageAtPos(startPos, startPos+1) + "\n" + str(e)
+                        else:
+                            msg = str(e)
+                        raise makeJriException(msg, None)
+                        jrprint("LARK PARSING ERROR: \n")
+                        jrprint(msg)
+
                     self.addException(e, "Lark-parsing source")
                     # pass the exception up?
                     raise e
 
                 # PART 2: Convert parse tree to our interpretter AST class
                 self.convertParseTreeToAst()
+
+
+    def improveParsingException(self, e):
+        # try to improve the exception if we can
+        if (isinstance(e, lark.exceptions.UnexpectedInput)) and ("RBRACE" in e.allowed):
+            #msg = "Parser encountered unexpected input.  Do you have an unmatched '{' and are you missing a '}'?\n" + str(e)
+            msg = "HINT ---> Do you have an unmatched opening '{' above this line somewhere and are you missing a closing '}'?"
+        elif (isinstance(e, lark.exceptions.UnexpectedInput)) and (e.char == "}"):
+            msg = "HINT ---> Got an unexpected '}' character but there is no open brace '{' to match against above this point."
+        else:
+            return e
+        newException = Exception(msg)
+        newException.with_traceback(e.__traceback__)
+        newException.original_exception = e
+        return newException
 
 
 
@@ -197,13 +232,14 @@ class JrInterpreter:
 
 
     def runJobs(self, jobList, progressCallback):
+        env = self.getEnvironment()
         for job in jobList:
-            self.runJob(job, progressCallback)
+            self.runJob(env, job, progressCallback)
             if (self.isErrored()):
                 break
 
 
-    def runJob(self, job, progressCallback):
+    def runJob(self, env, job, progressCallback):
         #
         # TEST
         if (False):
@@ -226,7 +262,9 @@ class JrInterpreter:
                 taskIndex += 1
                 taskLabel = jrfuncs.getDictValueOrDefault(taskOptions, "label", "anonymous")
                 taskName = jrfuncs.getDictValueOrDefault(taskOptions, "taskName", None)
-                retv = self.runJobTask(self.getEnvironment(), job, taskName, taskOptions)
+                # make new child env for each task so they dont collide and start fresh each task
+                childEnv = env.makeChildEnv()
+                retv = self.runJobTask(childEnv, job, taskName, taskOptions)
                 if (not retv):
                     self.eHelper.addError("Error returned from runJobTask ({}/{}).".format(taskName, taskLabel))
                     break
@@ -249,13 +287,13 @@ class JrInterpreter:
         # nothing to do?
         pass
 
-    def preBuildPreRender(self):
+    def preBuildPreRender(self, env):
         # run the pre build for all plugins
-        self.getPluginManager().preBuildPreRender(self.getEnvironment())
+        self.getPluginManager().preBuildPreRender(env)
 
-    def postBuildPreRender(self):
+    def postBuildPreRender(self, env):
         # run the post build for all plugins
-        self.getPluginManager().postBuildPreRender(self.getEnvironment())
+        self.getPluginManager().postBuildPreRender(env)
 
 
 
@@ -279,3 +317,7 @@ class JrInterpreter:
 
     def clearGeneratedFileListForZip(self):
         self.getGeneratedFilesForZip = []
+
+
+    def getBuildLog(self):
+        return self.eHelper.getErrorWarningLog()

@@ -139,6 +139,10 @@ class AstVal(JrAst):
         self.value = val
     def getWrapped(self):
         return self.value
+    def getWrappedOrDefault(self, defaultVal):
+        if (self.value is None):
+            return defaultVal
+        return self.value
     def getWrappedForDisplay(self):
         return str(self.getWrapped())
 
@@ -175,7 +179,7 @@ class AstVal(JrAst):
             return "{} (type={})".format(value, typeStr)
         return str(value)
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # most value return themselves
         return self
 
@@ -259,13 +263,13 @@ class AstValIdentifier(AstVal):
     def __init__(self, sloc, parentp, val):
         super().__init__(sloc, parentp, val)
 
-    def resolve(self, env, flagResolveIdentifiers):
+    def resolve(self, env, flagResolveIdentifiers, entryp, leadp):
         # most value return themselves but identifiers can resolve
         if (flagResolveIdentifiers):
             identifierName = self.value
             resolvedIdentifier = env.getEnvValue(self, identifierName, None)
             if (resolvedIdentifier is None):
-                msg = "Unknown identifier: {}.".format(identifierName)
+                msg = "Unknown identifier: {}; make sure you did not intend to pass this as a quoted value".format(identifierName)
                 raise self.makeAvalException(msg)
             return resolvedIdentifier
         # otherwise just return ourselves like base class

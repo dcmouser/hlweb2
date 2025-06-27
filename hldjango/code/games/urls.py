@@ -1,8 +1,8 @@
 from django.urls import path, re_path
 
 from .views import GameListView, GameDetailView, GameCreateView, GameEditView, GameDeleteView, GameGenerateView, GamePlayView
-from .views import GameCreateFileView, GameFilesListView, GameFilesReconcileView, GameVersionFileListView
-from .views import GameFileDetailView, GameFileEditView, GameFileDeleteView, GameChangeDirView
+from .views import GameCreateFileView, GameFilesListView, GameFilesReconcileView, GameVersionFileListView, GameFilesDownloadView
+from .views import GameFileDetailView, GameFileEditView, GameFileDeleteView, GameFileEffectView, GameChangeDirView
 #
 from .views_api import GameApiModDateByPkView, GameApiModDateBySlugView
 #
@@ -15,7 +15,7 @@ urlpatterns = [
     path("game/file/<int:pk>", GameFileDetailView.as_view(), name="gameFileDetail"),
     path("game/file/<int:pk>/edit/", GameFileEditView.as_view(), name="gameFileEdit"),
     path("game/file/<int:pk>/delete/", GameFileDeleteView.as_view(), name="gameFileDelete"),
-
+    path("game/file/<int:pk>/effect/", GameFileEffectView.as_view(), name="gameFileEffect"),
 
     # Game related
     path("game/new/", GameCreateView.as_view(), name="gameCreate"),
@@ -29,6 +29,8 @@ urlpatterns = [
     path("game/<slug:slug>/files/", GameFilesListView.as_view(), name="gameFileList"),
     path("game/<slug:slug>/files/new/", GameCreateFileView.as_view(), name="gameFileCreate"),
     path("game/<slug:slug>/files/reconcile/", GameFilesReconcileView.as_view(), name="gameFileReconcile"),
+    path("game/<slug:slug>/files/download/", GameFilesDownloadView.as_view(), name="gameFileDownload"),
+
 
     #
     # game/ new filelist related

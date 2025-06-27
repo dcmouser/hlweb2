@@ -11,6 +11,9 @@
 {% block content %}
 <h1>Game File List for "<a href="{{ game.get_absolute_url }}">{{game.name}}</a>"</h1>
 
+<a href="{% url 'gameFileCreate' game.slug %}" class="btn btn-info" role="button">Upload new files for game</a>
+<hr/>
+
 <ul class="gameFileList">
 {% for gamefile in gamefile_list %}
     <li class="gameFileEntry">
@@ -32,11 +35,24 @@
 
 <hr/>
     <div>
-        <a href="{% url 'gameFileCreate' game.slug %}" class="btn btn-info" role="button">Upload new files for game</a>
-        <form method="post" action="{% url 'gameFileReconcile' game.slug %}"> {% csrf_token %}
-            {{ form|crispy }}
-            <div><input class="btn btn-success" type="submit" name="reconcile" value="Reconcile file directory (auto add/delete)" onclick="return confirm('Are you sure?');"></div>
-        </form>
+        <p>Additional actions:</p>
+        <ul class = "jrButtonList">
+            <li>
+                <form method="post" action="{% url 'gameFileReconcile' game.slug %}"> {% csrf_token %}
+                    {{ form|crispy }}
+                    <input class="btn btn-secondary btn-sm" type="submit" name="reconcile" value="Reconcile file directory (auto add/delete)" onclick="return confirm('Are you sure?');">
+                </form>                
+            </li>
+            <li>
+                <form method="post" action="{% url 'gameFileDownload' game.slug %}"> {% csrf_token %}
+                    {{ form|crispy }}
+                    <input class="btn btn-secondary btn-sm" type="submit" name="download" value="Download a zip of all files above">
+                </form>                
+            </li>
+        </ul>
+
+
+
     </div>
 
 {% endblock content %}

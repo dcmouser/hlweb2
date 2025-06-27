@@ -10,6 +10,4 @@ class GameAdmin(admin.ModelAdmin):
     readonly_fields = ("created", "modified",)
 #
 admin.site.register(Game, GameAdmin)
-
-
 admin.site.register(GameFile)

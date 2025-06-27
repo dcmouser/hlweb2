@@ -1,0 +1,35 @@
+BD: Bloomingdale
+BO: The Bowery
+CC: Civic Center
+CH: Central Harlem
+CM: Carnegie Mansion
+CP: Central Park
+CS: Chelsea
+CT: Chinatown
+EV: East Village
+FD: Financial District
+FT: Fort Tryon
+GD: Gashouse District
+GP: Gramercy Park
+GV: Greenwich Village
+HH: Hamilton Heights
+HK: Hell's Kitchen
+HY: Hudson Yards
+IH: Italian Harlem
+IW: Inwood
+LE: Lower East Side
+LH: Lenox Hill
+LI: Little Italy
+LS: Lincoln Square
+LW: Lower West Side
+MH: Murray Hill
+MS: Morningside
+NH: Negro Harlem
+SH: Spanish Harlem
+TB: Turtle Bay
+TL: The Tenderloin
+TS: Times Square
+UE: Upper East Side
+UW: Upper West Side
+WH: Washington Heights
+YV: Yorkville

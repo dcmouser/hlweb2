@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import validators
+from django.contrib.auth.models import User
 
 # user modules
 from .validators import validateGameFile
@@ -21,6 +22,7 @@ from .gametasks import queueTaskBuildStoryPdf, publishGameFiles, unpublishGameFi
 # helpers
 from . import gamefilemanager
 from .gamefilemanager import calculateGameFilePathRuntime, calculateAbsoluteMediaPathForRelativePath, calculateGameFileUploadPathRuntimeRelative
+from lib.jreffects.jreffect import JrImageEffects
 
 # python modules
 import hashlib
@@ -29,6 +31,10 @@ import json
 import os
 import datetime
 import uuid
+import logging
+
+
+
 
 
 
@@ -68,7 +74,10 @@ class Game(models.Model):
         (GamePreferredFormatPaperSize_B5, "B5 (176 × 250 mm)"),
         (GamePreferredFormatPaperSize_A5, "A5 (148 x 210 mm)"),
     ]
-    GameFormatPaperSizeCompleteList = [GamePreferredFormatPaperSize_Letter, GamePreferredFormatPaperSize_A4, GamePreferredFormatPaperSize_B5, GamePreferredFormatPaperSize_A5]
+
+    #GameFormatPaperSizeCompleteList = [GamePreferredFormatPaperSize_Letter, GamePreferredFormatPaperSize_A4, GamePreferredFormatPaperSize_B5, GamePreferredFormatPaperSize_A5]
+    GameFormatPaperSizeCompleteList = [GamePreferredFormatPaperSize_Letter, GamePreferredFormatPaperSize_A4, ]
+
     #
     GamePreferredFormatLayout_Solo = "SOLOSCR"
     GamePreferredFormatLayout_SoloPrint = "SOLOPRN"
@@ -80,7 +89,8 @@ class Game(models.Model):
         (GamePreferredFormatLayout_OneCol, "One column per page (double-sided)"),
         (GamePreferredFormatLayout_TwoCol, "Two columns per page (double-sided)"),
     ]
-    GameFormatLayoutCompleteList = [GamePreferredFormatLayout_Solo, GamePreferredFormatLayout_SoloPrint, GamePreferredFormatLayout_OneCol, GamePreferredFormatLayout_TwoCol]
+    #GameFormatLayoutCompleteList = [GamePreferredFormatLayout_Solo, GamePreferredFormatLayout_SoloPrint, GamePreferredFormatLayout_OneCol, GamePreferredFormatLayout_TwoCol]
+    GameFormatLayoutCompleteList = [GamePreferredFormatLayout_Solo, GamePreferredFormatLayout_TwoCol]
 
 
     # tracking creation and modification dates
@@ -89,9 +99,9 @@ class Game(models.Model):
 
 
     # new unique slug (we allow blank==true just so that it passes clean operation, we will set it ourselves)
-    slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, unique=True, blank=True)
+    slug = models.SlugField(help_text="Unique slug id of the game", max_length=128, unique=True, blank=True, verbose_name="Url slug name")
     # dirname is set once at start, and governs the path where files are created; an admin could force it
-    subdirname = models.CharField(max_length=64, blank=False, unique=True, default=jrdfuncs.shortUuidAsStringWithPkPrefix, validators = [jrdfuncs.validateName])
+    subdirname = models.CharField(max_length=64, blank=False, unique=True, default=jrdfuncs.shortUuidAsStringWithPkPrefix, validators = [jrdfuncs.validateName], verbose_name="Subdirectory name")
 
     # owner provides this info
     name = models.CharField(max_length=50, verbose_name="Short name", help_text="Internal name of the game; not used for urls or files; just for author info", blank=False, validators = [jrdfuncs.validateName])
@@ -107,25 +117,37 @@ class Game(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    # new (12/30/24); allowing multiple editors
+    editors = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="editable_objects", verbose_name="Allow these additional users to edit this game", blank=True)
 
 
+    instructions = models.TextField(verbose_name="Additional requirements and instructions (markdown)", help_text="List of additional instructions and downloads needed to play, in Markdown format.", default="", blank=True,)
 
-    # these properties should be extracted from the text
+    # these properties should be extracted from the text and cannot be edited manually
     gameName = models.CharField(max_length=80, help_text="Public name of game (parsed from game text)", default="", blank=True)
 
-    title = models.CharField(max_length=80, help_text="Title of game (parsed from game text)", default="", blank=True)
-    subtitle = models.CharField(max_length=80, help_text="Subtitle of game (parsed from game text)", default="", blank=True)
+    title = models.CharField(max_length=255, help_text="Title of game (parsed from game text)", default="", blank=True)
+    subtitle = models.CharField(max_length=255, help_text="Subtitle of game (parsed from game text)", default="", blank=True)
     authors = models.CharField(max_length=255, help_text="Author(s) of game w/emails (parsed from game text)", default="", blank=True)
     summary = models.TextField(help_text="Short description (parsed from game text)", default="", blank=True)
     version = models.CharField(max_length=32, help_text="Version information (parsed from game text)", default="", blank=True)
     versionDate = models.CharField(max_length=64, help_text="Version date (parsed from game text)", default="", blank=True)
+    status = models.CharField(max_length=80, help_text="Status (parsed from game text)", default="", blank=True)
     difficulty = models.CharField(max_length=32, help_text="Difficulty (parsed from game text)", default="", blank=True)
-    cautions = models.CharField(max_length=32, help_text="Age rage, etc. (parsed from game text)", default="", blank=True)
+    cautions = models.CharField(max_length=255, help_text="Age rage, etc. (parsed from game text)", default="", blank=True)
     duration = models.CharField(max_length=32, help_text="Expected playtime (parsed from game text)", default="", blank=True)
     url = models.CharField(max_length=255, help_text="Homepage url (parsed from game text)", default="", blank=True)
  
     extraInfo = models.TextField(help_text="Extra information (parsed from game text)", default="", blank=True)
     extraCredits = models.TextField(help_text="Extra credits (parsed from game text)", default="", blank=True)
+
+    copyright = models.CharField(max_length=255, help_text="Copyright (parsed from game text)", default="", blank=True)
+
+    gameSystem = models.CharField(max_length=64, help_text="Game system (parsed from game text)", default="", blank=True)
+    gameDate = models.CharField(max_length=64, help_text="Game date (parsed from game text)", default="", blank=True)
+
+    campaignName = models.CharField(max_length=64, help_text="Part of this campaign (parsed from game text)", default="", blank=True)
+    campaignPosition = models.CharField(max_length=64, help_text="Case position in campaign (parsed from game text)", default="", blank=True)
 
     # preferred format details
     preferredFormatPaperSize =  models.CharField(max_length=8, verbose_name="Preferred paper size; what you set here is what is used when performing the build preferred action.", choices=GamePreferredFormatPaperSize, default=GamePreferredFormatPaperSize_Letter)
@@ -144,26 +166,14 @@ class Game(models.Model):
 
     # tracking builds being out of date, etc
     buildResultsJsonField = models.JSONField(help_text="All build results as json; this is internal field you should not mess with.", default=dict, blank=True, null=True) # , encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
-    #buildResultsJson = models.TextField(help_text="All build results as json string; this is an internal list you do not need to worry about.", default="", blank=True)
-    #buildResultsJsonField = models.JSONField(help_text="All build results as json", default=dict, blank=True, null=True, encoder=DjangoJSONEncoder, decoder=DjangoJSONEncoder)
 
 
 
     # result of building
     # OLD method, one value per model; now we store in buildResults
     lastBuildLog = models.TextField(help_text="Results of last build; check here for errors.", default="", blank=True)
-    # status
-    #queueStatus =  models.CharField(max_length=3, choices=GameQueueStatusEnum, default=GameQueueStatusEnum_None)
-    #isBuildErrored = models.BooleanField(help_text="Was there an error on the last build?")
-    #buildDate = models.DateTimeField(help_text="When was story last built?", null=True, blank=True)
-    #queueDate = models.DateTimeField(help_text="When was build queued?", null=True, blank=True)
-    
-    #outOfDatePreferred = models.BooleanField(help_text="Preferred build is out of date")
-    #outOfDateDebug = models.BooleanField(help_text="Debug files are out of date")
-    #outOfDateDraft = models.BooleanField(help_text="Draft document set is out of date")
-    #outOfDatePublished = models.BooleanField(help_text="Published document set is out of date")
-    #
 
+    adminSortKey = models.CharField(max_length=32, blank=True, null=True, help_text="alphanumeric field to control default sorting when presenting game list")
 
 
 
@@ -199,7 +209,6 @@ class Game(models.Model):
             self.textHashChangeDate = timezone.now()
             # set this non-db field which we will check for when we save
             self.flagSaveVersionedGameText = True
-
 
         # this will happen even if text has not changed, as long as there was a previous error
         self.parseSettingsFromTextAndSetFields()
@@ -256,7 +265,8 @@ class Game(models.Model):
             info = jrfuncs.getDictValue(settings, "info")
             summary = jrfuncs.getDictValue(settings, "summary")
             infoExtra = jrfuncs.getDictValue(settings, "infoExtra")
-            if (info is None) or (len(info)==0):
+            campaign = jrfuncs.getDictValue(settings, "campaign")
+            if ((info is None) or (len(info)==0)) and (len(errorList)==0):
                 errorList.append("No value set for required property group 'info'.")
 
             # set info properties
@@ -266,6 +276,7 @@ class Game(models.Model):
             self.setPropertyByName("authors", None, info, errorList)
             self.setPropertyByName("version", None, info, errorList)
             self.setPropertyByName("versionDate", None, info, errorList)
+            self.setPropertyByName("status", None, info, errorList)
             self.setPropertyByName("difficulty", None, info, errorList)
             self.setPropertyByName("duration", None, info, errorList)
             #
@@ -274,7 +285,13 @@ class Game(models.Model):
             self.setPropertyByName("cautions", None, infoExtra, errorList, False)
             self.setPropertyByName("extraCredits", None, infoExtra, errorList, False)
             self.setPropertyByName("url", None, infoExtra, errorList, False)
-
+            self.setPropertyByName("copyright", None, infoExtra, errorList, False)
+            #
+            self.setPropertyByName("gameSystem", None, infoExtra, errorList, False)
+            self.setPropertyByName("gameDate", None, infoExtra, errorList, False)
+            #
+            self.setPropertyByName("name", "campaignName", campaign, errorList, False)
+            self.setPropertyByName("position", "campaignPosition", campaign, errorList, False)
             #
             if (len(errorList)==0):
                 self.setSettingStatus(False, "Successfully updated settings on {}.".format(niceDateStr))
@@ -290,6 +307,8 @@ class Game(models.Model):
 
 
     def setPropertyByName(self, propName, storeName, propDict, errorList, flagErrorIfMissing = True, defaultVal = None):
+        if (propDict is None):
+            return
         if (storeName is None):
             storeName = propName
         if (propName in propDict):
@@ -297,7 +316,9 @@ class Game(models.Model):
             setattr(self, storeName, value)
         else:
             if (flagErrorIfMissing):
-                errorList.append("No value set for required setting property '{}'".format(propName))
+                if (len(errorList)==0):
+                    # only bother with this error if there are no other errors
+                    errorList.append("No value set for required setting property '{}'".format(propName))
             else:
                 if (defaultVal is not None):
                     setattr(self, storeName, defaultVal)
@@ -506,6 +527,11 @@ class Game(models.Model):
         # we better save to db so that task queue db sees this is if it checks right away
         self.save()
 
+        # log the queuing of a task
+        logger = logging.getLogger("app")
+        msg = "{} Queueing game task for game id#{} '{}/{}' ({})".format(request.user.username, self.pk, self.name, self.gameName, buildMode)
+        logger.info(msg)
+
         # this will QUEUE or run immediately the game build if neeed
         # but note that right now we are saving the entire TEXT in the function call queue, alternatively we could avoid passing text and grab it only when build triggers
         # ATTN: eventually move all this to the function that actually builds
@@ -574,6 +600,11 @@ class Game(models.Model):
                 msg = jrfuncs.exceptionPlusSimpleTraceback(e, "publishing game")
             if (msg is None):
                 msg = "Successfully published."
+                #
+                # log
+                logger = logging.getLogger("app")
+                msg = "{} Published game files for game id#{} '{}/{}'".format(request.user.username, self.pk, self.name, self.gameName)
+                logger.info(msg)
 
         jrdfuncs.addFlashMessage(request, msg, False)
 
@@ -588,6 +619,10 @@ class Game(models.Model):
                 msg = jrfuncs.exceptionPlusSimpleTraceback(e, "deleting published files for game")
             if (msg is None):
                 msg = "Published files have been deleted."
+                # log
+                logger = logging.getLogger("app")
+                msg = "{} UNpublished game files for game id#{} '{}/{}'".format(request.user.username, self.pk, self.name, self.gameName)
+                logger.info(msg)
 
         jrdfuncs.addFlashMessage(request, msg, False)
 
@@ -609,15 +644,7 @@ class Game(models.Model):
         relativeRoot = gameFileManager.getMediaSubDirectoryPathForGameType(gameFileType)
 
         # now walk list of files
-        filePathList = []
-        jrfuncs.createDirIfMissing(directoryPath)
-        obj = os.scandir(directoryPath)
-        for entry in obj:
-            if not entry.is_file():
-                continue
-            filePath = entry.path
-            filePath = jrfuncs.canonicalFilePath(filePath)
-            filePathList.append(filePath)
+        filePathList = self.collectFilesInUploadDirectory()
 
         # ok now for each one, see if its already listed
         msgList.append("Found {} files in game upload directory.".format(len(filePathList)))
@@ -665,6 +692,100 @@ class Game(models.Model):
         return retv
 
 
+    def collectFilesInUploadDirectory(self):
+        gameFileType = gamefilemanager.EnumGameFileTypeName_StoryUpload
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        directoryPath = gameFileManager.getDirectoryPathForGameType(gameFileType)
+
+        # now walk list of files
+        filePathList = []
+        jrfuncs.createDirIfMissing(directoryPath)
+        obj = os.scandir(directoryPath)
+        for entry in obj:
+            if not entry.is_file():
+                continue
+            filePath = entry.path
+            filePath = jrfuncs.canonicalFilePath(filePath)
+            filePathList.append(filePath)
+        #
+        return filePathList
+
+
+
+
+    def addOrReconcileGameFile(self, filePath):
+        # given a path, add it if needed or return existing gamefile
+        gameFileType = gamefilemanager.EnumGameFileTypeName_StoryUpload
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        directoryPath = gameFileManager.getDirectoryPathForGameType(gameFileType)
+        relativeRoot = gameFileManager.getMediaSubDirectoryPathForGameType(gameFileType)
+        filePath = jrfuncs.canonicalFilePath(filePath)
+        relativePath = filePath.replace(directoryPath, relativeRoot)
+        gameFile = None
+
+        if (not jrfuncs.pathExists(filePath)):
+            message = "Could not find an existing file at '{}'.".format(filePath)
+            retv = False
+            return {"success": retv, "message": message, "gameFile": gameFile}      
+
+        try:
+            relativePath = filePath.replace(directoryPath,relativeRoot)
+            gameFile = GameFile.get_or_none(filefield=relativePath)
+            # delete existing file; but only if its not editingGameFile (in other words this is going to catch the case where we might be editing one gameFILE and matching the image file name to another, which will then be deleted to make way)
+            if (gameFile is None):
+                # doesnt exist, add it, making game owner the owner of the file
+                gameFile = GameFile(owner=self.owner, game=self, gameFileType = gameFileType, note="")
+                # remove absolute part of path
+                relativePath = filePath.replace(directoryPath, relativeRoot)
+                gameFile.filefield.name = relativePath
+                gameFile.save()
+                message = "Added new file to game."
+                retv = True
+            else:
+                message = "Existing file replaced."
+                retv = True
+        except Exception as e:
+            # existing file not found -- not an error
+            message = jrfuncs.exceptionPlusSimpleTraceback(e, "trying to add file '{}'".format(filePath))
+            retv = False
+
+        return {"success": retv, "message": message, "gameFile": gameFile}
+
+
+
+
+    def zipImageFilesIntoDebugDirectory(self, request):
+        # walk through upload directory, make a zip of all files, put the zip in the debug directory
+        # return a dictionary with zip filePath, fileName, error
+
+        # the output directory
+        gameFileManager = gamefilemanager.GameFileManager(self)
+        directoryPath = gameFileManager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_Debug)
+        gameFileManager.createFileDirectoryForGameTypeIfNeeded(gamefilemanager.EnumGameFileTypeName_Debug)
+
+        # base file name
+        fileNameSuffix = "_uploadedFiles"
+        gameName = self.name
+        fileName = jrfuncs.safeCharsForFilename(gameName+fileNameSuffix)
+
+        # get file list
+        filePathList = self.collectFilesInUploadDirectory()
+
+        # create the zip file!
+        try:
+            zipFileOutputPath = jrfuncs.makeZipFile(filePathList, directoryPath, fileName)
+        except Exception as e:
+            error = str(e)
+            return {"error": error}
+        if (not jrfuncs.pathExists(zipFileOutputPath)):
+            error = "Tried to zip {} files, but zip file was not successfully created at '{}'.".format(len(filePathList), zipFileOutputPath)
+            return {"error": error}
+        # success
+        return {"filePath": zipFileOutputPath, "fileName":fileName + ".zip"}
+
+
+
+
 
 
     def saveVersionedGameText(self):
@@ -674,9 +795,11 @@ class Game(models.Model):
         directoryPath = gameFileManager.getDirectoryPathForGameType(gameFileType)
         # add to filename
         versionStr = self.version
+        versionStr = versionStr.replace(".", "p")
         nowTime = datetime.datetime.now()
         currentDateStr = nowTime.strftime('_%Y%m%d_%H%M%S')
-        fileNameSuffix = "_gameText_v{}_{}".format(versionStr, currentDateStr)
+        #fileNameSuffix = "_gameText_v{}_{}".format(versionStr, currentDateStr)
+        fileNameSuffix = "_gameText_{}_v{}".format(currentDateStr, versionStr)
         gameName = self.name
         fileName = jrfuncs.safeCharsForFilename(gameName+fileNameSuffix)
         fullFilePath = "{}/{}.txt".format(directoryPath, fileName)
@@ -731,9 +854,11 @@ class Game(models.Model):
         lastBuildDateStart = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildDateStart", 0)
         lastBuildVersion = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildVersion", "")
         lastBuildVersionDate = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildVersionDate", "")
+        lastBuildTool = jrfuncs.getDictValueOrDefault(buildResultsPrevious, "lastBuildTool", "")
         buildResults["lastBuildDateStart"] = lastBuildDateStart
         buildResults["lastBuildVersion"] = lastBuildVersion
         buildResults["lastBuildVersionDate"] = lastBuildVersionDate
+        buildResults["lastBuildTool"] = lastBuildTool
 
 
 
@@ -760,6 +885,46 @@ class Game(models.Model):
 
 
 
+    def runEffectOnImageFileAddOrReplaceGameFile(self, effectKey, path, suffixKey, pathIsRelative):
+        # image effect helper
+        jreffector = JrImageEffects()
+
+        # get effect options
+        effectOptions = jreffector.calcEffectOptionsByKey(effectKey)
+        if (effectOptions is None):
+            message = "Effect not known: '{}'.".format(effectKey)
+            return {"success": False, "message": message}
+
+        # absolute paths for input and output
+        if (pathIsRelative):
+            absoluteFilePath = "/".join([str(settings.MEDIA_ROOT), path])
+        else:
+            absoluteFilePath = path
+        outPath = jreffector.suffixFilePath(absoluteFilePath, effectKey, suffixKey)
+
+        # run it
+        retv = jreffector.run(absoluteFilePath, outPath, effectOptions)
+
+        if (not retv["success"]):
+            # failure
+            errorMessage = retv["message"]
+            message = "Failed to run effect on file: {}".format(errorMessage)
+            return {"success": False, "message": message}
+
+        # success
+        # now we need to ADD the new file as an object; or just return the existing one if it already exists
+        # and set newGameFile to the new one, so we open that one
+        newBaseName = jrfuncs.getBaseFileName(outPath)
+        retv = self.addOrReconcileGameFile(outPath)
+        reconcileMessage = retv["message"]
+        if (not retv["success"]):
+            message = "Failed to add new {} image file to game ({}): {}.".format(effectOptions["label"], newBaseName, reconcileMessage)
+            return {"success": False, "message": message}
+
+        # success
+        gameFile = retv["gameFile"]
+        message = "Successfully added new {} image file to game ({}): {}.".format(effectOptions["label"], newBaseName, reconcileMessage)
+        return {"success": True, "message": message, "outPath": outPath, "gameFile": gameFile}
 
 
 
@@ -882,6 +1047,9 @@ class GameFile(models.Model):
                     fileSize / 1000000, maxFilesize / 1000000
                 )
             )
+
+    def getPath(self):
+        return self.filefield.name
 
 
 

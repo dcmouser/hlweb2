@@ -1,0 +1,51 @@
+{
+  "Agriculture / Farming / Stables": [
+    "Pet Stores / Veterinarians"
+  ],
+  "Cafes & Diners": [
+    "Restaurants"
+  ],
+  "Churches": [
+    "Religious Institutions"
+  ],
+  "Clothing Stores": [
+    "Tailors"
+  ],
+  "Dentists": [
+    "Doctors"
+  ],
+  "Department Stores": [
+    "Variety Stores / Five & Dime"
+  ],
+  "Doctors": [
+    "Medical Services & Supplies",
+    "Psychologists & Psychiatrists"
+  ],
+  "Medical Services & Supplies": [
+    "Doctors"
+  ],
+  "Pet Stores / Veterinarians": [
+    "Agriculture / Farming / Stables"
+  ],
+  "Printing & Engraving": [
+    "Writing & Stationery"
+  ],
+  "Psychologists & Psychiatrists": [
+    "Doctors"
+  ],
+  "Religious Institutions": [
+    "Churches"
+  ],
+  "Restaurants": [
+    "Cafes & Diners"
+  ],
+  "Tailors": [
+    "Clothing Stores"
+  ],
+  "Variety Stores / Five & Dime": [
+    "Department Stores"
+  ],
+  "Writing & Stationery": [
+    "Printing & Engraving"
+  ]
+}

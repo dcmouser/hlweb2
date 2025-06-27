@@ -1,0 +1,3 @@
+Type : Left Loop
+Loop  : 142	162
+Delta : 202	289

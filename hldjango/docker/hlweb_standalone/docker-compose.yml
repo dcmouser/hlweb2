@@ -1,0 +1,42 @@
+name: hlweb_standalone
+
+services:
+
+  hlweb_priv:
+    image: jreichler/${COMPOSE_PROJECT_NAME}:latest
+    container_name: ${COMPOSE_PROJECT_NAME}
+    build:
+      dockerfile: docker/${COMPOSE_PROJECT_NAME}/Dockerfile
+      context: ../../
+      tags:
+        - jreichler/${COMPOSE_PROJECT_NAME}:v4.61
+
+    #ATTN: This command will OVERRIDE any CMD in the Dockerfile; currently we use same values
+    #command: /install_scripts/run_mainservices.sh
+
+    # disable for interactive shell testing
+    restart: always
+
+    volumes:
+      - media_games:/media/games
+      - db:/db
+      - jrlogs:/jrlogs
+      - letsencrypt:/etc/letsencrypt
+
+    ports:
+      # TIP: see also the Dockerfile for exposing ports
+      - "80:80"
+      # port 8000 is used when running locally? or no, just for proxy
+      # - "8000:8000"
+
+    environment:
+      - COMPOSE_PROJECT_NAME
+      - TZ=America/Chicago
+
+
+# create named volumes used above
+volumes:
+  media_games:
+  db:
+  jrlogs:
+  letsencrypt:

@@ -1,0 +1,13 @@
+If you have trouble locating a fingerprint in the fingerprint directory, you may receive help here from officers in the fingerprint division, at a cost.
+
+**IMPORTANT**: Before you seek help here, familiarize yourself with the Fingerprint Directory, and remember that a fingerprint you find may differ slightly (in rotation and distortion from its match in the Finderprint Directory.  *Only* use this hint section if you cannot (or do not wish to) locate fingerprints yourself in that directory.
+
+$divider()
+
+Each fingerprint is shown below along with its associated identification #.  You can look this number up in this case book to identify and retrieve information about the individual, or look up the # in the Fingerprint directory to find the owner's full print set for all ten fingers.
+
+HOWEVER, for **each** fingerprint you look up in this section:
+$mark(demerits=3)
+$advanceTime(60)
+
+$divider()

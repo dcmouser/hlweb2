@@ -1,0 +1,3 @@
+Type : Right Loop
+Loop  : 131	197
+Delta : 69	287

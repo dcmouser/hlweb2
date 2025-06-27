@@ -17,6 +17,9 @@ from lib.jr.jrglobalenv import jrGlobalEnv
 jrGlobalEnv.setDefault("JR_DJANGO_DEBUG", False)
 #jrGlobalEnv.setDefault("JR_DJANGO_DEBUG", True)
 
+# we MIGHT need to override and tell it where to put log files if they are mounted elsewhere
+jrGlobalEnv.setDefault("JRBASELOGDIR", "/")
+
 
 # base settings
 from .settings_base import *
@@ -77,50 +80,35 @@ HUEY = {
 
 
 
-# HUEY DB SETUP
-# see https://huey.readthedocs.io/en/latest/django.html
-HUEY_OLD_PRE102624 = {
-    "huey_class": "huey.SqliteHuey",  # Huey implementation to use.
-    "name": "HlHueyDb",
-    "filename": BASE_DIR / "db/hlHueyDb.sqlite3",
-    "results": True,  # Store return values of tasks.
-    "store_none": False,  # If a task returns None, do not save to results.
-
-    # ATTN: controls whether we use queued huey or run tasks immediately
-    "immediate": False,
-
-    "utc": True,  # Use UTC for all times internally.
-    "connection": {},
-    "consumer": {
-        "workers": 1,
-        "worker_type": "thread",
-        "initial_delay": 0.1,  # Smallest polling interval, same as -d.
-        "backoff": 1.15,  # Exponential backoff using this rate, -b.
-        "max_delay": 10.0,  # Max possible polling interval, -m.
-        "scheduler_interval": 1,  # Check schedule every second, -s.
-        "periodic": True,  # Enable crontab feature.
-        "check_worker_health": True,  # Enable worker health checks.
-        "health_check_interval": 1,  # Check worker health every second.
-    },
-    # To run Huey in "immediate" mode with a live storage API, specify
-    # immediate_use_memory=False.
-    #'immediate_use_memory': False,
-}
-
-
-
-
 # force secure ssl https only settings
-JR_DJANGO_FORCE_SECURE = False
+# ATTN: some of these are also set now in settings_base.py
+JR_DJANGO_FORCE_SECURE = True
+#
 if (JR_DJANGO_FORCE_SECURE):
+    # NOTE: we if set these I think we NEED to make the nginx server force a redirect to https, because True for secure wont work over http
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     # this one shouldnt be needed if we force redirect in nginx config, which is more recommended?
     SECURE_SSL_REDIRECT = True
-
+    # could this block login from http? (trying 2/21/25); i think this is set properly by nginx
+    #SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+else:
+    # NEW 2/21/25; i dont think we should have to set this, i think these are defaults
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    # is this needed to let people login via http (if we want to)
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+    # is this default? I think we need to set this to something OTHER than NONE if we want to turn off secure cookies
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    #
+    SECURE_SSL_REDIRECT = False
 
 # 10/25/24 see https://stackoverflow.com/questions/12174040/forbidden-403-csrf-verification-failed-request-aborted
-CSRF_TRUSTED_ORIGINS = ['https://nycnoir.org', 'https://www.nycnoir.org']
+CSRF_TRUSTED_ORIGINS = ['https://nynoir.org', 'https://www.nynoir.org', 'https://nycnoir.org', 'https://www.nycnoir.org', 'https://nynoir.net', 'https://www.nynoir.net', 'http://nynoir.org', 'http://www.nynoir.org', 'http://nycnoir.org', 'http://www.nycnoir.org', 'http://nynoir.net']
+
+# NEW 2/21/25 trying this (doesnt seem to have any effect)
+SESSION_COOKIE_DOMAIN = '.nynoir.org'
+SESSION_COOKIE_PATH = '/'
 
 
 

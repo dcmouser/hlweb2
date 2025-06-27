@@ -1,0 +1,2081 @@
+% CASEBOOK GENERATED LATEX DOCUMENT
+
+
+
+\documentclass[oneside, openany, 10pt, paper=letter, DIV=15]{scrbook}%
+\def\mygeometryMargin{2cm} \def\mygeometryBottom{2.5cm}
+% CASEBOOK LATEX - PREAMBLE PACKAGES
+
+
+
+% used in a couple of places to force geometry
+%\def\mygeometryMargin{2cm}
+%\def\mygeometryBottom{2.5cm}
+\usepackage[margin=\mygeometryMargin, bottom=\mygeometryBottom]{geometry} % note this is also set in newspaper!
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{lastpage}
+\usepackage{FiraSans} % font
+\usepackage{librebaskerville} % font
+\usepackage{setspace}
+\usepackage{graphicx} % for graphics
+\usepackage{amssymb} % symbols
+\usepackage{amsthm} % symbols
+\usepackage{amsmath} % symbols
+\usepackage{wasysym} % symbols
+\usepackage{MnSymbol} % symbols
+\usepackage{parskip}
+\usepackage{scrlayer-scrpage} % main document class
+\usepackage{tocloft} % table of contents support
+\usepackage{multicol} % multi-column support
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
+\usepackage{tikz}
+\usetikzlibrary{backgrounds,calc}
+\usepackage{clock} % clock symbols
+\usepackage[clock]{ifsym} % clock symbols
+\usepackage{fontawesome5} % various symbols
+\usepackage{pgfornament} % ornaments like tombstones between leads
+\usepackage{fancybox} % fancy boxed blocks of text
+
+\usepackage{aurical}
+\usepackage{listings} % checkbox lists
+\usepackage{pdfpages} % embedding pdf files?
+\usepackage{enumitem} % lists of items
+\usepackage{refcount} % new ContinuedOnNextPage Stuff
+\usepackage{tabularray} % autosizing tables (tabulary seemed broken)
+\usepackage{array}     % For fine-tuning table formatting (used in fingerprint)
+
+\usepackage[export]{adjustbox} % for image alignment in table cells
+\usepackage{printlen} % for reporting image sizes
+
+\usepackage{options} % needed by others? see https://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/longfbox/longfbox.sty
+\usepackage{pict2e} % see above (longbox needs?)
+\usepackage[most]{tcolorbox} % more fancy boxed blocks
+\usepackage{longfbox} % more fancy boxed blocks
+\usepackage{lettrine} % first big character drop caps
+\usepackage{lipsum} % for testing blocks of text
+\usepackage{marginnote} % margin notes
+
+
+% new newspaper stuff
+
+%\usepackage{picinpar} % may not be needed
+%\usepackage{yfonts} % may not be needed
+%\usepackage{epigraph} % for nice looking quotes? - UNUSED
+% \usepackage{printlen} % for reporting image sizes and converting - UNUSED
+
+\usepackage{float}
+\usepackage{caption}
+\usepackage{needspace}
+
+% forcing header footer text on a specific page
+\usepackage{eso-pic}
+
+% landscape
+\usepackage{lscape}
+
+% helper for logic stuff
+\usepackage{etoolbox}
+
+% font control for xelatex
+\usepackage{fontspec}
+
+% colors
+\usepackage[svgnames]{xcolor}
+
+% for redacting
+\usepackage{censor}
+
+% for strikeout (normalem should remove sideeffect of underlining emphasized text)
+\usepackage[normalem]{ulem}
+
+% better underlining (colors); and strikeout?
+\usepackage{soul}\usepackage[]{csquotes}
+% CASEBOOK LATEX - PREAMBLE MAIN
+
+
+% for blank paragraphs
+\def\fakepar{\hfill\mbox{}\vspace{\parskip}\newline\mbox{}\hspace{\parindent}}
+
+
+
+% without this we can get latex trying to tweak spacing of headers and other weird stuff
+\raggedbottom
+\raggedcolumns
+
+
+% footer page numbers
+\newcommand{\mySetFooters}{
+% into margin to leave more space see same command below
+%\rofoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
+%\lefoot*{{\pagemark}\scriptsize\mycontdfoot\textbf}
+\rofoot*{\vspace{-0.4cm}{\pagemark}\hspace{-0.3cm}\scriptsize\mycontdfoot\textbf}%
+\lefoot*{\vspace{-0.4cm}\hspace{-0.3cm}{\pagemark}\scriptsize\mycontdfoot\textbf}%
+}
+
+
+% For intentionally blank facing pages
+\newpairofpagestyles{specialfooter}{
+  \cfoot{This page intentionally left blank.} % Set custom center footer
+\mySetFooters
+}
+
+\KOMAoptions{cleardoublepage=specialfooter}
+
+% default footer height/position, customized for newspapers
+\KOMAoptions{footheight=1cm}
+\setlength{\footskip}{1cm}
+
+
+% section and chapter name formatting part 1
+\let\origaddcontentsline\addcontentsline
+\let\origcftaddtitleline\cftaddtitleline
+\setlength{\columnsep}{2em}%
+\onehalfspacing%
+\setlength{\parindent}{0pt}%
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=0.5cm]{chapter}
+\renewcommand*{\chapterheadstartvskip}{\vspace*{-1.0cm}}
+\renewcommand*{\chapterheadendvskip}{\vspace*{0.5cm}}
+\renewcommand{\cftsecfont}{\ttfamily}
+\renewcommand{\cftsubsecfont}{\ttfamily}
+\renewcommand{\cftsubsubsecfont}{\ttfamily}
+\renewcommand{\cftchappagefont}{\ttfamily}
+\renewcommand{\cftsecpagefont}{\ttfamily}
+\renewcommand{\cfttoctitlefont}{\fontsize{25}{30}\selectfont\bfseries\scshape}
+\newenvironment{cb_quoteenv}{}{} % quote environment for when we need one
+
+
+
+
+\DeclareTOCStyleEntries[entryformat=\ttfamily, pagenumberformat=\ttfamily]{tocline}{subsection, subsubsection}
+
+
+
+% section and chapter name formatting part 2
+\renewcommand\cftchapafterpnum{\vskip-2pt}
+\renewcommand\cftsecafterpnum{\vskip-2pt}
+\newcommand\cbsubheading[1]{\vskip-0.35cm\textbf{#1}}
+\renewcommand\contentsname{}
+\defcaptionname{\languagename}{\contentsname}{}
+\addtokomafont{chapter}{\fontsize{40}{50}\selectfont}\renewcommand{\cftchapfont}{\ttfamily}
+\setkomafont{disposition}{\bfseries}
+\setlength{\cftbeforetoctitleskip}{-2em}
+\setlength{\cftaftertoctitleskip}{-2em}
+
+
+
+% checkbox lists, etc (uses package enumitem)
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=\openbox}
+\newlist{nobulletlist}{itemize}{2}
+\setlist[nobulletlist]{label=}
+
+
+
+% kludge fix for longfbox (see code comments)
+\makeatletter
+\newdimen\@tempdimd
+\makeatother
+
+
+
+% calendar support
+\usetikzlibrary{calendar,shapes.misc}
+\makeatletter%
+\tikzoption{day headings}{\tikzstyle{day heading}=[#1]}
+\tikzstyle{day heading}=[]
+\tikzstyle{day letter headings}=[
+    execute before day scope={ \ifdate{day of month=1}{%
+      \pgfmathsetlength{\pgf@ya}{\tikz@lib@cal@yshift}%
+      \pgfmathsetlength\pgf@xa{\tikz@lib@cal@xshift}%
+      \pgftransformyshift{-\pgf@ya}
+      \foreach \d/\l in {0/M,1/T,2/W,3/T,4/F,5/S,6/S} {
+        \pgf@xa=\d\pgf@xa%
+        \pgftransformxshift{\pgf@xa}%
+        \pgftransformyshift{\pgf@ya}%
+        \node[every day,day heading]{\l};%
+      } 
+    }{}%
+  }%
+]
+\makeatother%
+
+
+
+
+
+
+% For forcing text to very very top or very very bottom as part of footer
+% OVERLAY ON HEADER
+\newcommand{\overlayHeadText}[1]{
+\AddToShipoutPictureBG*{%
+  \AtPageUpperLeft{%
+    % Adjust the positioning: xshift and yshift to place text exactly where you need it
+    \raisebox{-\height-2.5mm}[0pt][0pt]{%
+      \hspace{2.5mm} % Horizontal position (20mm from the left)
+      \makebox[\textwidth][l]{#1} % The text to display
+    }
+  }
+}
+}
+%
+% OVERLAY ON FOOTER
+\newcommand{\overlayFootText}[1]{
+% Add a line of text to the bottom center of the first page
+\AddToShipoutPictureBG*{%
+  \AtPageLowerLeft{%
+    % Raise the text slightly above the bottom of the page
+    \raisebox{0.5cm}[0pt][0pt]{%
+      % Center the text horizontally
+      \hspace{0.5\paperwidth} % Moves the starting point to half the width of the paper
+			% force standard small font size
+			\fontsize{8.0}{8.0}\selectfont
+      \makebox[0pt][c]{#1} % Centers the text at this point
+    }
+  }
+}
+}
+%
+
+
+
+
+
+
+% LAYOUTS THAT CAN BE SELECTED FOR LEADS/DOCUMENTS/ENTRIES
+\newcommand{\mylayoutMinMarginsBegin}{
+%\begingroup
+\newgeometry{margin=3em, top=2em, bottom=3em}\setlength{\footskip}{0.5cm}
+}
+
+\newcommand{\mylayoutMinMarginsEnd}{
+%\restoregeometry
+%\endgroup
+\newgeometry{margin=\mygeometryMargin, bottom=\mygeometryBottom}
+}
+
+
+% TOMBSTONES (these can be overwritten later with \renewcommand)
+\newcommand{\myTombstoneLead}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{84}}\end{center}
+}
+%
+\newcommand{\myTombstoneDefault}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{80}}\end{center}
+}
+%
+\newcommand{\myTombstoneFinal}{
+\begin{center}{\pgfornament[anchor=center,ydelta=0pt,width=3cm]{80}}\end{center}
+}
+
+
+
+% misc
+\newcommand{\mySpaceAfterSymbol}{
+\hspace{0.1cm}%
+}
+
+
+
+% cblrender calls for kludge embedding header after quote (mid page)
+\newcommand{\myKludgeForMidPageHeader}[1]{%
+\begingroup \let\clearpage\relax \vspace{3em}{#1} \endgroup"
+}
+
+%
+\newcommand{\myHugeHeaderFontSelect}{
+\fontsize{96}{128}\selectfont
+}
+
+
+
+%\newcommand{\setMarginDefaultsNarrow}{
+%\def\mygeometryMargin{1cm}
+%\def\mygeometryBottom{1.5cm}
+%\newgeometry{margin=\mygeometryMargin, bottom=\mygeometryBottom}
+%}
+
+
+
+% replace \underline with soul version
+\let\underline\ul
+
+% replace \sout with soul version
+\let\sout\st
+
+% thicker underlines by default?
+\setul{}{.2ex}
+\setuldepth{abc}
+
+
+
+
+% CASEBOOK LATEX PREAMBLE - NEWSPAPER FUNCS
+
+
+
+% HELPER COMMANDS
+%
+% NEWSPAPER
+\newcommand{\npNewsPaperBegin}[0]{
+\begingroup
+}
+%
+\newcommand{\npNewsPaperEnd}[0]{
+\restoregeometry
+\endgroup
+}
+
+
+%
+% BANNER
+\newcommand{\npBanner}[1]{
+  % Include the image so it fills the text width
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{#1}
+\par
+\vspace{1mm}
+\end{minipage}
+}
+
+% UNDER BANNER LINES
+\newcommand{\npBannerLines}[0]{
+\begin{minipage}{\linewidth}
+  \noindent\rule{\linewidth}{0.5pt}\\[-\baselineskip]
+  \vspace{1mm} \\[-\baselineskip]
+  \noindent\rule{\linewidth}{0.5pt}
+\end{minipage}
+}
+
+% UNDER BANNER
+\newcommand{\npUnderBanner}[3]{
+\begingroup
+\npBannerLines
+\noindent\makebox[0pt][l]{~~~#1}%
+\hfill%
+\makebox[0pt]{#2}%
+\hfill%
+\makebox[0pt][r]{#3~~~}
+\\[-.25\baselineskip]
+\npBannerLines
+\\[-1.5\baselineskip]
+\endgroup
+}
+
+
+
+
+%
+% UNDER BANNER 2
+\newcommand{\npUnderBannerAbove}[3]{
+\begingroup
+ \setstretch{0.8}
+\vspace{-0.075\linewidth}
+\noindent\begin{center}{#2}\end{center}
+\begingroup
+\vspace{-2em}
+#1 \hfill #3
+\endgroup
+\vspace{0.02\linewidth}
+\endgroup
+}
+
+
+
+%
+% UNDER BANNER 2
+\newcommand{\npUnderBannerAboveOlder}[3]{
+\begingroup
+ \setstretch{0.8}
+ \vspace{-1.55cm}
+\noindent\begin{center}{#2}\end{center}
+\begingroup
+\vspace{-1.5em} #1 \hfill #3
+\endgroup
+ \vspace{0.25cm}
+\endgroup
+}
+
+
+
+
+
+
+
+
+
+
+
+%
+% HEADLINE
+\newcommand{\npHeadline}[1]{
+\noindent %
+%H4
+%\needspace{1in} %
+\begin{minipage}{\columnwidth} %
+\centering %
+\noindent %
+%\vspace*{0.5em}
+\setstretch{1.2}%
+%\noindent %
+%\par
+%\noindent%
+#1
+%\noindent
+%\par
+\end{minipage}
+\noindent\par\nopagebreak[4]
+\vspace{0.5em}
+}
+%
+
+
+
+
+% BYLINE
+\newcommand{\npByLine}[1]{
+{\centering
+ \scriptsize
+\noindent%
+#1
+\par
+}
+\vspace{0.2cm}
+ \nopagebreak[4] 
+}
+
+
+%
+% EndLine for things like "Continued on page 4"
+\newcommand{\npEndLine}[1]{
+\par
+{\centering
+\scriptsize
+\noindent\textbf{\textit{#1}}
+\\[-\baselineskip]
+\vspace{0.2cm}
+}
+\nopagebreak[4] 
+}
+
+
+
+
+% SEPARATOR HALF
+\newcommand{\npSeparatorHalf}[0]{%
+%\par
+%\vspace*{-0.5em}%
+%\vspace{1em}
+\vspace{0.5em}
+\begin{center}%
+%\par%
+\noindent\rule{0.5\columnwidth}{0.75pt}%
+\end{center}%
+\vspace{1em}%
+\par%
+%\hspace{0.2cm}
+\nopagebreak[4] 
+}
+
+% SEPARATOR FULL
+\newcommand{\npSeparatorFull}[0]{%
+%\par %
+%\vspace*{-0.5em}%
+%\vspace{1em}
+\vspace{0.5em}
+\begin{center}%
+%\par%
+\noindent\rule{\columnwidth}{0.75pt}%
+\end{center}%
+\vspace{1em}%
+\par%
+%\hspace{0.2cm}
+\nopagebreak[4] 
+}
+
+
+
+
+% ARTICLE GROUP BEGIN
+\newcommand{\npArticleGroupBegin}[1]{
+ \begingroup
+%\setlength{\parindent}{0.2cm} %
+\setlength{\parindent}{0pt} %
+ \setlength{\columnseprule}{0.5pt}
+ \begin{multicols}{#1}
+ \raggedcolumns
+}
+
+% ARTICLE GROUP END
+\newcommand{\npArticleGroupEnd}{
+ \end{multicols}
+ \endgroup
+}
+
+
+
+% ARTICLE BEGIN
+\newcommand{\npArticleBegin}[0]{%
+%H2
+\needspace{1in} %
+\begingroup %
+\setlength{\parindent}{0.2cm} %
+%H3
+}
+
+
+% ARTICLE END
+\newcommand{\npArticleEnd}[0]{
+\nopagebreak[4]
+\npSeparatorFull
+\endgroup
+}
+
+
+
+% IMAGE UNBORDERED
+\newcommand{\npImage}[3]{
+\setlength{\fboxsep}{1pt} % Padding between the image and the border
+\setlength{\fboxrule}{1pt} % Thickness of the border
+\noindent\begin{minipage}{\columnwidth}
+\vspace{0.75em}
+\centering
+    \includegraphics[width=#3\columnwidth]{#1}
+  \ifstrempty{#2}{%
+  }{%
+	\captionsetup{labelformat=empty, skip=0.2cm}
+	\captionof{figure}{#2}
+  }%
+\end{minipage}
+\vspace{-0.75em}
+\nopagebreak[4]%
+}
+
+
+% IMAGE BORDERED
+\newcommand{\npImageBordered}[3]{
+\setlength{\fboxsep}{1pt} % Padding between the image and the border
+\setlength{\fboxrule}{1pt} % Thickness of the border
+\noindent\begin{minipage}{\columnwidth}
+\vspace{0.75em}
+\centering
+    \tcbox[sharp corners, size=tight, colframe=black, colback=white, boxsep=2pt, boxrule=1pt] {
+    \includegraphics[width=#3\columnwidth]{#1}
+    }
+  \ifstrempty{#2}{%
+	\vspace{-0.75em}
+  }{%
+	\vspace{-0.75em}
+ 	\captionsetup{labelformat=empty, skip=0.2cm}
+	\captionof{figure}{#2}
+\vspace{-0.75em}
+  }%
+\end{minipage}
+\vspace{-0.75em}
+\nopagebreak[4]%
+}
+
+
+
+
+
+% WEATHER BOX AT UPPER RIGHT
+% banner box puts text in a box on right side of banner
+\newcommand{\npBannerBox}[1]{
+\begingroup
+% We place the floating box
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=south east]  at (\linewidth, 0.70cm) {
+    \tcbox[width=\weatherboxWidth, sharp corners, size=tight, colframe=black, colback=white, boxsep=3pt, boxrule=0.75pt, box align=top, halign=center, valign=center, nobeforeafter, enhanced]{
+\setstretch{0.8}
+     \parbox{\weatherboxWidth}{\tiny \textbf{#1}}
+    }
+  };
+\end{tikzpicture}
+\endgroup
+}
+
+
+
+
+
+
+% Short helper commands called by newspaper building
+%
+\newcommand{\npGeomLandscapeNarrow}{%
+%\newgeometry{margin=3em, left=2em, right=2em, bottom=4em}\setlength{\footskip}{2em} %
+\newgeometry{margin=.9cm, left=.6cm, right=.9cm, bottom=1.2cm}\setlength{\footskip}{.6cm} %
+}
+%
+\newcommand{\npGeomLandscapeWide}{%
+\newgeometry{margin=.9cm, bottom=1.2cm}\setlength{\footskip}{.6cm} %
+}
+
+%
+\newcommand{\npGeomPortraitWide}{%
+\newgeometry{margin=.9cm, top=.6cm, bottom=2.2cm}\setlength{\footskip}{1.6cm} %
+}
+%
+\newcommand{\npGeomPortraitNarrow}{%
+\newgeometry{margin=.6cm, top=.45cm, bottom=1.2cm}\setlength{\footskip}{.6cm} %
+}
+
+\newcommand{\npTallGeom}{%
+\newgeometry{bottom=1.2cm}\setlength{\footskip}{.6cm} %
+}
+
+
+
+
+%
+\newcommand{\npWeatherBoxSetupLandscape}{%
+\def\weatherboxWidth{2.8cm} \def\weatherboxMargin{2.2cm} %
+}
+%
+\newcommand{\npWeatherBoxSetupPortrait}{%
+\def\weatherboxWidth{2.8cm} \def\weatherboxMargin{2.2cm} %
+}
+%
+\newcommand{\npWeatherBoxSetupPortraitNarrow}{%
+\def\weatherboxWidth{1.8cm} \def\weatherboxMargin{1.4cm} %
+}
+
+
+
+
+\newcommand{\npGeomNone}{%
+}% CASEBOOK LATEX PREAMBLE - FINGERPRINT FUNCS
+
+
+% END NEWSPAPER FUNCS
+
+
+
+
+
+
+
+
+
+% CASEBOOK LATEX PREAMBLE - FINGERPRINT FUNCS
+
+
+
+\newlength{\imagewidth}
+
+
+
+% Ensure that the total width minus the space for 9 gaps fits the text width
+\newlength{\totalimagewidth}
+\setlength{\totalimagewidth}{\textwidth}
+\addtolength{\totalimagewidth}{-\dimexpr 9\imagewidth/10 \relax} % adjust space between images
+
+% remove default label in captions
+\captionsetup[figure]{labelformat=empty} % Removes the label from figure captions
+\captionsetup[subfloat]{labelformat=empty} % Removes the label from subfigure captions
+
+
+
+\setlength{\imagewidth}{2.2cm} % Width of the images
+\newcommand{\gap}{20pt}
+\newcommand{\vgapfix}{\vspace*{4pt}}
+\newcommand{\vgapbfix}{\vspace*{12pt}}
+
+
+
+
+
+
+% FINGERPRINT IMAGE IN BORDER WITH TEXT (pass pass as first arg, and caption as second)
+\newcommand{\iwidth}{0.17}
+\newcommand{\jwidth}{0.12}
+\newcommand{\kwidth}{0.11}
+
+\newcommand{\fpimage}[2]{%
+   \fbox{\includegraphics[width=\jwidth\textwidth]{#1}} \par \textbf{#2}
+}
+
+\newcommand{\fpimagenc}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+\newcommand{\fpimagen}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+
+
+
+
+
+
+
+
+% Custom environment definition
+\newenvironment{myfprowtable}
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}}
+    {\end{tabular}
+    \end{center}
+    \vgapfix
+    }
+
+
+\newcommand{\mfplabeledHand}[6]
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.15cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+\rotatebox{90}{\Large\textbf{#1}} &
+ #2 & #3 & #4 & #5 & #6
+  \end{tabular}
+  \end{center}
+   \vgapfix
+}
+
+
+\newcommand{\mfpLabelRow}[5]
+    {\noindent 
+    \begin{center}
+    \vspace*{-14pt}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.15cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+ &
+ #1 & #2 & #3 & #4 & #5
+  \end{tabular}
+  \end{center}
+%   \vgapfix
+}
+
+
+
+
+
+
+
+
+
+
+\newcommand{\myfpersontableSetLeft}[5]{
+    \def\fpTempLa{#1}%
+    \def\fpTempLb{#2}%
+    \def\fpTempLc{#3}%
+    \def\fpTempLd{#4}%
+    \def\fpTempLe{#5}%
+}
+
+\newcommand{\myfpersontableSetRight}[5]{
+    \def\fpTempRa{#1}%
+    \def\fpTempRb{#2}%
+    \def\fpTempRc{#3}%
+    \def\fpTempRd{#4}%
+    \def\fpTempRe{#5}%
+}
+
+% 10 fingerprint table in 2 rows
+\newcommand{\myfpersontable}[1]{%
+\begin{tcolorbox}[sharp corners, colframe=black, colback=white, boxrule=2pt]
+    \ttfamily
+% Adjust spacing
+\setlength{\tabcolsep}{4pt} % Space between columns
+\renewcommand{\arraystretch}{1.5} % Adjust vertical spacing
+% Reduce padding and margin around the images
+\setlength{\fboxsep}{0pt} % Padding between the content and border of \fbox
+\setlength{\fboxrule}{1pt} % Thickness of the border of \fbox
+\vgapfix
+\centering \Large\textbf %{#1}
+\vgapfix
+\mfplabeledHand{LEFT} %
+{\fpimagenc{\fpTempLa}} %
+{\fpimagenc{\fpTempLb}} %
+{\fpimagenc{\fpTempLc}} %
+{\fpimagenc{\fpTempLd}} %
+{\fpimagenc{\fpTempLe}}
+\mfplabeledHand{RIGHT} %
+{\fpimagenc{\fpTempRa}}%
+{\fpimagenc{\fpTempRb}}%
+{\fpimagenc{\fpTempRc}}%
+{\fpimagenc{\fpTempRd}}%
+{\fpimagenc{\fpTempRe}}
+\mfpLabelRow %
+{Thumb}
+{Index}
+{Middle}
+{Ring}
+{Pinky}
+\end{tcolorbox}
+}
+% CASEBOOK LATEX PREAMBLE - MISC EFFECTS
+
+
+
+
+% full page image used for cover pages, etc., which handles transparency properly
+
+\newcommand{\imageFullPage}[2]{
+\AddToHookNext{shipout/foreground}{
+  \begin{tikzpicture}[remember picture,overlay, blend mode=multiply]
+  \node[opacity=#2, black] at (current page.center) {
+   \includegraphics[width=\paperwidth,height=\paperheight]{#1}
+  };
+  \end{tikzpicture}
+}
+}
+
+
+
+
+
+
+% for torn page tcolorbox
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{shadows}
+% for image behind text drop shadow
+\tcbuselibrary{skins}
+
+
+
+
+% torn page 
+% see https://tex.stackexchange.com/questions/86150/torn-page-effect
+
+%
+\definecolor{cbYellowPaperColor}{RGB}{239,227,157}
+\definecolor{cbNewsPaperColorA}{RGB}{249,250,235}
+\definecolor{cbNewsPaperColorB}{RGB}{241,241,240}
+%
+\usepackage{lipsum}
+\newtcolorbox{tornpage}[1]{%
+    %enhanced jigsaw, breakable, % allow page breaks
+    enhanced jigsaw, % allow page breaks
+    % not sure breakable=false is doing anything...
+    %enforce breakable=false,
+    breakable=false,
+    frame hidden, % hide the default frame
+    overlay={%
+        \draw [
+            fill=#1, % fill paper
+            draw=#1!50!black, % boundary colour
+            decorate, % decoration
+            decoration={random steps,segment length=2pt,amplitude=1pt},
+            drop shadow, % shadow
+        ]
+        % top line
+        (frame.north west)--(frame.north east)--
+        % right line
+        (frame.north east)--(frame.south east)--
+        % bottom line
+        (frame.south east)--(frame.south west)--
+        % left line
+        (frame.south west)--(frame.north west);
+    },
+    % paragraph skips obeyed within tcolorbox
+    parbox=false,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% put an image behind some text (minipage)
+\newcommand{\imageBehindFull}[6]{%
+\begin{center}
+\begin{tcolorbox}[enhanced,
+                  width=#1,   % Set the width of the tcolorbox (should be fraction\linewidth)
+                  boxsep=#2\textwidth,         % Padding inside the box
+                  colback=white,      % Color behind the text
+                  colframe=white,     % Frame color
+                  sharp corners,      % Sharp corners of the box
+                  halign=center,      % Center-align the content horizontally (affects only the box content, not minipage)
+                  valign=#4,      % Center-align the content vertically
+                  opacityback=0.5,    % Opacity of the background color
+                  opacityframe=0,     % Frame opacity
+                  watermark opacity=#3,   % Opacity of the background image
+                  #5,
+                  ]
+    #6
+\end{tcolorbox}
+\end{center}
+}
+
+
+
+
+% LATE PREAMBLE STUFF
+
+\newfontfamily{\cbFontsigtest}{QEKevinShirley.ttf}[Path=E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/fonts/hand/, Scale=2, Color=NavyBlue]
+
+
+
+
+% embed info into generated pdf
+\hypersetup{
+pdfauthor={Jesse Reichler <jessereichler@gmail.com>},
+pdftitle={Casebook Feature Demo},
+pdfsubject={New York Noir - Casebook Feature Demo v2.1},
+pdfkeywords={casebook},
+}
+\date{1/18/25}
+% CASEBOOK LATEX - DOC START
+
+
+\begin{document}
+
+
+\normalsize%
+\clearpairofpagestyles
+
+
+
+% footers get page numbers and a "continued on next page" line if appropriate
+\mySetFooters
+
+
+\newif\ifwarnpgbrk
+\warnpgbrkfalse
+\newcounter{question}
+\newcommand\mycontdfoot{\ifwarnpgbrk \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
+\newcommand\mycontdfootLabelMethodUnused{\ifnum\getpagerefnumber{question-start-\thequestion}<\getpagerefnumber{question-end-\thequestion} \begin{center}CONTINUED ON NEXT PAGE\end{center} \fi}
+\newenvironment{breakwarnsec}{\warnpgbrktrue}{}
+
+
+
+
+
+
+
+
+
+% --------------------------
+% USER LATEX
+% --------------------------
+
+
+
+
+
+
+
+
+
+\cleardoublepage
+\addcontentsline{toc}{chapter}{~~Front Matter}
+\newpage
+\addcontentsline{toc}{section}{~~Cover Page}
+\label{e4}
+\imageFullPage{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/crookedPastCoverImageBw.jpg}{0.33}\begin{titlepage}
+\begin{center}
+\vspace*{0in} \begin{Huge}\bfseries \textbf{Casebook Feature Demo} \par\end{Huge}
+\vspace*{0in} \begin{Large}\bfseries \textbf{A Case for New York Noir} \par\end{Large}
+\vspace*{0in} \bfseries by \textbf{Jesse Reichler} \par
+\vspace*{0in} \bfseries \textbf{v2.1 - 1/18/25} \par \vspace{0.1in} \par
+
+\end{center}
+
+\textbf{SUMMARY}%:
+
+A demo case to show some features of Casebook.
+\begin{flushleft}
+\begin{itemize} \setlength\itemsep{-0.5em}
+\item \textbf{Author}: Jesse Reichler <jessereichler@gmail.com>
+\item \textbf{Status}: Testing
+\item \textbf{Difficulty}: 1 out of 5
+\item \textbf{Playtime}: 2 hours
+\item \textbf{Cautions}: Suitable for all audiences
+\item \textbf{Build tool}: Casebook v4.01 (2/15/25)
+\item \textbf{Typesetting}: 10pt letter oneside (xelatex)
+\item \textbf{Compiled}: Wednesday, February 19, 2025 at 03:44 AM
+\item \textbf{Stats}: 40 Leads / 4.5k Words / 36.8 KB
+\end{itemize}
+\end{flushleft}
+\end{titlepage}
+\newpage
+\cleardoublepage
+\section*{Table of Contents}%
+
+\addcontentsline{toc}{section}{~~Table of Contents}
+\label{e5}
+\begin{multicols*}{2}
+\warnpgbrktrue 
+\addvspace{8pt}
+\tableofcontents
+\warnpgbrkfalse \end{multicols*}
+\newpage
+\section*{Instructions}%
+
+\addcontentsline{toc}{section}{~~Instructions}
+\label{e6}
+To play \underline{this} case you \sout{may} will need the v2 base set from New York Noir (\url{https://www.nynoir.org}):
+\newpage
+\cleardoublepage
+{\par\raggedleft\lfbox[padding=0em, margin=0em, border-left-width=0pt, border-right-width=0pt, border-top-width=1pt, border-bottom-width=1pt]{\begin{minipage}[c]{0.8\columnwidth}\vspace*{1.1em}
+ \begin{cb_quoteenv} \setstretch{1} \huge \textit{"Childhood is the first great adventure of the human mind."} \begin{flushright} \vspace{0.5em} \textbf{ - Sherlock Holmes} \end{flushright}  \end{cb_quoteenv}\vspace*{1em}\end{minipage}}\par}
+
+
+\myKludgeForMidPageHeader{\chapter*{Day One}}
+
+
+
+\addcontentsline{toc}{chapter}{~~Day One}
+
+
+\textbf{10 AM - Thursday, June 10th, 1915}
+\section*{Demo of Tags/markers (setting and testing)}%
+
+\addcontentsline{toc}{section}{~~Demo of Tags/markers (setting and testing)}
+\label{e8}
+\warnpgbrktrue 
+
+
+
+\textbf{Gaining markers}%
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}\raisebox{-2.0pt}{\Large \faCameraRetro}\mySpaceAfterSymbol }Circle \textbf{Document 1} in your case log. You have now gained access to \textbf{Document 1} (Memo sheet on Jacob Thomson), which can be found at the back of this case book on \hyperref[{e27}]{page \pageref*{e27}}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}\raisebox{-3.3pt}{\Large \faTag}\mySpaceAfterSymbol }Circle \textbf{Marker K} in your case log.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}\raisebox{-3.3pt}{\Large \faTag}\mySpaceAfterSymbol }\underline{Underline} \textbf{Marker L} in your case log.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}\raisebox{-3.3pt}{\Large \faTag}\mySpaceAfterSymbol }Strike through \textbf{Marker L} in your case log.\end{minipage}}\par}
+
+
+
+
+
+\textbf{Checking markers}%
+
+
+If you have circled \textbf{Marker L} in your case log, then go to the end.
+
+If you have circled in your case log \textbf{both} of the the following 2 items (\textbf{Marker K} and \textbf{Marker L}), then go to the end.
+
+If you have \underline{underlined} \textbf{Marker K} in your case log, then 
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}\raisebox{-3.3pt}{\Large \faTag}\mySpaceAfterSymbol }Circle \textbf{Marker K} in your case log.\end{minipage}}\par}
+
+
+
+If you have marked in any way (circled, underlined, etc.) \textbf{Marker L} in your case log, then say goodnight.
+
+If you want to combine you may have to customize box stuff:
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\Large \faTags}\mySpaceAfterSymbol }If you have \underline{underlined} but \textbf{not} circled \textbf{Marker K} in your case log, then circle \textbf{Marker K} in your case log.\end{minipage}}\par}
+
+
+
+If you have circled in your case log \textit{any} of the the following 3 items (\textbf{Marker K}, \textbf{Marker L}, or \textbf{Marker M}), then go to the end.
+
+If you have circled in your case log \textbf{all} of the the following 3 items (\textbf{Marker K}, \textbf{Marker L}, and \textbf{Marker M}), then go to the end.
+
+Here are some more advanced commands for combining instructions that are common in something like Razorhurst Blood Alley, where there are certain phrasing that happens a lot:
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\Large \faTags}\mySpaceAfterSymbol }If you have \underline{underlined} but \textbf{not} circled \textbf{Marker K} in your case log, then circle \textbf{Marker K} in your case log, and go to \hyperref[{e25}]{6{-}0847 (p.\pageref*{e25})}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\Large \faTags}\mySpaceAfterSymbol }If you have circled but \textbf{not} struck-through \textbf{Marker K} in your case log, then strike through \textbf{Marker K} in your case log, and go to \hyperref[{e25}]{6{-}0847 (p.\pageref*{e25})}.\end{minipage}}\par}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \section*{Other kinds of markers and tracks}%
+
+\addcontentsline{toc}{section}{~~Other kinds of markers and tracks}
+\label{e11}
+\warnpgbrktrue 
+
+
+
+\textbf{Tracks can be used for arbitrary things, and are just places on the case log:}%
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, record that the current value of \textbf{track A} is: \textbf{10}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, record that the current value of \textbf{track B} is: \textbf{4}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, \textbf{increase} the current value of \textbf{track A} by \textbf{+2}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, \textbf{reduce} the current value of \textbf{track B} by \textbf{1}.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, \textbf{increase} the current value of \textbf{track A} by \textbf{+2}, but not greater than 10.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, \textbf{reduce} the current value of \textbf{track B} by \textbf{1}, but not less than 0.\end{minipage}}\par}
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+{\color{red}{\faCalculator}\mySpaceAfterSymbol }In your case log, record that the current value of \textbf{track C} is: \textbf{"tired"}.\end{minipage}}\par}
+
+
+
+
+
+\textbf{Demerits}%
+
+
+
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\mySpaceAfterSymbol Mark \textbf{3} demerit checkboxes in your case log.\end{minipage}}\par}
+
+
+
+
+
+\textbf{Fingerprints}%
+
+
+You find a fingerprint:
+
+\includegraphics[width=1in, height=0.80\textheight,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsRightLoop/Impression\_2/fp\_1/346.png} 
+
+Let’s examine the whole set from this criminal:
+
+\myfpersontableSetLeft{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsDoubleLoop/Impression_1/fp_1/318.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsRightLoop/Impression_1/fp_1/346.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsWhorl/Impression_1/fp_1/95.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsArch/Impression_1/fp_1/362.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsLeftLoop/Impression_1/fp_1/397.png}%
+\myfpersontableSetRight{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsLeftLoop/Impression_1/fp_1/298.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsWhorl/Impression_1/fp_1/219.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsLeftLoop/Impression_1/fp_1/58.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsLeftLoop/Impression_1/fp_1/157.png}%
+{E:/MyDocs/Programming/Python/hlweb2/hldjango/code/lib/fingerprinter/data/Anguli/FingerprintsWhorl/Impression_1/fp_1/373.png}%
+\myfpersontable{1-4382}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\warnpgbrktrue \begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\mySpaceAfterSymbol }  Stop reading this case book now, and begin searching for leads in the directories.
+
+Continue to the next page only when you are ready to end \textbf{day 1}.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{Day Two}
+
+\addcontentsline{toc}{chapter}{~~Day Two}
+
+
+Here is day two
+\newpage
+\cleardoublepage
+\chapter*{LEADS}
+
+\addcontentsline{toc}{chapter}{~~LEADS}
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\mySpaceAfterSymbol }  WARNING! Do \textbf{not} read through the rest of this document like a book from beginning to end. Lead entries are meant to be read individually only when you look up a lead by its number.
+
+Close this book now and follow rulebook instructions for looking up leads.
+\newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{1}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~1}
+\label{r53}
+\newpage
+\subsection*{1{-}8639}%
+
+\addcontentsline{toc}{subsection}{~~1{-}8639}
+\label{r52}
+\cbsubheading{Hint for Marker K (\hyperref[{e53}]{p.\pageref*{e53}}) contd.}%
+
+\warnpgbrktrue {\color{red}{\Large \faCheckSquare[regular]}\mySpaceAfterSymbol Mark \textbf{2} demerit checkboxes in your case log}.
+
+Hint: There is no good hint here.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{2}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~2}
+\label{r14}
+\newpage
+\subsection*{2{-}8920}%
+
+\addcontentsline{toc}{subsection}{~~2{-}8920}
+\label{e19}
+\cbsubheading{Thomson, Jacob
+\newline\small{303 E. 8th St, LE}%
+}%
+
+\warnpgbrktrue The idea of knocking on Jacob Thomson’s door fills me with dread.  The whole block seems run-down and dangerous.  I spend 15 minutes across the street, hoping I’ll spot him leaving, and trying to work up the courage to cross the street.  Finally I come up with a story in my head about looking for a lost dog, but I feel a wave of relief when no one answers the door.
+
+As I’m about to leave, an old woman with curlers in her hair and a small poodle in her arms sticks her head out of the next door window.
+
+“You looking for Jacob?” she asks.
+
+“I lost my dog,” I say, without thinking.  She looks down at her poodle as if to check that it’s hers.
+
+“Do you know Mr. Thomson?” I ask, regaining my wits.
+
+“Mister \textit{Thomson}…” she says, with not a small amount of disdain, “was evicted last month.  I think he went uptown to live with his cousin.  Trying to avoid the law, no doubt.”
+
+“Do you know his cousin’s name?” I ask.
+
+“Don’t remember his first name but I remember he said his last name was almost the same as his, only slightly different...”
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\mySpaceAfterSymbol Time advances 60 minutes.\end{minipage}}\par}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{5}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~5}
+\label{r20}
+\newpage
+\subsection*{5{-}1068}%
+
+\addcontentsline{toc}{subsection}{~~5{-}1068}
+\label{e23}
+\cbsubheading{Billups, J. {-} Apt. 2c
+\newline\small{351 W. 114th St, CH (apt. 2c)}%
+}%
+
+\warnpgbrktrue I knock on the door but there’s no answer.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{6}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~6}
+\label{r24}
+\newpage
+\subsection*{6{-}0847}%
+
+\addcontentsline{toc}{subsection}{~~6{-}0847}
+\label{e25}
+\cbsubheading{The Old Man’s Grocery Storey}%
+
+\warnpgbrktrue The old man’s grocery store is empty.
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\mySpaceAfterSymbol Time advances 60 minutes.\end{minipage}}\par}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{7}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~7}
+\label{r16}
+\newpage
+\subsection*{7{-}0031}%
+
+\addcontentsline{toc}{subsection}{~~7{-}0031}
+\label{e22}
+\cbsubheading{Porta, M {-} Apt. 2b
+\newline\small{351 W. 114th St, CH (apt. 2b)}%
+}%
+
+\warnpgbrktrue I knock on the door but there’s no answer.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\subsection*{7{-}3019}%
+
+\addcontentsline{toc}{subsection}{~~7{-}3019}
+\label{e21}
+\cbsubheading{Scheier, N. {-} Apt. 2a
+\newline\small{351 W. 114th St, CH (apt. 2a)}%
+}%
+
+\warnpgbrktrue I knock on the door but there’s no answer.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\subsection*{7{-}8927}%
+
+\addcontentsline{toc}{subsection}{~~7{-}8927}
+\label{e20}
+\cbsubheading{Thomsen, R.
+\newline\small{351 W. 114th St, CH (apt. 2d)}%
+}%
+
+\warnpgbrktrue The Monterey Apartments building is a short little structure, just two stories tall, with no doorman in sight, and open to the street.  The sidewalk is bustling with activity, and I hear strange discordant notes of music from some place nearby that I can’t quite wrap my head around.  I walk past the maintenance guy’s apartment and knock on apartment 2d, and after a long while the door creaks open, but only a few inches wide.
+
+“Yeah?” says the thin voice from behind the door.
+
+“I’m looking for my dog,” I say, a bit unsure of myself.
+
+“Haven’t got a dog,” says the man.
+
+“Is Jacob Thomson there?” I ask, without skipping a beat.  There’s a long pause.
+
+“Is that your dog’s name?” he asks.
+
+“No…  But Mr. Thomson might have seen my dog, he went missing down on 8th Street.”
+
+“You’re a long way from 8th Street, kid,” says the voice without a face.  “I ain’t seen Jacob in weeks.  Go back to your own neighborhood, kid, you don’t belong uptown.”  And with that he closes the door, and I hear it lock.
+
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+\color{red}\raisebox{-4.1pt}\VarTaschenuhr\mySpaceAfterSymbol Time advances 60 minutes.\end{minipage}}\par}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\begingroup\addtokomafont{section}{\myHugeHeaderFontSelect}
+\section*{8}%
+
+
+\endgroup
+\addcontentsline{toc}{section}{~~8}
+\label{r22}
+\newpage
+\subsection*{8{-}6011}%
+
+\addcontentsline{toc}{subsection}{~~8{-}6011}
+\label{e24}
+\cbsubheading{Harris, A. {-} Apt. 2f
+\newline\small{351 W. 114th St, CH (apt. 2f)}%
+}%
+
+\warnpgbrktrue I knock on the door but there’s no answer.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{DOCUMENTS}
+
+\addcontentsline{toc}{chapter}{~~DOCUMENTS}
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\mySpaceAfterSymbol }  Do \textbf{not} access the documents section unless directed to retrieve a specific document.
+\newpage
+\section*{Document 1}%
+
+\addcontentsline{toc}{section}{~~Document 1}
+\label{e27}
+\cbsubheading{Memo sheet on Jacob Thomson}%
+
+\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large Name: Jacob Thomson
+
+Age: 18-20(?)
+
+Race: Caucasian
+
+Occupation: Taxi Cab Driver(?)
+
+On the afternoon of Wednesday, June 9th, suspect was seen by witnesses running from the Tallerico bakery in Little Italy, which had just been robbed.  Suspect description by bakery owners was unclear.
+
+No answer to knocking on door of suspect’s last known home address, but caller identifying himself as Thomson called in to Police Headquarters Wednesday evening at 8pm, and agreed to come in for a sitdown interview on Thursday, June 10th, at 8am.\end{flushleft}\end{tornpage}
+\newpage
+\section*{Document 2}%
+
+\addcontentsline{toc}{section}{~~Document 2}
+\label{e28}
+\cbsubheading{cipher test}%
+
+\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'caesar' with key '1' (format=True):
+
+OBNF: KBDPC UIPNTPO
+
+BHF: 18-20(?)
+
+SBDF: DBVDBTJBO
+
+PDDVQBUJPO: UBYJ DBC ESJWFS(?)
+
+PO UIF BGUFSOPPO PG XFEOFTEBZ, KVOF 9UI, TVTQFDU XBT TFFO CZ XJUOFTTFT SVOOJOH GSPN UIF UBMMFSJDP CBLFSZ JO MJUUMF JUBMZ, XIJDI IBE KVTU CFFO SPCCFE.  TVTQFDU EFTDSJQUJPO CZ CBLFSZ PXOFST XBT VODMFBS.
+
+OP BOTXFS UP LOPDLJOH PO EPPS PG TVTQFDU’T MBTU LOPXO IPNF BEESFTT, CVU DBMMFS JEFOUJGZJOH IJNTFMG BT UIPNTPO DBMMFE JO UP QPMJDF IFBERVBSUFST XFEOFTEBZ FWFOJOH BU 8QN, BOE BHSFFE UP DPNF JO GPS B TJUEPXO JOUFSWJFX PO UIVSTEBZ, KVOF 10UI, BU 8BN.\end{flushleft}\end{tornpage}\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'substitution' with key '1' (format=True):
+
+AXQW: NXLHY OZHQUHA
+
+XFW: 18-20(?)
+
+MXLW: LXPLXUTXA
+
+HLLPVXOTHA: OXCT LXY KMTDWM(?)
+
+HA OZW XBOWMAHHA HB IWKAWUKXS, NPAW 9OZ, UPUVWLO IXU UWWA YS ITOAWUUWU MPAATAF BMHQ OZW OXRRWMTLH YXJWMS TA RTOORW TOXRS, IZTLZ ZXK NPUO YWWA MHYYWK.  UPUVWLO KWULMTVOTHA YS YXJWMS HIAWMU IXU PALRWXM.
+
+AH XAUIWM OH JAHLJTAF HA KHHM HB UPUVWLO’U RXUO JAHIA ZHQW XKKMWUU, YPO LXRRWM TKWAOTBSTAF ZTQUWRB XU OZHQUHA LXRRWK TA OH VHRTLW ZWXKGPXMOWMU IWKAWUKXS WDWATAF XO 8VQ, XAK XFMWWK OH LHQW TA BHM X UTOKHIA TAOWMDTWI HA OZPMUKXS, NPAW 10OZ, XO 8XQ.\end{flushleft}\end{tornpage}\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'morse' with key 'None' (format=True):
+
+-. ~.- ~-- ~. ~: .--- ~.- ~-.-. ~--- ~-... / - ~.... ~--- ~-- ~... ~--- ~-.
+
+.- ~--. ~. ~: 18* ~20(?)
+
+.-. ~.- ~-.-. ~. ~: -.-. ~.- ~..- ~-.-. ~.- ~... ~.. ~.- ~-.
+
+--- ~-.-. ~-.-. ~..- ~.--. ~.- ~- ~.. ~--- ~-. ~: - ~.- ~-..- ~.. / -.-. ~.- ~-... / -.. ~.-. ~.. ~...- ~. ~.-. ~(?)
+
+--- ~-. / - ~.... ~. / .- ~..-. ~- ~. ~.-. ~-. ~--- ~--- ~-. / --- ~..-. / .-- ~. ~-.. ~-. ~. ~... ~-.. ~.- ~-.-- ~, .--- ~..- ~-. ~. / 9- ~...., ... ~..- ~... ~.--. ~. ~-.-. ~- / .-- ~.- ~... / ... ~. ~. ~-. / -... ~-.-- / .-- ~.. ~- ~-. ~. ~... ~... ~. ~... / .-. ~..- ~-. ~-. ~.. ~-. ~--. / ..-. ~.-. ~--- ~-- / - ~.... ~. / - ~.- ~.-.. ~.-.. ~. ~.-. ~.. ~-.-. ~--- / -... ~.- ~-.- ~. ~.-. ~-.-- / .. ~-. / .-.. ~.. ~- ~- ~.-.. ~. / .. ~- ~.- ~.-.. ~-.-- ~, .-- ~.... ~.. ~-.-. ~.... / .... ~.- ~-.. / .--- ~..- ~... ~- / -... ~. ~. ~-. / .-. ~--- ~-... ~-... ~. ~-.. ~* / ... ~..- ~... ~.--. ~. ~-.-. ~- / -.. ~. ~... ~-.-. ~.-. ~.. ~.--. ~- ~.. ~--- ~-. / -... ~-.-- / -... ~.- ~-.- ~. ~.-. ~-.-- / --- ~.-- ~-. ~. ~.-. ~... / .-- ~.- ~... / ..- ~-. ~-.-. ~.-.. ~. ~.- ~.-. ~*\end{flushleft}\end{tornpage}\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'polybius' with key 'week' (format=True):
+
+34 14 33 12 :  31 14 21 35 15 *  45 25 35 33 44 35 34
+
+14 24 12 :  1  8  -  2  0  (  ?  )
+
+43 14 21 12 :  21 14 51 21 14 44 31 14 34
+
+35 21 21 51 41 14 45 31 35 34 :  45 14 53 31 *  21 14 15 *  22 43 31 52 12 43 (  ?  )
+
+35 34 *  45 25 12 *  14 23 45 12 43 34 35 35 34 *  35 23 * 11 12 22 34 12 44 22 14 54 ,  31 51 34 12 *  9  45 25,  44 51 44 41 12 21 45 *  11 14 44 *  44 12 12 34 *  15 54 *  11 31 45 34 12 44 44 12 44 *  43 51 34 34 31 34 24 *  23 43 35 33 *  45 25 12 *  45 14 32 32 12 43 31 21 35 *  15 14 13 12 43 54 *  31 34 *  32 31 45 45 32 12 *  31 45 14 32 54 ,  11 25 31 21 25 *  25 14 22 *  31 51 44 45 *  15 12 12 34 *  43 35 15 15 12 22 .  44 51 44 41 12 21 45 *  22 12 44 21 43 31 41 45 31 35 34 *  15 54 *  15 14 13 12 43 54 *  35 11 34 12 43 44 *  11 14 44 *  51 34 21 32 12 14 43 .
+
+34 35 *  14 34 44 11 12 43 *  45 35 *  13 34 35 21 13 31 34 24 *  35 34 *  22 35 35 43 *  35 23 *  44 51 44 41 12 21 45 ’  44 *  32 14 44 45 *  13 34 35 11 34 *  25 35 33 12 *  14 22 22 43 12 44 44 ,  15 51 45 *  21 14 32 32 12 43 *  31 22 12 34 45 31 23 54 31 34 24 *  25 31 33 44 12 32 23 *  14 44 *  45 25 35 33 44 35 34 *  21 14 32 32 12 22 *  31 34 *  45 35 *  41 35 32 31 21 12 *  25 12 14 22 42 51 14 43 45 12 43 44 *  11 12 22 34 12 44 22 14 54 *  12 52 12 34 31 34 24 *  14 45 *  8  41 33 ,  14 34 22 *  14 24 43 12 12 22 *  45 35 *  21 35 33 12 *  31 34 *  23 35 43 *  14 *  44 31 45 22 35 11 34 *  31 34 45 12 43 52 31 12 11 *  35 34 * 45 25 51 43 44 22 14 54 ,  31 51 34 12 *  1  0  45 25,  14 45 *  8  14 33 . \end{flushleft}\end{tornpage}\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'vigenere' with key 'week' (format=True):
+
+JEQO:FEGYX XLYIWSX
+
+WKI:18-20(?)
+
+NEGO:YEYMWWMKJ
+
+KGGELEXSKR:XKTM GKX HVSRIV(?)
+
+KR XRA EJDAVRYKR SP SIHXAWHKU,NYXA 9XL,OYWZAGX GWW WOAR FI SMXXAWWOO VYXJMRQ BVSW PLI DWPPONMGY XEOONC MX HMXDHI MDWPC,GDMGR DEH TQWX LAIR BKFFOZ.WYCLIGD ZIWMNMTDESR LU FEUAVC YSRIBO AEC QRGVAEV.
+
+JS EXOAIB PS OXKGOSJK SX ZSSB KJ WEOTIMP’W PKOX OXKAR RKQI KZHVOOW,FEP GEVHIV SZIRDEJCSJK LSIWIVB EW DDSQCKR GKHPIN ER XY LSPSYI LOWHUEWVXONW AOZRICZEC ORIRSJK ED 8LQ,EXZ EKBAIH DK GSWA MR PKV E CEXHYSR MXPIVFEIA YJ PLYBOHEI,FYRO 10PL,WX 8EW.\end{flushleft}\end{tornpage}\begin{tornpage}{cbYellowPaperColor}\begin{flushleft}\ttfamily\Large DEBUG NOTE: Applying cipher 'atbash' with key 'None' (format=True):
+
+MZNV: QZXLY GSLNHLM
+
+ZTV: 18-20(?)
+
+IZXV: XZFXZHRZM
+
+LXXFKZGRLM: GZCR XZY WIREVI(?)
+
+LM GSV ZUGVIMLLM LU DVWMVHWZB, QFMV 9GS, HFHKVXG DZH HVVM YB DRGMVHHVH IFMMRMT UILN GSV GZOOVIRXL YZPVIB RM ORGGOV RGZOB, DSRXS SZW QFHG YVVM ILYYVW.  HFHKVXG WVHXIRKGRLM YB YZPVIB LDMVIH DZH FMXOVZI.
+
+ML ZMHDVI GL PMLXPRMT LM WLLI LU HFHKVXG’H OZHG PMLDM SLNV ZWWIVHH, YFG XZOOVI RWVMGRUBRMT SRNHVOU ZH GSLNHLM XZOOVW RM GL KLORXV SVZWJFZIGVIH DVWMVHWZB VEVMRMT ZG 8KN, ZMW ZTIVVW GL XLNV RM ULI Z HRGWLDM RMGVIERVD LM GSFIHWZB, QFMV 10GS, ZG 8ZN.\end{flushleft}\end{tornpage}
+\newpage
+\section*{Document 3}%
+
+\addcontentsline{toc}{section}{~~Document 3}
+\label{e29}
+\cbsubheading{redaction test}%
+
+\blackout{You do not know me.
+
+But I know you.} 
+
+And here is a sentence with \blackout{two words}  blacked out.
+\newpage
+\section*{Document 4}%
+
+\addcontentsline{toc}{section}{~~Document 4}
+\label{e30}
+\cbsubheading{Deputy Detective Note}%
+
+\begin{flushleft}\Fontskrivan\LARGE The bearer of this note, Jack Deverell, has been deputized as a Junior Detective of the New York City Police Department.
+
+Your cooperation is appreciated.
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{flushleft}
+\newpage
+\section*{Document 5}%
+
+\addcontentsline{toc}{section}{~~Document 5}
+\label{e31}
+\cbsubheading{Deputy Detective Note}%
+
+{\cbFontsigtest \hyphenpenalty=10000 \exhyphenpenalty=10000 \setulcolor{NavyBlue}\setstcolor{NavyBlue}\sethlcolor{NavyBlue}\setul{}{.2ex}\setuldepth{abc}\normalsize The bearer of this note, Jack Deverell, has been \sout{awarded} deputized as a Junior Detective of the New York City Police Department.
+
+Your cooperation is appreciated.
+
+
+
+{\Huge \hyphenpenalty=10000\exhyphenpenalty=10000 NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street}}
+\newpage
+\overlayFootText{Document 6 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 6}
+\label{e32}
+\npNewsPaperBegin
+\npGeomPortraitWide
+\npWeatherBoxSetupPortrait
+\fontsize{8.0}{9.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/nyTimesBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npBannerBox{Weather is partly cloudy with a high chance of rain.}
+\npArticleGroupBegin{3}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 7 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 7}
+\label{e33}
+\npNewsPaperBegin
+\npGeomLandscapeWide
+\npWeatherBoxSetupLandscape
+\begin{landscape}
+\npWeatherBoxSetupPortrait
+\fontsize{7.0}{8.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/nyTimesBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npBannerBox{Weather is partly cloudy with a high chance of rain.}
+\npArticleGroupBegin{4}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\end{landscape}
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 8 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 8}
+\label{e34}
+\npNewsPaperBegin
+\npGeomPortraitWide
+\npWeatherBoxSetupPortrait
+\fontsize{8.0}{9.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/nyPostBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npBannerBox{Weather is partly cloudy with a high chance of rain.}
+\npArticleGroupBegin{3}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 9 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 9}
+\label{e35}
+\npNewsPaperBegin
+\npGeomLandscapeWide
+\npWeatherBoxSetupLandscape
+\begin{landscape}
+\npWeatherBoxSetupPortrait
+\fontsize{7.0}{8.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/nyHeraldBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npArticleGroupBegin{5}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\end{landscape}
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 10 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 10}
+\label{e36}
+\npNewsPaperBegin
+\npGeomPortraitWide
+\npWeatherBoxSetupPortrait
+\fontsize{8.0}{9.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/nyHeraldBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npArticleGroupBegin{3}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 11 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 11}
+\label{e37}
+\npNewsPaperBegin
+\npGeomPortraitWide
+\npWeatherBoxSetupPortrait
+\fontsize{7.0}{8.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/dailyNewsBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npArticleGroupBegin{4}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 12 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 12}
+\label{e38}
+\npNewsPaperBegin
+\npGeomLandscapeWide
+\npWeatherBoxSetupLandscape
+\begin{landscape}
+\npWeatherBoxSetupPortrait
+\fontsize{7.0}{8.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/dailyNewsBanner.png}
+\npUnderBanner{VOL. LXIV... No. 21,776.}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npArticleGroupBegin{5}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-4]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\end{landscape}
+\npNewsPaperEnd
+\newpage
+\overlayFootText{Document 13 - Sample newspaper}
+\addcontentsline{toc}{section}{~~Document 13}
+\label{e39}
+\npNewsPaperBegin
+\npGeomPortraitWide
+\npWeatherBoxSetupPortrait
+\fontsize{8.0}{9.0}\selectfont
+\npBanner{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/newspaper/villagerBanner.png}
+\npUnderBannerAbove{}{THURSDAY, JUNE 10, 1915}{2 cents}
+\npArticleGroupBegin{4}
+\npArticleBegin
+\npHeadline{\large \textbf{FOCH FINDS GERMANY HAS FRAME FOR ARMY ON PRE-WAR SCALE}}\npByLine{\scriptsize \textbf{\emph{BY EDWIN E. JAMES}}}
+   This is the text of the article. Write as much as you want here.
+
+\lipsum[6-6]\npImageBordered{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/games/caseBookDemo/uploadsStory/portrait.png}{Suspect John Doe}{0.95}
+\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{PLAY JURY ADOPTED; TRIALS TO BE SECRET}}
+\lipsum[1-2]
+\npSeparatorHalf
+\lipsum[2-3]\npArticleEnd
+\npArticleBegin
+\npHeadline{\large \textbf{SENATE TALKS ON AS JAM TIGHTENS}}
+\lipsum[3-3]\npEndLine{CONTINUED ON PAGE FOUR.}\npArticleEnd
+\npArticleGroupEnd
+\npNewsPaperEnd
+\recalctypearea
+\newpage
+\recalctypearea
+Hello world 1
+
+\addcontentsline{toc}{section}{~~Document 14b}
+%\label{e40b}
+\recalctypearea
+\pagestyle{plain}
+\newpage
+
+
+
+
+\newpage
+
+
+
+
+
+
+
+Hello world 2
+
+\addcontentsline{toc}{section}{~~Document 14}
+\label{e40}
+
+
+
+
+
+
+\newpage
+\section*{Document 15}%
+
+\addcontentsline{toc}{section}{~~Document 15}
+\label{e41}
+\cbsubheading{Sample shoeprint}%
+
+\begin{center}\includegraphics[width=\columnwidth, height=0.95\dimexpr\textheight-\pagetotal\relax,keepaspectratio]{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/shoeprints/00011.jpg} \end{center}
+\newpage
+\section*{Document 16}%
+
+\addcontentsline{toc}{section}{~~Document 16}
+\label{e42}
+\cbsubheading{Background image test 1}%
+
+
+
+Just 70\% width:
+
+\def\cbImageBehindTempText {
+\begin{minipage}{\textwidth}
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} }
+\imageBehindFull{0.7\columnwidth}{0.025}{1.0}{top}{watermark graphics=E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg, watermark stretch=1.0}{\cbImageBehindTempText}
+
+Centered, 70\% width, and using scale=stretch:
+
+\def\cbImageBehindTempText {
+\begin{minipage}{\textwidth}
+\centering
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} }
+\imageBehindFull{0.7\columnwidth}{0.025}{1.0}{center}{watermark graphics=E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg, watermark stretch=1.0}{\cbImageBehindTempText}
+
+
+
+
+
+Centered, 70\% width, and using scale=zoom:
+
+\def\cbImageBehindTempText {
+\begin{minipage}{\textwidth}
+\centering
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} }
+\imageBehindFull{0.7\columnwidth}{0.025}{1.0}{center}{watermark graphics=E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg, watermark overzoom=1.0}{\cbImageBehindTempText}
+
+Forced tall 70\% of page height:
+
+\def\cbImageBehindTempText {
+\begin{minipage}{\textwidth}
+\centering
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} }
+\imageBehindFull{0.7\columnwidth}{0.025}{1.0}{center}{height=0.7\textheight, watermark graphics=E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg, watermark stretch=1.0, drop shadow}{\cbImageBehindTempText}
+\newpage
+\section*{Document 17}%
+
+\addcontentsline{toc}{section}{~~Document 17}
+\label{e43}
+\cbsubheading{Background image test 2}%
+
+Centered 70\% with scale=image (and opacity 0.7)
+
+\def\cbImageBehindTempText {
+% TikZ picture environment to overlay text on the image
+\begin{tikzpicture}
+\node[anchor=south west, inner sep=0, opacity=0.7] (image) at (0,0) {\includegraphics[width=1\linewidth]{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg}};
+% Ensure the node text is on top of the image
+\node[inner sep=0.025\linewidth, text width=0.95\linewidth] at (image.center) {
+\begin{minipage}{\textwidth}
+\centering
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} };
+\end{tikzpicture}}
+\imageBehindFull{0.7\columnwidth}{0.025}{0.7}{center}{top=-1em, bottom=-1em}{\cbImageBehindTempText}
+
+Post text.
+
+Left 50\% with scale=image
+
+\def\cbImageBehindTempText {
+% TikZ picture environment to overlay text on the image
+\begin{tikzpicture}
+\node[anchor=south west, inner sep=0, opacity=1] (image) at (0,0) {\includegraphics[width=1\linewidth]{E:/MyDocs/Programming/Python/hlweb2/hldjango/media/shared/images/textures/paper1.jpg}};
+% Ensure the node text is on top of the image
+\node[inner sep=0.025\linewidth, text width=0.95\linewidth, anchor=north] at (image.north) {
+\begin{minipage}{\textwidth}
+If found, please return to:
+
+NYPD Homicide Department
+
+Detective Sam Deverell
+
+240 Centre Street\end{minipage} };
+\end{tikzpicture}}
+\imageBehindFull{0.5\columnwidth}{0.025}{1}{top}{top=-1em, bottom=-1em}{\cbImageBehindTempText}
+
+Post text.
+\newpage
+\cleardoublepage
+\chapter*{END}
+
+\addcontentsline{toc}{chapter}{~~END}
+\section*{Conclusion}%
+
+\addcontentsline{toc}{section}{~~Conclusion}
+\label{e45}
+\warnpgbrktrue You are about to read the final questions for this case.  Once you read them, there is no going back into the field.
+
+Even if you have already found all of the required markTagers for the final day, you may now continue to play the final day of the case and resume searching for leads for as long as you like with no penalty.
+
+Proceed to the final questions only when you are ready to end your investigation.
+
+
+
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\mySpaceAfterSymbol }  Proceed only when you are ready to answer questions.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\section*{Questions}%
+
+\addcontentsline{toc}{section}{~~Questions}
+\label{e46}
+\warnpgbrktrue 
+
+\textbf{Q1. Who is the robber and what is your evidence against them?}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\begin{displayquote}
+
+\verb|__________________________________________________|
+\end{displayquote}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\section*{Epilogue {-} Brooklyn Heights 1935}%
+
+\addcontentsline{toc}{section}{~~Epilogue {-} Brooklyn Heights 1935}
+\label{e47}
+\warnpgbrktrue I’m back in 1935, standing over my kitchen table with the empty glass of whiskey in my hand.  Back up on the step stool, and back goes the bottle and the unwashed glass alongside it.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\section*{Final Scoring}%
+
+\addcontentsline{toc}{section}{~~Final Scoring}
+\label{e48}
+\warnpgbrktrue Calculate your final score by assessing how well you answered each question, assigning partial credit as you see fit.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\section*{Behind the Scenes: Postscript from the Author}%
+
+\addcontentsline{toc}{section}{~~Postscript: Behind the Scenes}
+\label{e49}
+\warnpgbrktrue This is where the author might write some info about how they wrote the case, whether it was based on a true story, etc.
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\section*{Full Walkthrough}%
+
+\addcontentsline{toc}{section}{~~Full Walkthrough}
+\label{e50}
+\warnpgbrktrue 
+
+Here’s one way an experienced detective might have solved the case:
+
+\textbf{Turn 1: Visit the scene of the crime (1-1978: Tallerico and Brother Bakery)}%
+
+
+From the suspect sheet we are told the name of the store that was robbed, the Tallerico and Brother Baker in Little Italy.  We could look that up in the White pages by name, under Tallerico, or by using the Yellow pages to find Bakeries.
+
+Etc..
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+\cleardoublepage
+\chapter*{HINTS}
+
+\addcontentsline{toc}{chapter}{~~HINTS}
+\begin{Huge}\bfseries \textbf{STOP!}\par\end{Huge}
+
+~
+
+{\color{red}{\Huge \faExclamationTriangle}\mySpaceAfterSymbol }  Do \textbf{not} access the hints section except when looking up a specific hint from the table of contents at the start of this case book.
+\newpage
+\section*{Hint for Marker K}%
+
+\addcontentsline{toc}{section}{~~Hint for Marker K}
+\label{e53}
+\warnpgbrktrue 
+{\par\centering\lfbox[border-radius=5pt, padding=8pt, margin-top=4pt, margin-bottom=2pt]{\begin{minipage}[c]{0.95\columnwidth}
+\color{red}{\Large \faCheckSquare[regular]}\mySpaceAfterSymbol Mark \textbf{2} demerit checkboxes in your case log.\end{minipage}}\par}
+
+
+
+See if you can figure out how to confirm the identity of the robber.
+
+For another hint, go to \hyperref[{r52}]{1{-}8639 on p.\pageref*{r52}}.
+
+\hrulefill
+
+If you still need help, as a last resort {\color{red}{\Large \faCheckSquare[regular]}\mySpaceAfterSymbol Mark \textbf{3} demerit checkboxes in your case log}, then visit one or more of the following leads where this item is obtained:
+\begin{itemize}
+\item \hyperref[{e8}]{Demo of Tags/markers (setting and testing) on p.\pageref*{e8}}
+\item \hyperref[{e8}]{Demo of Tags/markers (setting and testing) on p.\pageref*{e8}}
+\item \hyperref[{e8}]{Demo of Tags/markers (setting and testing) on p.\pageref*{e8}}
+\item \hyperref[{e8}]{Demo of Tags/markers (setting and testing) on p.\pageref*{e8}}
+\item \hyperref[{e8}]{Demo of Tags/markers (setting and testing) on p.\pageref*{e8}}
+\end{itemize}
+\nopagebreak
+\myTombstoneLead
+\warnpgbrkfalse \newpage
+
+\end{document}
+
+% Generated by casebook tool Casebook v4.01 (2/15/25) [10pt letter oneside {-} preferred format build (xelatex)] on Wednesday, February 19, 2025 at 03:44 AM
+

@@ -7,3 +7,5 @@ python ./manage.py migrate
 python ./manage.py initGameGroupAndPermission
 python ./manage.py initSiteGadminGroupAndPermission
 python ./manage.py verifyOrAddInsecureTestingSuperuser
+
+python ./manage.py collectstatic

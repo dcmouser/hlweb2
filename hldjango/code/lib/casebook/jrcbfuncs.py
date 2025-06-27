@@ -8,6 +8,9 @@ from .jrastvals import AstValString
 from lib.jr import jrfuncs
 from lib.jr.jrfuncs import jrprint
 
+# python modules
+import difflib
+
 
 # define kludge
 DefArgDefaultValRequired = "__REQUIRED__"
@@ -70,14 +73,17 @@ class CbFunc:
         # now named args, throwing error on duplicate
         for argName, arg in namedArgs.items():
             if (argName not in self.paramDict):
-                 raise self.makeFunctionException("Unknown argument ({}) passed by name".format(argName), astloc)
+                 msg = "Unknown argument ({}) passed by name".format(argName)
+                 # try to find case-insensitive intended arg name
+                 guessedArgName = self.findDidYouMeanArg(argName)
+                 if (guessedArgName is not None):
+                     msg += " (did you mean '{}'?)".format(guessedArgName)
+                 raise self.makeFunctionException(msg, astloc)
             if (argName in args):
                 if (argName in positionalArgNames):
                     raise self.makeFunctionException("Argument ({}) passed by name was already passed previously positionally".format(argName), astloc)
                 else:
                     raise self.makeFunctionException("Argument ({}) passed by name was already passed previously by name".format(argName), astloc)
-            if (argName not in self.paramDict):
-                raise self.makeFunctionException("Argument ({}) passed by name does not exist in function declaration", astloc)
             param = self.paramDict[argName]
             # assign it
             args[argName] = arg
@@ -101,7 +107,29 @@ class CbFunc:
         return [args, defaultArgList]
     
 
-    def resolveArgs(self, rmode, env, astloc, args, targets):
+    def findDidYouMeanArg(self, argName):
+        # try to guess what they intended
+        argNameLower = argName.lower()
+        bestSimilarity = 0
+        bestIdentifier = None
+        for paramName, param in self.paramDict.items():
+            paramNameLower = paramName.lower()
+            if (argNameLower == paramNameLower):
+                return paramName
+            matcher = difflib.SequenceMatcher(None, paramNameLower, argNameLower)
+            # Get the ratio of similarity
+            similarity = matcher.ratio()
+            if (similarity > bestSimilarity):
+                bestSimilarity = similarity
+                bestIdentifier = paramName
+
+        if (bestIdentifier is not None):
+            return paramName
+
+        return None
+
+
+    def resolveArgs(self, rmode, env, astloc, args, targets, entryp, leadp):
         # this is done at runtime
         resolvedArgs = {}
         # do in order of function params for nicer debug listing of args
@@ -112,7 +140,7 @@ class CbFunc:
             flagResolveIdentifiers = param.getFlagResolveIdentifiers()
             # ATTN: TODO maybe force flagResolveIdentifiers to False when rmode == "render"?
             #
-            resolvedArg = arg.resolve(env, flagResolveIdentifiers)
+            resolvedArg = arg.resolve(env, flagResolveIdentifiers, entryp, leadp)
             # check if the arg is valid
             param.verifyValidValue(self, astloc, resolvedArg)
             resolvedArgs[paramName] = resolvedArg
@@ -123,20 +151,37 @@ class CbFunc:
     def invoke(self, rmode, env, entryp, leadp, astloc, argList, targets):
         # invoke the function on the argDict
         # build named arg dict
-        [args, defaultArgList] = self.buildFuncArgs(astloc, argList)
-        # resolve args
-        resolvedArgs = self.resolveArgs(rmode, env, astloc, args, targets)
+        try:
+            [args, defaultArgList] = self.buildFuncArgs(astloc, argList)
+            # resolve args
+            resolvedArgs = self.resolveArgs(rmode, env, astloc, args, targets, entryp, leadp)
 
-        # add hidden internal args
-        resolvedArgs["_functionName"] = self.getName()
+            # add hidden internal args
+            resolvedArgs["_functionName"] = self.getName()
 
-        # invoke through function pointer
-        return self.funcPointer(rmode, env, entryp, leadp, astloc, resolvedArgs, self.customData, self.name, targets)
+            # verify correct number of targets was passed
+            self.verifyTargetArity(env, astloc, targets)
+
+            # invoke through function pointer
+            return self.funcPointer(rmode, env, entryp, leadp, astloc, resolvedArgs, self.customData, self.name, targets)
+
+        except Exception as e:
+            # error running func
+            # set msgExtra to tell the person how to use the function
+            msgExtra = "NOTE: Here is some help for using function ${}(...):\n".format(self.getName()) + self.getErrorHelpInfoPlaintextCompact()
+            # add location if an error is thrown without one
+            e = makeModifyJriExceptionAddLocIfNeeded(e, astloc, msgExtra)
+            interp = env.getInterp()
+            if (interp.getFlagContinueOnException()):
+                interp.displayException(e, True)
+            else:
+                raise e
 
 
     def makeFunctionException(self, msg, sloc):
         msg = msg + " for function {}(..), ".format(self.getName())
-        return makeJriException(msg, sloc)
+        msgExtra = "NOTE: Here is some help for using function ${}(...):\n".format(self.getName()) + self.getErrorHelpInfoPlaintextCompact()
+        return makeJriException(msg, sloc, msgExtra)
 
 
     def verifyTargetArity(self, env, sloc, targets):
@@ -147,6 +192,11 @@ class CbFunc:
         if (allowedTargets == False) or (allowedTargets is None):
             if (targetCount!=0):
                 raise self.makeFunctionException("Runtime error: Function does not operate on target brace blocks, but one or more ({}) provided".format(targetCount), sloc)
+        elif (allowedTargets=="any"):
+            return True
+        elif (allowedTargets=="optional"):
+            if (targetCount!=0) and (targetCount!=1):
+                raise self.makeFunctionException("Runtime error: Too many target brace blocks ({}); should be 0 or 1".format(targetCount), sloc)
         elif (type(allowedTargets) is list):
             if (targetCount not in allowedTargets):
                 raise self.makeFunctionException("Runtime error: Function was passed {} target brace blocks, but function requires from {}".format(targetCount, allowedTargets), sloc)
@@ -171,7 +221,7 @@ class CbFunc:
 
 
 
-    def calcAnnotatedArgListStringForDebug(self, env, astloc, argList, targets):
+    def calcAnnotatedArgListStringForDebug(self, env, astloc, argList, targets, entryp, leadp):
         # helper function for debugging
 
         # catch any error and return it for display
@@ -179,7 +229,7 @@ class CbFunc:
             # convert positional args into named args, set defaults
             [args, defaultArgList] = self.buildFuncArgs(astloc, argList)
             rmode = DefRmodeRun
-            resolvedArgs = self.resolveArgs(rmode, env, astloc, args, targets)
+            resolvedArgs = self.resolveArgs(rmode, env, astloc, args, targets, entryp, leadp)
         except Exception as e:
             return repr(e)
 
@@ -199,7 +249,12 @@ class CbFunc:
 
 
 
-    def getUsageInfoHtml(self):
+    def getErrorHelpInfoPlaintextCompact(self):
+        usageText = self.getUsageInfoSimple()
+        usageText += "\nWHERE params are:\n" + self.getParameterInfoPlaintextCompact()
+        return usageText
+
+    def getUsageInfoSimple(self):
             paramTexts = []
             for param in self.paramList:
                 name = param.getName()
@@ -207,8 +262,15 @@ class CbFunc:
                 defaultVal = param.getDefaultVal()
                 isRequired = param.getIsRequired()
                 paramStr = name
-                if (defaultVal is not None) or (not isRequired):
-                    paramStr += "=" + jrfuncs.quoteStringsForDisplay(str(defaultVal))
+                if (defaultVal is None) and (not isRequired):
+                    paramStr += "= NONE"
+                elif (defaultVal is not None):
+                    defaultVal = str(jrfuncs.quoteStringsForDisplay(defaultVal))
+                    if (defaultVal=="True"):
+                        defaultVal = "true"
+                    elif (defaultVal=="False"):
+                        defaultVal = "false"
+                    paramStr += "=" + defaultVal
                 paramTexts.append(paramStr)
             #
             paramTextAll = ", ".join(paramTexts)
@@ -222,7 +284,6 @@ class CbFunc:
     
 
     def getParameterInfoHtml(self):
-            #
             paramCount = len(self.paramList)
             if (paramCount==0):
                 return ""
@@ -260,8 +321,40 @@ class CbFunc:
 
 
 
-
-
+    def getParameterInfoPlaintextCompact(self):
+            paramCount = len(self.paramList)
+            if (paramCount==0):
+                return "none"
+            #
+            paramTexts = []
+            for param in self.paramList:
+                name = param.getName()
+                description = param.getDescription()
+                defaultVal = param.getDefaultVal()
+                isRequired = param.getIsRequired()
+                paramCheck = param.getParamCheck()
+                #
+                if (description is None) or (description==""):
+                    description = "n/a"
+                paramStr = name + ": " + jrfuncs.quoteStringsForDisplay(description)
+                #
+                if (paramCheck is not None):
+                    paramStr += "; type=" + param.calcNiceParamCheckString()
+                if (isRequired):
+                    paramStr += "; required"
+                if (defaultVal is not None):
+                    paramStr += "; default="+jrfuncs.quoteStringsForDisplay(str(defaultVal))
+                #
+                paramStrLi = paramStr
+                paramTexts.append(" * " + paramStrLi)
+            #
+            allowedTargets = self.getAllowedTargets()
+            if (allowedTargets):
+                paramStrLi = " * :{targetblock} - a braced group of text to operate on"
+                paramTexts.append(paramStrLi)
+            #
+            paramTextAll = "\n".join(paramTexts)
+            return paramTextAll
 
 
 
@@ -355,7 +448,9 @@ class CbParam:
             functionName = cbfunc.getName()
             valueNiceString = value.asNiceString()
             paramCheckStr = self.calcNiceParamCheckString()
-            raise makeJriException("Runtime error: In function call {}(..) the parameter '{}' was set to an illegal value {}; should be: {}.".format(functionName, self.name, valueNiceString, paramCheckStr), astloc)
+            msg = "Runtime error: In function call {}(..) the parameter '{}' was set to an illegal value '{}'; should be: {}".format(functionName, self.name, valueNiceString, paramCheckStr)
+            msg += ": " + cbfunc.getErrorHelpInfoPlaintextCompact()
+            raise makeJriException(msg, astloc)
 
     def verifyValidValueAgainstType(self, astloc, value, paramCheck):
         if (paramCheck is None):

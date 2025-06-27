@@ -1,0 +1,8 @@
+// Police Departments and Labs Reference
+* $referDb("Firearms permits: NYPD - License and Permits (Firearms)")
+* $referDb("Central police records: NYPD - Police Headquarters")
+* $referDb("Undercover operations: NYPD - Undercover Operations Division")
+* $referDb("Local police: See local NYPD Neighborhood Precincts")
+* $referDb("Coroner & medical examination: NYPD - Chief Medical Examiner")
+* $referDb("Crime scene analysis: NYPD - Crime Scene Analysis Lab")
+* $referDb("Bombs and Explosives: NYPD - Bomb Squad")

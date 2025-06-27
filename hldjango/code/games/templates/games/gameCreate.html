@@ -6,16 +6,20 @@
 {% block content %}
 <h1>New Game</h1>
 <form action=""" method="post"> {% csrf_token %}
-    {{ form|crispy }}
     <a href="{% url 'gameHome' %}" class="btn btn-danger" role="button">Cancel</a>
     <input class="btn btn-success" type="submit" value="Save">
+    {% crispy form %}
 </form>
 
 
 <hr/>
 <h2>Documentation for Casebook Syntax</h2>
 <ul>
-<li><a href="https://docs.google.com/document/d/1i8pc_BEJR8EllEkJ9Fl5ZzirUeEBwtBSnxKc1Bd3WMs/edit?usp=sharing" target="_blank">Casebook syntax v1</a> (see here for a complete sample game casebook)</li>
+<li><a href="https://docs.google.com/document/d/16OFk0jbn0IvgO8ZnRPFXaMtxzwND9cln-9LjG83Xpjg/edit?usp=sharing" target="_blank">Casebook Handbook</a> (latest)</li>
+<li><a href="https://docs.google.com/document/d/1cSOF75-341V9mbW2D6o__ErDuTtgkmoulFWOyPbb2uk/edit?usp=sharing" target="_blank">Casebook syntax v2</a> (for full documentation and examples)</li>
+<li><a href="https://docs.google.com/document/d/1sq4XB5LCUx5WeXQMykTPptleHvAOBrT6cI2ccwbrQ74/edit?usp=sharing" target="_blank">Handbook to writing good stories/cases</a>.</li>
+<li><a href="{{ sampleStartingTemplateUrl }}" target="_blank">Mostly blank starting game template</a> (see here for a mostly blank starting template for your game)</li>
+<li><a href="{{ simpleStartingTemplateUrl }}" target="_blank">Minimal game example</a> (see here for a minimal but fully working case)</li>
 </ul>
 
 {% endblock content %}

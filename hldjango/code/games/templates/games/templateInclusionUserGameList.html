@@ -1,10 +1,14 @@
 {% load jrtemplatetags %}
 {% load gametemplatetags %}
 
-{% if flagShowNonPublic %}
-    <h3>My games</h3>
-{% else %}
-    <h3>Public Games</h3>
+{% if game_list %}
+    {% if flagMyGames %}
+        <h3>My games</h3>
+    {% elif flagShowNonPublic %}
+        <h3>Games (public and private)</h3>
+    {% else %}
+        <h3>Public Games</h3>
+    {% endif %}
 {% endif %}
 
 <ul>

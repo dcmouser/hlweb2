@@ -1,0 +1,88 @@
+% set default margins
+%\usepackage[margin=\mygeometryMargin, bottom=\mygeometryBottom]{geometry}
+\usepackage[top=\mygeometryMargin, left=\mygeometryMargin, right=\mygeometryMargin, inner=\mygeometryMargin, outer=\mygeometryMargin, bottom=\mygeometryBottom]{geometry}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{lastpage}
+\usepackage{FiraSans} % font
+\usepackage{librebaskerville} % font
+\usepackage{setspace}
+\usepackage{graphicx} % for graphics
+\usepackage{amssymb} % symbols
+\usepackage{amsthm} % symbols
+\usepackage{amsmath} % symbols
+\usepackage{wasysym} % symbols
+\usepackage{MnSymbol} % symbols
+\usepackage{parskip}
+\usepackage{scrlayer-scrpage} % main document class
+\usepackage{tocloft} % table of contents support
+\usepackage{multicol} % multi-column support
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=DarkBlue,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
+\usepackage{tikz}
+\usetikzlibrary{backgrounds,calc,patterns}
+\usepackage{clock} % clock symbols
+\usepackage[clock]{ifsym} % clock symbols
+\usepackage{fontawesome5} % various symbols
+\usepackage{pgfornament} % ornaments like tombstones between leads
+\usepackage{fancybox} % fancy boxed blocks of text
+
+\usepackage{aurical}
+\usepackage{listings} % checkbox lists
+\usepackage{pdfpages} % embedding pdf files?
+\usepackage{enumitem} % lists of items
+\usepackage{refcount} % new ContinuedOnNextPage Stuff
+
+\usepackage{tabularray} % autosizing tables (tabulary seemed broken)
+\usepackage{array}     % For fine-tuning table formatting (used in fingerprint)
+
+\usepackage[export]{adjustbox} % for image alignment in table cells
+\usepackage{printlen} % for reporting image sizes
+
+\usepackage{options} % needed by others? see https://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/longfbox/longfbox.sty
+\usepackage{pict2e} % see above (longbox needs?)
+\usepackage[most]{tcolorbox} % more fancy boxed blocks
+\usepackage{longfbox} % more fancy boxed blocks
+\usepackage{lettrine} % first big character drop caps
+\usepackage{lipsum} % for testing blocks of text
+\usepackage{marginnote} % margin notes
+
+\usepackage{float}
+\usepackage{caption}
+\usepackage{needspace}
+
+% forcing header footer text on a specific page
+\usepackage{eso-pic}
+
+% landscape
+\usepackage{lscape}
+
+% helper for logic stuff
+\usepackage{etoolbox}
+
+% font control for xelatex
+\usepackage{fontspec}
+
+% colors
+\usepackage[svgnames]{xcolor}
+
+% for redacting
+\usepackage{censor}
+
+% for strikeout (normalem should remove sideeffect of underlining emphasized text)
+\usepackage[normalem]{ulem}
+
+% better underlining (colors); and strikeout?
+\usepackage{soul}
+
+% form lists (checkbox lists, etc.)
+\usepackage{enumitem}
+
+% for wrapping text around figures
+\usepackage{wrapfig}
+
+% for write align leder dot function
+\usepackage{tabularx}

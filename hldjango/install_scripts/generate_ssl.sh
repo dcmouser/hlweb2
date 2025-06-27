@@ -12,7 +12,8 @@ cd /
 
 #DOMAIN='newyorknoirgame.com'
 #DOMAIN='nycnoirgame.com'
-DOMAIN='nycnoir.org'
+#DOMAIN='nycnoir.org'
+DOMAIN='nynoir.org'
 
 # generate the ssl key
 echo "Generating ssl certificate for $DOMAIN in $PWD/ssl/ ..."

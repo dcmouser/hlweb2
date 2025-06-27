@@ -1,5 +1,7 @@
 # mind manager diagram
 
+from .cbrender import CbRenderDoc, CbRenderSection, CbRenderLead, outChunkManager
+
 # helpers
 from .jriexception import *
 from lib.jr import jrfuncs
@@ -61,12 +63,18 @@ def lookupGenericObjectByReferenceId(env, id):
     tag = tagManager.findTagById(id)
     if (tag is not None):
         return tag
+    # try to find in concepts
+    conceptManager = env.getConceptManager()
+    tag = conceptManager.findTagById(id)
+    if (tag is not None):
+        return tag
     # day?
     matches = re.match(r"^DAY#(.+)$", id)
     if (matches is not None):
         dayManager = env.getDayManager()
         dayNumber = int(matches.group(1))
-        day = dayManager.findDayByNumber(dayNumber)
+        flagAllowTempCalculatedDay = False
+        day = dayManager.findDayByNumber(dayNumber, flagAllowTempCalculatedDay)
         if (day is not None):
             return day
 
@@ -142,6 +150,7 @@ class CbMindManager:
         self.pendingNodes = []
         self.links = []
         self.nodeHash = {}
+        self.needsResolveProcessing = True
 
 
     def addLinkBetweenNodes(self, env, typeStr, label, source, target):
@@ -162,22 +171,30 @@ class CbMindManager:
 
     def buildMindMap(self, env, outputDirPath, baseFilename, flagDebug):
         jrfuncs.createDirIfMissing(outputDirPath)
-        self.buildAndresolveNodesAndLinks(env)
+        self.buildAndResolveLinksIfNeeded(env)
+        #
         [retv, generatedFileName] = self.renderToDotImageFile(outputDirPath, baseFilename, flagDebug)
         return [retv, generatedFileName]
 
+    def buildAndResolveLinksIfNeeded(self, env):
+        if (self.needsResolveProcessing):
+            self.buildAndResolveNodesAndLinks(env)
 
 
-    def buildAndresolveNodesAndLinks(self, env):
+    def buildAndResolveNodesAndLinks(self, env):
         # first ADD nodes for all leads/days/tags/etc. (this can be done after they are all created)
+        self.needsResolveProcessing = False
         self.nodeHash = {}
+
 
         # create all nodes 
         self.mergeObjectListIntoNodeHash(env, self.pendingNodes, False)
         tagManager = env.getTagManager()
         self.mergeObjectDictIntoNodeHash(env, tagManager.getTagDict())
+        conceptManager = env.getConceptManager()
+        self.mergeObjectDictIntoNodeHash(env, conceptManager.getTagDict())
         renderer = env.getRenderer()
-        leadList = renderer.calcFlatLeadList()
+        leadList = renderer.calcFlatLeadList(True)
         self.mergeObjectListIntoNodeHash(env, leadList, True)
         dayManager = env.getDayManager()
         self.mergeObjectDictIntoNodeHash(env, dayManager.getDayDict())
@@ -186,14 +203,16 @@ class CbMindManager:
         # create links from days to tag deadlines
         self.createDayTagDeadlineLinks(env)
 
-
         # now walk links and resolve them  
         for index, link in enumerate(self.links):
-            sourceHashId = self.resolveMindMapObjectReferenceToHashId(env, link.source)
-            targetHashId = self.resolveMindMapObjectReferenceToHashId(env, link.target)
+            source = link.source
+            target = link.target
+            # NEW: handle source and target being prev or next
+            sourceHashId = self.resolveMindMapObjectReferenceToHashId(env, source, target)
+            targetHashId = self.resolveMindMapObjectReferenceToHashId(env, target, source)
             # reassign
-            self.links[index].source = sourceHashId
-            self.links[index].target = targetHashId
+            self.links[index].sourceHash = sourceHashId
+            self.links[index].targetHash = targetHashId
             #jrprint(link.typeStr)
 
 
@@ -212,9 +231,10 @@ class CbMindManager:
                 if (role is not None):
                     roleType = role["type"]
                     if (roleType=="hint"):
-                        # this node is a HINT for a tag
-                        tag = role["tag"]
-                        self.addLinkBetweenNodes(env, "hint", None, tag, obj)
+                        # this node is a HINT (maybe for a tag
+                        tag = jrfuncs.getDictValueOrDefault(role, "tag", None)
+                        if (tag is not None):
+                            self.addLinkBetweenNodes(env, "hint", None, tag, obj)
 
     def mergeObjectDictIntoNodeHash(self, env, objectDict):
         for key, obj in objectDict.items():
@@ -240,7 +260,13 @@ class CbMindManager:
 
 
 
-    def resolveMindMapObjectReferenceToHashId(self, env, objectReference):
+    def resolveMindMapObjectReferenceToHashId(self, env, objectReference, relativeOrigin):
+        if (objectReference=="previous"):
+            # relative reference
+            objectReference = self.calcRelativeObjectReference(env, relativeOrigin, -1, "previous")
+        if (objectReference=="next"):
+            # relative reference
+            objectReference = self.calcRelativeObjectReference(env, relativeOrigin, 1, "next")
         objDict = getObjectMindMapInfo(env, objectReference)
         if (objDict is None):
             return None
@@ -248,6 +274,30 @@ class CbMindManager:
         if (uniqueId not in self.nodeHash):
             raise makeJriException("Could not find object by id ({}) in mind mapper hash but expected to find it.".format(uniqueId), None)
         return uniqueId
+
+
+    def calcRelativeObjectReference(self, env, relativeOrigin, offset, hint):
+        # find lead refered to by relative origina
+        objDict = getObjectMindMapInfo(env, relativeOrigin)
+        if (objDict is None):
+            raise makeJriException("Trying to handle a relative lead reference (typically from a $logic({}) function); could not the lead to be relative to.".format(hint), None)
+        if (objDict["type"]!="lead"):
+            raise makeJriException("Trying to handle a relative lead reference (typically from a $logic({}) function); but the base item was not a lead (found {}).".format(hint), objDict["type"], None)
+        leadp = objDict["pointer"]
+        # ok now how do we get the lead RELATIVE to this leadp?
+        renderer = env.getRenderer()
+        leadList = renderer.calcFlatLeadList(True)
+        index = leadList.index(leadp)
+        if (index==-1):
+            raise makeJriException("Trying to handle a relative lead reference (typically from a $logic({}) function); but the base lead was not found ({}).".format(hint, leadp.getIdFallbackLabel()), None)
+        targetIndex = index + offset
+        if (targetIndex<0) or (targetIndex>=len(leadList)):
+            raise makeJriException("Trying to handle a relative lead reference (typically from a $logic({}) function); but the base lead was at end of index ({}).".format(hint, leadp.getIdFallbackLabel()), None)
+        targetLeadp = leadList[targetIndex]
+        return targetLeadp
+
+
+
 
 
 
@@ -270,14 +320,49 @@ class CbMindManager:
             #
             if (source==lead):
                 label = link.getNiceLabel()
-                relatedLead = target
+                relatedObject = target
             elif (target==lead):
                 label = link.getNiceLabelTarget()
-                relatedLead = source
-            if (relatedLead is None) or (isinstance(relatedLead, CbRenderLead)):
-                relatedLinkDict = {"label": jrfuncs.uppercaseFirstLetter(label), "relatedLead": relatedLead}
-                retList.append(relatedLinkDict)
+                relatedObject = source
+            else:
+                # iffy
+                label = link.getNiceLabelTarget()
+                relatedObject = target
+            #
+            if (relatedObject is None):
+                relatedLinkDict = {"label": jrfuncs.uppercaseFirstLetter(label)}
+            elif (isinstance(relatedObject, CbRenderLead)):
+                relatedLinkDict = {"label": jrfuncs.uppercaseFirstLetter(label), "relatedLead": relatedObject}
+            else:
+                relatedLinkDict = {"label": jrfuncs.uppercaseFirstLetter(label), "relatedObject": relatedObject}
+            #
+            relatedLinkDict["source"] = link.source
+            relatedLinkDict["target"] = link.target
+            retList.append(relatedLinkDict)
         return retList
+
+
+
+    def findDeductiveLeadsThatLogicallyImplyOrSuggestTargetLead(self, env, targetLead):
+        sourceLeads = []
+
+        # walk through all deductive links from source to target and add to sourceLeads
+        excludedLinkTypes = []
+        #
+        for index, link in enumerate(self.links):
+            linkTypeStr = link.typeStr
+            source = getObjectMindMap(env, link.source)
+            target = getObjectMindMap(env, link.target)
+            if (linkTypeStr in excludedLinkTypes):
+                continue
+
+            if (target==targetLead) and (source is not None):
+                if (not isinstance(source, CbRenderLead)):
+                    continue
+                sourceItem = {"lead": source, "link": linkTypeStr}
+                sourceLeads.append(sourceItem)
+
+        return sourceLeads
 # ---------------------------------------------------------------------------
 
 

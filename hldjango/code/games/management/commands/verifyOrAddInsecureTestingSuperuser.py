@@ -37,7 +37,8 @@ def runCommand():
         superUsers = CustomUser.objects.filter(is_superuser=True)
         superUserCount = superUsers.count()
         if (superUserCount>0):
-            print("Confirmed existence of superuser in database; nothing more to do (initial username/password = {}/{}).".format(username, password))
+            #print("Confirmed existence of superuser in database; nothing more to do (initial username/password = {}/{}).".format(username, password))
+            print("Confirmed existence of superuser in database; nothing more to do (initial username = {}; see verifyOrAddInsecureTestingSuperuser.py).".format(username))
             if (optionReAddSuperuserToGroups):
                 for superuser in superUsers:
                     # readd superuser to groups

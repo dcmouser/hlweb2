@@ -1,0 +1,18 @@
+
+\begin{document}
+
+
+\normalsize%
+\clearpairofpagestyles
+
+
+% we can help test the resetting of geometry by calling this explicitly here at start (try this if twosided=semi layout looks weird AFTER changing margins)
+\cbResetNormalGeometry
+
+
+% footers get page numbers and a "continued on next page" line if appropriate
+\mySetFooters
+
+
+
+% NEWIFWARNPGBRK USED TO BE HERE NOW MOVED TO PREAMBLE MAIN

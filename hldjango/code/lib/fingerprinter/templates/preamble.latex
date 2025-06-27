@@ -1,0 +1,414 @@
+
+
+
+
+
+\documentclass[twoside=semi, openany, 10pt, paper=letter, DIV=22]{scrbook}%
+\usepackage{scrlayer-scrpage} % For headers and footers
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{subfig} % Allows for subfigure placement and customization
+\usepackage{fp}     % Floating point arithmetic
+\usepackage{calc}   % Provides tools to perform arithmetic calculations in LaTeX
+%\usepackage[margin=1cm]{geometry} % Sets all margins to 1 cm
+\usepackage[left=1cm, right=1cm, bottom=1cm, top=1cm]{geometry}
+\usepackage{setspace}
+\usepackage{float} % For the H placement specifier
+\usepackage{tabulary}  % For flexible tables
+\usepackage{array}     % For fine-tuning table formatting
+\usepackage{caption}   % For captions
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=black,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=2]{hyperref} % support for links, bookmarks, etc.
+\usepackage{tikz}
+\usepackage{fontspec}
+\usepackage{pdfpages}
+\usepackage{tcolorbox}
+
+
+% vertical spacing
+\setstretch{1.2}
+\setlength{\parskip}{2pt} % Adjust to desired space, e.g., 10pt
+\raggedbottom
+
+\renewcommand*{\chapterpagestyle}{plain}
+\clearpairofpagestyles
+
+\KOMAoptions{footheight=1cm}
+\setlength{\footskip}{0.7cm}  % Decrease footskip to move the footer up
+\renewcommand*{\pagemark}{\textbf{\thepage}}  % Customizes the page marker
+% footers get page numbers and a "continued on next page" line if appropriate
+\rofoot*{{\pagemark}}
+\lefoot*{{\pagemark}}
+
+
+% have any effect?
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=0.5cm]{chapter}
+\RedeclareSectionCommand[beforeskip=1.8em,afterskip=1.72ex]{section}
+\RedeclareSectionCommand[beforeskip=1.8em,afterskip=1.02ex]{subsection}
+
+\setkomafont{section}{\Huge\selectfont\setstretch{1.0}}  % Adjust line spacing specifically for section titles
+\setkomafont{subsection}{\Large\selectfont\setstretch{1.0}}  % Adjust line spacing specifically for section titles
+
+
+
+
+
+\newlength{\imagewidth}
+
+
+
+% Ensure that the total width minus the space for 9 gaps fits the text width
+\newlength{\totalimagewidth}
+\setlength{\totalimagewidth}{\textwidth}
+\addtolength{\totalimagewidth}{-\dimexpr 9\imagewidth/10 \relax} % adjust space between images
+
+% remove default label in captions
+\captionsetup[figure]{labelformat=empty} % Removes the label from figure captions
+\captionsetup[subfloat]{labelformat=empty} % Removes the label from subfigure captions
+
+% Reduce padding and margin around the images
+\setlength{\fboxsep}{0pt} % Padding between the content and border of \fbox
+\setlength{\fboxrule}{1pt} % Thickness of the border of \fbox
+
+\setlength{\imagewidth}{2.2cm} % Width of the images
+\newcommand{\gap}{20pt}
+\newcommand{\vgapfix}{\vspace*{-14pt}}
+\newcommand{\vgapbfix}{\vspace*{12pt}}
+
+
+% Adjust spacing
+\setlength{\tabcolsep}{4pt} % Space between columns
+\renewcommand{\arraystretch}{1.5} % Adjust vertical spacing
+
+
+
+
+
+
+
+
+
+% FINGERPRINT IMAGE IN BORDER WITH TEXT (pass pass as first arg, and caption as second)
+\newcommand{\iwidth}{0.17}
+\newcommand{\jwidth}{0.12}
+\newcommand{\kwidth}{0.11}
+
+\newcommand{\fpimage}[2]{%
+   \fbox{\includegraphics[width=\jwidth\textwidth]{#1}} \par \textbf{#2}
+}
+
+\newcommand{\fpimagenc}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+\newcommand{\fpimagen}[1]{%
+   \fbox{\includegraphics[width=\kwidth\textwidth]{#1}}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+% Custom environment definition
+\newenvironment{myfprowtable}
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}}
+    {\end{tabular}
+    \end{center}
+    \vgapfix
+    }
+
+
+\newcommand{\mfplabeledHand}[6]
+    {\noindent 
+    \begin{center}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.15cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+\rotatebox{90}{\Large\textbf{#1}} &
+ #2 & #3 & #4 & #5 & #6
+  \end{tabular}
+  \end{center}
+   \vgapfix
+}
+
+
+\newcommand{\mfpLabelRow}[5]
+    {\noindent 
+    \begin{center}
+    \vspace*{-14pt}
+     \begin{tabular}{>{\centering\arraybackslash}m{0.15cm} % Left column for rotated text
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}
+                     >{\centering\arraybackslash}m{\iwidth\textwidth}}
+ &
+ #1 & #2 & #3 & #4 & #5
+  \end{tabular}
+  \end{center}
+   \vgapfix
+}
+
+
+
+
+
+
+
+
+
+
+\newcommand{\myfpersontableSetLeft}[5]{
+    \def\fpTempLa{#1}%
+    \def\fpTempLb{#2}%
+    \def\fpTempLc{#3}%
+    \def\fpTempLd{#4}%
+    \def\fpTempLe{#5}%
+}
+
+\newcommand{\myfpersontableSetRight}[5]{
+    \def\fpTempRa{#1}%
+    \def\fpTempRb{#2}%
+    \def\fpTempRc{#3}%
+    \def\fpTempRd{#4}%
+    \def\fpTempRe{#5}%
+}
+
+% 10 fingerprint table in 2 rows
+\newcommand{\myfpersontable}[1]{%
+\begin{tcolorbox}[sharp corners, colframe=black, colback=white, boxrule=2pt]
+\centering \Large\textbf{#1}
+\mfplabeledHand{LEFT} %
+{\fpimagenc{\fpTempLa}} %
+{\fpimagenc{\fpTempLb}} %
+{\fpimagenc{\fpTempLc}} %
+{\fpimagenc{\fpTempLd}} %
+{\fpimagenc{\fpTempLe}}
+\mfplabeledHand{RIGHT} %
+{\fpimagenc{\fpTempRa}}%
+{\fpimagenc{\fpTempRb}}%
+{\fpimagenc{\fpTempRc}}%
+{\fpimagenc{\fpTempRd}}%
+{\fpimagenc{\fpTempRe}}
+\mfpLabelRow %
+{Thumb}
+{Index}
+{Middle}
+{Ring}
+{Pinky}
+\end{tcolorbox}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% full page background image
+% call like: \coverimage{templates/art/WhiteDirectory.png}{1cm}{2cm}{2pt}
+% default normal
+\newcommand\dopagecolor{} % blank by default
+\newcommand\customPageBackground{} % blank by default
+
+\newcommand{\coverbordermargin}{1}
+\newcommand{\coverimagemargin}{2}
+\newcommand{\coverborderwidth}{3}
+%
+\newcommand{\coverimage}[4]{
+	\renewcommand{\coverbordermargin}{#2}
+	\renewcommand{\coverimagemargin}{#3}
+	\renewcommand{\coverborderwidth}{#4}
+
+	\begin{figure}[p]
+
+		% draw image
+		\newgeometry{margin=\coverimagemargin}
+		\dopagecolor{}
+		\noindent % Ensures the image aligns exactly at the margin
+		\begin{tikzpicture}[remember picture, overlay]
+		    \node[inner sep=0pt] at (current page.center) { % Node at the center of the page
+		        \includegraphics[width=\textwidth, height=\textheight, keepaspectratio]{#1}
+		    };
+		\end{tikzpicture}
+		\restoregeometry
+
+		% Draw a border around the page, inside the margins
+		\newgeometry{margin=\coverbordermargin}
+		\dopagecolor{}
+		\begin{tikzpicture}[remember picture, overlay]
+	    \draw[line width={#4}] ([shift={(\coverbordermargin, -\coverbordermargin)}]current page.north west) rectangle ([shift={(-\coverbordermargin, \coverbordermargin)}]current page.south east);
+		\end{tikzpicture}
+		\restoregeometry
+
+	\end{figure}
+	\thispagestyle{empty}
+	\clearpage % Ends the page and dumps all floats
+}
+
+
+\newcommand{\coverimageStretch}[4]{
+	\renewcommand{\coverbordermargin}{#2}
+	\renewcommand{\coverimagemargin}{#3}
+	\renewcommand{\coverborderwidth}{#4}
+
+	\begin{figure}[p]
+
+		% draw image
+		\newgeometry{margin=\coverimagemargin}
+		\dopagecolor{}
+		\noindent % Ensures the image aligns exactly at the margin
+		\begin{tikzpicture}[remember picture, overlay]
+		    \node[inner sep=0pt] at (current page.center) { % Node at the center of the page
+		        \includegraphics[width=\textwidth, height=\textheight]{#1}
+		    };
+		\end{tikzpicture}
+		\restoregeometry
+
+		% Draw a border around the page, inside the margins
+		\newgeometry{margin=\coverbordermargin}
+		\dopagecolor{}
+		\begin{tikzpicture}[remember picture, overlay]
+	    \draw[line width={#4}] ([shift={(\coverbordermargin, -\coverbordermargin)}]current page.north west) rectangle ([shift={(-\coverbordermargin, \coverbordermargin)}]current page.south east);
+		\end{tikzpicture}
+		\restoregeometry
+
+	\end{figure}
+	\thispagestyle{empty}
+	\clearpage % Ends the page and dumps all floats
+}
+
+
+\newcommand{\hlversionpage}{
+	\begin{tikzpicture}[remember picture, overlay]
+	    % Node for the text box, aligned at the bottom of the page
+	    \node[anchor=south, inner sep=0] at (current page.south) {%
+	            \parbox{\textwidth}{%
+	                \centering
+				Directory data v{\hlDataVersion} ({\hlDataDate})
+				
+				Built on {\hlBuildDate} (v{\hlBuildVersion})
+				\vspace{0.5cm}
+	        }
+	    };
+	\end{tikzpicture}
+
+	\thispagestyle{empty}
+	\clearpage % Ends the page and dumps all floats
+}
+
+
+\newcommand{\makeblankpage}{
+	\begin{tikzpicture}[remember picture, overlay]
+	    % Node for the text box, aligned at the bottom of the page
+	    \node[anchor=south, inner sep=0] at (current page.south) {%
+	            \parbox{\textwidth}{%
+	                \centering
+				{}
+				\vspace{0.5cm}
+	        }
+	    };
+	\end{tikzpicture}
+
+	\thispagestyle{empty}
+	\clearpage % Ends the page and dumps all floats
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% embed info into generated pdf
+\hypersetup{
+pdfauthor={Jesse Reichler <jessereichler@gmail.com>},
+pdftitle={New York Noir - FingerPrint Directory},
+pdfsubject={Fingerprint Directory v{\hlDataVersion} - {\hlDataDate} ({\hlBuildDate})},
+pdfkeywords={NewYorkNoir},
+}
+
+
+
+
+% default yellow page cover (not transparent)
+\newcommand\mycover{\coverimageStretch{templates/art/fingerprints/FingerPrintDirectoryCover_B1.jpg}{0cm}{0cm}{0pt}}
+
+
+\begin{document}
+\noindent
+
+% COVER PAGE
+\mycover{}
+\hlversionpage
+
+
+
+% font
+\ttfamily
+
+% table of contents
+\setcounter{tocdepth}{2}
+\cleardoublepage
+
+\section*{CONTENTS}
+\addcontentsline{toc}{section}{Contents}
+
+\tableofcontents
+\cleardoublepage
+\setstretch{1}
+
+
+
+\phantomsection
+\addcontentsline{toc}{section}{INTRODUCTION}
+\includepdf[pages=-,pagecommand={\pagestyle{empty}}]{templates/art/fingerprints/handbook.pdf}
+\cleardoublepage
+
+
+
+
+
+
+
+
+
+
+
+

@@ -44,6 +44,8 @@ fi
 
 
 
+# NOTE: JR_DJANGO_WEBSERVER is set in the Dockerfile for this image
+
 # collect static unless builtin debug mode
 if [ "$JR_DJANGO_WEBSERVER" != "devbuiltin" ] || [ "$JR_DJANGO_DEBUG" != "true" ]
 then
@@ -57,7 +59,7 @@ then
     # start django web server (process 1)
     # ATTN: TODO: change this to production web server
     #python ./manage.py runserver 0.0.0.0:8000 &
-    python ./manage.py runserver 0.0.0.0:$WEBSERVER_PORT_STANDALONE &
+    python ./manage.py runserver_local 0.0.0.0:$WEBSERVER_PORT_STANDALONE &
 
 elif [ "$JR_DJANGO_WEBSERVER" == "waitress" ]
 then

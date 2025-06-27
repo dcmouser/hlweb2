@@ -1,0 +1,94 @@
+% LEAD LOOKUP TABLE TEMPLATE PREAMBLE START
+
+
+
+\documentclass[twoside=semi, openany, 10pt, paper=letter, DIV=22]{scrbook}%
+
+\usepackage{scrlayer-scrpage} % main document class
+\usepackage{tocloft} % table of contents support
+\usepackage{multicol} % multi-column support
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{FiraSans} % font
+\usepackage{librebaskerville} % font
+\usepackage{setspace}
+\usepackage[pdfusetitle,colorlinks=true,linkcolor=black,filecolor=magenta,urlcolor=cyan,bookmarksopen=true,bookmarksopenlevel=1]{hyperref} % support for links, bookmarks, etc.
+\usepackage{graphicx} % for graphics
+\usepackage[english]{babel}
+\usepackage{tocloft}
+\usepackage[left=1cm, right=1cm, bottom=1cm, top=1cm]{geometry}
+\usepackage{xstring}
+\usepackage[x11names,table]{xcolor}
+\usepackage{tikz}
+\usepackage{fontspec}
+\usepackage{array}  % Enables the m column type for vertical centering
+\usepackage{calc}  % For calculating text width
+\usepackage{graphicx}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{soul}
+
+%\documentclass[10pt]{article}
+%\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+
+% Needed to make the footer nice and short
+\KOMAoptions{footheight=1cm}
+\setlength{\footskip}{0.7cm}  % Decrease footskip to move the footer up
+\renewcommand*{\pagemark}{\thepage}  % Customizes the page marker
+
+% footers get page numbers and a "continued on next page" line if appropriate
+%\rofoot*{{\pagemark}}
+%\lefoot*{{\pagemark}}
+
+\setmainfont{WhitneyCondensed-Medium}
+
+\setlength{\columnsep}{1cm}%
+%\setlength{\columnseprule}{2pt}
+\setlength{\parindent}{0pt}%
+
+% without this we can get latex trying to tweak spacing of headers and other weird stuff
+\raggedbottom
+\raggedcolumns
+
+\linespread{1.2}\selectfont
+
+%FONTS
+\newfontfamily\fontsEntryNormal{BellGothicStd-Light}
+\newfontfamily\fontsEntryBold{BellGothicStd-Bold}
+\newfontfamily\fontsEntryBlack{BellGothicStd-Black}
+
+
+\newcommand{\textFontHead}[1] {\textbf{#1}}
+\newcommand{\textFontInner}[1] {\texttt{\fontsEntryNormal #1}}
+
+% no page numbers
+\clearpairofpagestyles
+
+\newcommand\cbTableSheadingOld[2]{
+\begin{singlespace}\begin{center}\textbf{#2}\end{center}\end{singlespace}
+\vspace{-2em}
+\addcontentsline{toc}{section}{#1}
+}
+
+
+\newcommand\cbTableSheading[3]{
+\begin{textblock*}{0.75cm}[0.5,0.5](0.5\paperwidth,0.5\paperheight) % Centers the block on the page
+  \rotatebox{90}{\Huge \so{#2} #3}
+\end{textblock*}
+%\addcontentsline{toc}{section}{#1}
+}
+
+
+\newcommand\cbTableSheadingInline[3]{
+{\Huge \textbf{{#2} #3}}\vspace*{1em}
+%\addcontentsline{toc}{section}{#1}
+}
+
+
+
+\rowcolors{1}{}{lightgray}
+
+
+
+% LEAD LOOKUP TABLE TEMPLATE PREAMBLE END

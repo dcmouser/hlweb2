@@ -7,6 +7,7 @@ from .jriexception import *
 from lib.jr import jrfuncs
 
 
+
 # defines
 CbDef_SkipNextNewline = "__CbDef_SkipNextNewline__"
 
@@ -27,18 +28,16 @@ class CbDeferredBlock:
 
 
 class CbDeferredBlockRefLead(CbDeferredBlock):
-    def __init__(self, astloc, entryp, leadp, targetLeadId, optionPage, optionHref, optionLabel, optionId):
+    def __init__(self, astloc, entryp, leadp, targetLeadId, optionStyle):
         super().__init__(astloc, entryp, leadp)
         #
         self.targetLeadId = targetLeadId
-        self.optionPage = optionPage
-        self.optionHref = optionHref
-        self.optionLabel = optionLabel
-        self.optionId = optionId
+        self.optionStyle = optionStyle
 
     def renderToLatexString(self, env, renderDoc, lead, parentSection, priorMarkdownText, nextBlock):
         # build the latex for this reference
-        latex = makeLatexReferenceToLeadById(self.astloc, self.entryp, lead, renderDoc, self.targetLeadId, self.optionPage, self.optionHref, self.optionLabel, self.optionId, True)
+        from .cbfuncs_core_support import makeLatexReferenceToLeadById
+        latex = makeLatexReferenceToLeadById(self.astloc, self.entryp, lead, renderDoc, self.targetLeadId, self.optionStyle, True)
         return [latex, None, None]
 
 
@@ -51,7 +50,7 @@ class CbDeferredBlockCaseStats(CbDeferredBlock):
         # build the latex for this reference
         # deferred stats line
         latex = r"\item \textbf{Stats}: "
-        latex += renderDoc.calcLeadStatsString()
+        latex += renderDoc.calcLeadStatsString(env)
         latex += "\n"
         return [vouchForLatexString(latex, False), None, None]
 
@@ -59,10 +58,12 @@ class CbDeferredBlockCaseStats(CbDeferredBlock):
 
 
 class CbDeferredBlockFollowCase(CbDeferredBlock):
-    def __init__(self, astloc, entryp, leadp, text, useBulletIfEmptyLine):
+    def __init__(self, astloc, entryp, leadp, text, useBulletIfEmptyLine, flagShiftUp, flagShiftDown):
         super().__init__(astloc, entryp, leadp)
         self.text = text
         self.useBulletIfEmptyLine = useBulletIfEmptyLine
+        self.flagShiftUp = flagShiftUp
+        self.flagShiftDown = flagShiftDown
 
     def renderToLatexString(self, env, renderDoc, lead, parentSection, priorMarkdownText, nextBlock):
         # here we have some text, and we want to change the first letter's case depending if we are following in the middle of a sentence or starting a new one, etc.
@@ -74,7 +75,7 @@ class CbDeferredBlockFollowCase(CbDeferredBlock):
             optionLineStartPrefix = ""
         optionPeriodIfStandalone = False
         #
-        text = jrfuncs.modifyTextToSuitTextPositionStyle(text, priorTextPosStyle, optionLineStartPrefix, optionPeriodIfStandalone)
+        text = jrfuncs.modifyTextToSuitTextPositionStyle(text, priorTextPosStyle, optionLineStartPrefix, optionPeriodIfStandalone, self.flagShiftUp, self.flagShiftDown)
         return [text, None, None]
 
 
@@ -122,12 +123,12 @@ class CbDeferredBlockAbsorbFollowingNewline(CbDeferredBlock):
         # we want to add a period IFF we are followed by a newline
 
         # ATTN: we don't currently use this and solved it in grammar
-        if (False):
+        if (True):
             # if next block is a plain text newline (rendered as double newline in latex, remove it)
             nextBlockText = convertRenderBlockToSimpleText(nextBlock)
             if (nextBlockText == "\n"):
                 # return new block as pure newline in latex (rather than a double markdown newline)
-                return ["", vouchForLatexString("\n", False)]
+                return ["", None, vouchForLatexString("\n", False)]
 
         # do nothing
         return ["", None, None]
@@ -143,8 +144,8 @@ class CbDeferredBlockLeadTime(CbDeferredBlock):
 
     def renderToLatexString(self, env, renderDoc, lead, parentSection, priorMarkdownText, nextBlock):
         #inlineSection = renderDoc.getInlineSection()
-        #timeLatex = renderDoc.calculateItemTimeLatex(env, self.leadp, inlineSection)
-        timeLatex = renderDoc.calculateItemTimeLatex(env, self.leadp, parentSection)
+        #timeLatex = renderDoc.calculateItemTimeLatexBoxStyle(env, self.leadp, inlineSection)
+        timeLatex = renderDoc.calculateItemTimeLatexBoxStyle(env, self.leadp, parentSection)
         if (timeLatex is not None):
             # return the time string
             return [vouchForLatexString(timeLatex, False), None, None]
@@ -160,7 +161,7 @@ class CbDeferredBlockLeadHeader(CbDeferredBlock):
 
     def renderToLatexString(self, env, renderDoc, lead, parentSection, priorMarkdownText, nextBlock):
         # just the deferred header text
-        latex = renderDoc.calcHeaderLatexForLead(lead)
+        latex = renderDoc.calcHeaderLatexForLead(env, lead, parentSection, True)
         return [vouchForLatexString(latex, False), None, None]
 
 
@@ -171,11 +172,13 @@ class CbDeferredBlockPotentialEndLeadTime(CbDeferredBlock):
         super().__init__(astloc, entryp, leadp)
 
     def renderToLatexString(self, env, renderDoc, lead, parentSection, priorMarkdownText, nextBlock):
-        timeLatex = renderDoc.calculateItemTimeLatex(env, lead, parentSection)
         itemTimePos = lead.getTimePos()
-        if (timeLatex is not None) and ((itemTimePos=="end") or (itemTimePos is None) or (itemTimePos=="")):
-            # return the time string
-            return [vouchForLatexString(timeLatex, False), None, None]
+        optionTimeStyle = renderDoc.getOptionTimeStyle()
+        if (itemTimePos=="end") or (optionTimeStyle!="header") and ((itemTimePos is None) or (itemTimePos=="")):
+            timeLatex = renderDoc.calculateItemTimeLatexBoxStyle(env, lead, parentSection)
+            if (timeLatex is not None):
+                # return the time string
+                return [vouchForLatexString(timeLatex, False), None, None]
 
         # do nothing
         return ["", None, None]
@@ -184,65 +187,3 @@ class CbDeferredBlockPotentialEndLeadTime(CbDeferredBlock):
 
 
 
-
-# support funcs
-
-def makeLatexReferenceToLeadById(astloc, entryp, lead, renderDoc, targetId, optionPage, optionHref, optionLabel, optionId, optionVouch):
-    if (targetId is not None):
-        referencedLead = renderDoc.findLeadByIdPath(targetId, astloc)
-        if (referencedLead is None):
-            raise makeJriException("Deferred Render Syntax Error: Could not find lead with id/path: {}".format(targetId), astloc)
-    else:
-        referencedLead = lead.getInlinedFromLead()
-        if (referencedLead is None):
-            raise makeJriException("Deferred Render Syntax Error: Could not find implicit lead (are you trying to incorrectly return from a non-inline lead?)", astloc)
-    #
-    return makeLatexReferenceToLead(referencedLead, optionPage, optionHref, optionLabel, optionId, optionVouch)
-
-
-def makeLatexReferenceToLead(referencedLead, optionPage, optionHref, optionLabel, optionId, optionVouch):
-    from .jrastfuncs import DefInlineLeadPlaceHolder
-
-    referencedLeadRid = referencedLead.getRid()
-    referencedLeadIdText = referencedLead.getLabelIdPreferAutoId()
-
-    # start building text
-    text = ""
-    # add label?
-    if (optionLabel):
-        if (True):
-            text = referencedLead.getNiceFullLabel(False)
-        else:
-            label = referencedLead.getLabel()
-            if (label is not None) and (label != referencedLeadIdText):
-                text = referencedLeadIdText + " - " + label
-            else:
-                text = referencedLeadIdText
-    elif (optionId):
-        text = referencedLeadIdText
-    else:
-        text = ""
-
-    # kludge replace
-    text = text.replace(DefInlineLeadPlaceHolder, "")
-
-    #
-    if (text!=""):
-        latex = convertEscapeUnsafePlainTextToLatex(text)
-    else:
-        latex = ""
-    # add page number?
-    if (optionPage):
-        if (latex!=""):
-            latex += " "
-        latex+= r"(p.\pageref*{" + referencedLeadRid + r"})"
-    # make it an href?
-    if (optionHref):
-        latex = r"\hyperref[{" + referencedLeadRid + r"}]{" + latex + r"}"
-
-    # return it vouched
-    if (optionVouch):
-        return vouchForLatexString(latex, True)
-    else:
-        return latex
-    

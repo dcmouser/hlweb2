@@ -5,16 +5,19 @@ from django.template.defaultfilters import slugify
 from django.core.exceptions import ValidationError, FieldDoesNotExist
 from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.http import StreamingHttpResponse
 import django
 
+
 # my modules
-from lib.jr.jrfuncs import jrprint
+from lib.jr import jrfuncs, jrdfuncs
+from lib.jr.jrfuncs import jrprint, setLogFileAnnounceString
 
 # python modules
 from datetime import datetime
 import re
 import uuid
-
+import logging
 
 
 
@@ -109,28 +112,28 @@ def jrdUniquifySlug(instance, value, slug_field_name='slug', queryset=None, slug
     setattr(instance, slug_field.attname, slug)
 
 
-def jrd_slug_strip(value, separator='-'):
+def jrd_slug_strip(value, divider='-'):
     """
-    Cleans up a slug by removing slug separator characters that occur at the
+    Cleans up a slug by removing slug divider characters that occur at the
     beginning or end of a slug.
 
-    If an alternate separator is used, it will also replace any instances of
-    the default '-' separator with the new separator.
+    If an alternate divider is used, it will also replace any instances of
+    the default '-' divider with the new divider.
     """
 
-    separator = separator or ''
-    if separator == '-' or not separator:
+    divider = divider or ''
+    if divider == '-' or not divider:
         re_sep = '-'
     else:
-        re_sep = '(?:-|%s)' % re.escape(separator)
-    # Remove multiple instances and if an alternate separator is provided,
-    # replace the default '-' separator.
-    if separator != re_sep:
-        value = re.sub('%s+' % re_sep, separator, value)
-    # Remove separator from the beginning and end of the slug.
-    if separator:
-        if separator != '-':
-            re_sep = re.escape(separator)
+        re_sep = '(?:-|%s)' % re.escape(divider)
+    # Remove multiple instances and if an alternate divider is provided,
+    # replace the default '-' divider.
+    if divider != re_sep:
+        value = re.sub('%s+' % re_sep, divider, value)
+    # Remove divider from the beginning and end of the slug.
+    if divider:
+        if divider != '-':
+            re_sep = re.escape(divider)
         value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
     return value
 
@@ -199,10 +202,20 @@ def jrBlankFields(model, field_strings):
 
 
 
-def announceDjangoAndSettingsVersion():
+# ATTN: THIS IS NOT CALLED ON MY NORMAL TEST LOCAL SERVER STARTUP
+def announceDjangoAndSettingsVersion(buildStr):
     now = datetime.now().strftime("%B %d, %Y - %X")
     version = django.get_version()
-    jrprint(f"{now}\nDjango version {version}, using settings {settings.SETTINGS_MODULE!r}\n")
+
+    if (settings.DEBUG):
+        version += " (DEBUG)"
+
+    msg = f"Starting up Django version {version}, using settings {settings.SETTINGS_MODULE!r}" + "; " + buildStr
+    msg = f"{now}" + "\n" + msg
+    jrfuncs.setLogFileAnnounceString(msg)
+    # log
+    logger = logging.getLogger("app")
+    logger.info(msg)
 
 
 
@@ -244,11 +257,172 @@ def createDjangoGroupAndPermission(permissionCodename, permissionLabel, groupNam
                 content_type = ContentType.objects.get_for_model(contentModel),
             )
         except:
-            print(" * Permission {} ({}) already exists.".format(permissionCodename, permissionLabel))
+            print(" * Permission {} ({}) already exists; does not need to be added".format(permissionCodename, permissionLabel))
             permission = Permission.objects.get(codename=permissionCodename)
         # now give the author permission to the authorGroup
-        group.permissions.add(permission)
-        print(" * Added permission {} ({}) to group {}.".format(permissionCodename, permissionLabel, groupName))
+        if permission in group.permissions.all():
+            print(" * Permission {} ({}) already assigned to group {}; does not need to be added.".format(permissionCodename, permissionLabel, groupName))
+        else:
+            group.permissions.add(permission)
+            print(" * Added permission {} ({}) to group {}.".format(permissionCodename, permissionLabel, groupName))
     else:
         print(" * Group {} already exists: Leaving as is; assuming that permission {} ({}) has ALREADY been assigned".format(groupName, permissionCodename, permissionLabel))
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+def requestUserIsAuthenticatedAndGadmin(request):
+    return userIsAuthenticatedAndGadmin(request.user)
+
+def userIsAuthenticatedAndGadmin(user):
+    return (user.is_authenticated) and (user.get_is_gadmin())
+
+
+def userOwnsObjectOrStrongerPermission(obj, user):
+    # ATTN: should we be testing pk instead?
+    if (not user.is_authenticated):
+        return False
+    if (obj.owner.pk == user.pk):
+        return True
+    if (jrdfuncs.userIsAuthenticatedAndGadmin(user)):
+        return True
+
+    # ATTN: new 12/30/24
+    if (user in obj.editors.all()):
+        return True
+
+    return False
+# ---------------------------------------------------------------------------
+
+
+
+
+# ---------------------------------------------------------------------------
+def streamFileRequest(path, contentType):
+    chunk_size=8192
+    # Generator function that reads the file in small chunks
+    def file_iterator(file_name, chunk_size=8192):
+        with open(file_name, 'rb') as file:
+            while True:
+                data = file.read(chunk_size)
+                if not data:
+                    break
+                yield data
+
+    # Streaming the file
+    response = StreamingHttpResponse(file_iterator(path))
+    if (contentType == "attachment"):
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(path.split('/')[-1])
+    else:
+        response['Content-Type'] = contentType
+    return response
+
+
+
+def streamFileTailRequest(path, lineCount=10):
+    #lines = fileTailLines(path, lineCount)
+    # build first line info
+    currentDateString = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #fileModString = jrfuncs.calcModificationDateOfFileAsNiceString(path)
+    oldness = jrfuncs.calcHowLongAgoFileModifiedAsNiceString(path)
+    firstLine = "Tailing file {} at {} (last modified {} ago):\n\n".format(path, currentDateString, oldness)
+    lines = fileTailLines2(path, lineCount)
+    # Create a generator that yields each line as bytes
+    def generate():
+        yield firstLine
+        lineIndex = 0
+        for line in lines:
+            lineIndex += 1
+            if (lineIndex==lineCount):
+                yield "...\n"
+                continue
+            elif (lineIndex>lineCount):
+                break
+            #yield line.encode('utf-8') + b'\n'
+            yield line.encode('utf-8')
+    # Return a streaming response
+    response = StreamingHttpResponse(generate(), content_type="text/plain")
+    return response
+
+
+
+# thanks to chatgpt
+def fileTailLines(filename, lineCount):
+    with open(filename, 'r', encoding='utf-8') as file:
+        # Move to the end of the file
+        file.seek(0, 2)
+        end_position = file.tell()
+        buffer_size = 1024
+        block = -1
+        lines_to_go = lineCount
+        block_end = end_position
+        lines = []
+
+        while lines_to_go > 0 and block_end > 0:
+            if (block_end - buffer_size > 0):
+                # Move the pointer back a block size
+                file.seek(block * buffer_size, 2)
+                block_data = file.read(buffer_size)
+            else:
+                # Move to the beginning of the file
+                file.seek(0,0)
+                block_data = file.read(block_end)
+
+            # Add the data from the block to our lines array
+            lines.extend(block_data.splitlines())
+
+            # Update the count of lines still to go
+            lines_to_go -= block_data.count('\n')
+            block -= 1
+            block_end = file.tell()
+
+        # We may have read more lines than needed, trim the list
+        return lines[-lineCount:][::-1]
+    return None
+
+
+
+# see https://stackoverflow.com/questions/12523044/how-can-i-tail-a-log-file-in-python
+def fileTailLines2(path, lineCount):
+    batch_size=1024
+    keepends=True
+    encoding = 'utf-8'
+
+    bytesio = open(path, 'rb')
+
+    bytesio.seek(0, 2)
+    end = bytesio.tell()
+
+    buf = b""
+    for p in reversed(range(0, end, batch_size)):
+        bytesio.seek(p)
+        lines = []
+        remain = min(end-p, batch_size)
+        while remain > 0:
+            line = bytesio.readline()[:remain]
+            lines.append(line)
+            remain -= len(line)
+
+        cut, *parsed = lines
+        for line in reversed(parsed):
+            if buf:
+                line += buf
+                buf = b""
+            if encoding:
+                line = line.decode(encoding)
+            yield from reversed(line.splitlines(keepends))
+        buf = cut + buf
+    
+    if path:
+        bytesio.close()
+
+    if encoding:
+        buf = buf.decode(encoding)
+
+    yield from reversed(buf.splitlines(keepends))
 # ---------------------------------------------------------------------------

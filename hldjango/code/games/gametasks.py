@@ -13,13 +13,16 @@ from datetime import datetime
 import os
 import time
 import traceback
+import logging
 
 # user modules
 from lib.jr.jrfuncs import jrprint
 from lib.jr import jrdfuncs
 #from hueyconfig import huey
+
 # casebook
 from .casebookwrapper import CasebookWrapper
+from lib.casebook.casebookDefines import DefCbBuildString
 
 from lib.jr import jrfuncs
 
@@ -36,20 +39,69 @@ from lib.jr import jrfuncs
 
 
 
+# ---------------------------------------------------------------------------
+# REDIS SUPPORT FOR TRACKING RUNNING TASKS?
+
+if (False):
+# huey redis support
+    from huey import RedisHuey, signals
+    import redis
+    from functools import wraps
+
+    r = redis.Redis()  # Or reuse huey.storage.conn
+
+    def track_running_task(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            task_id = f"{fn.__name__}:{args}:{kwargs}"
+            r.sadd("running_tasks", task_id)
+            try:
+                return fn(*args, **kwargs)
+            finally:
+                r.srem("running_tasks", task_id)
+        return wrapper
+
+
+    def get_running_task_count():
+        return r.scard("running_tasks")
+
+    def get_running_tasks():
+        return r.smembers("running_tasks")
+else:
+    def get_running_task_count():
+        return "unknown"
+# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 # module global funcs
 # see https://huey.readthedocs.io/en/latest/api.html#Huey.task
-@db_task(context=True)
+# trying to set an expiration of 1 day
+@db_task(context=True, expires=86400)
+#@track_running_task
 def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     # imports needing in function to avoid circular?
     from games.models import Game
     from games import gamefilemanager
     from games.gamefilemanager import GameFileManager
 
+    debugMode = False
+
     # starting time of run
     timeStart = time.time()
     # start time of build
     buildDateStart = timezone.now()
+    buildDateStartNiceStr = jrfuncs.getNiceDateTime(buildDateStart)
 
     # reset
     buildLog = ""
@@ -58,7 +110,9 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
 
     # options
     buildMode = requestOptions["buildMode"]
-    optionZipFiles = True
+
+    #optionZipFiles = True
+    optionZipFiles = False
 
 
     # REload game instance AGAIN to save state, in case it has changed
@@ -114,7 +168,10 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     #
     # save NOW early (and again later) since it will take some time and something else might run in meantime
     game.save()
-    jrprint("Saving new huey job ({}) starting.".format(buildMode))
+
+
+    if (debugMode):
+        jrprint("Saving new huey job ({}) starting.".format(buildMode))
 
     # normally this wouildnt happen because a cancel would stop the task from even running
     # but its potentially possible for it to start running and then get canceled before it makes progress beyond here?
@@ -133,24 +190,25 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         # build preferred format
         suffix = calcDefaultSuffixForBuildMode(buildMode)
         build = {"label": "preferred format build", "task": "latexBuildPdf", "exsuffix": suffix, "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "gameFileType": gamefilemanager.EnumGameFileTypeName_PreferredBuild, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_PreferredBuild)}
-        addCalculatedFieldsToBuild(build)
+        addCalculatedFieldsToBuild(build, game)
         buildList.append(build)
         if (optionZipFiles):
             # build zip
             zipBuild = {"label": "zipping built files", "task": "zipFiles", "suffix": suffix, "gameFileType": gamefilemanager.EnumGameFileTypeName_PreferredBuild, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_PreferredBuild)}
-            addCalculatedFieldsToBuild(zipBuild)
+            addCalculatedFieldsToBuild(zipBuild, game)
             buildList.append(zipBuild)
         flagCleanAfter = "minimal"
     if (buildMode in ["buildDebug"]):
         # build debug format
         suffix = calcDefaultSuffixForBuildMode(buildMode)
-        build = {"label": "debug build", "task": "latexBuildPdf", "exsuffix": suffix, "reportMode": True, "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_Debug)}
-        addCalculatedFieldsToBuild(build)
+        build = {"label": "debug build", "task": "latexBuildPdf", "exsuffix": suffix, "reportMode": True, "convert": "jpg", "convertSuffix": "_cover", "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_Debug)}
+        #build["convert"] = "jpg"
+        addCalculatedFieldsToBuild(build, game)
         buildList.append(build)
         if (optionZipFiles):
             # build zip
             zipBuild = {"label": "zipping built files", "task": "zipFiles", "suffix": suffix, "gameFileType": gamefilemanager.EnumGameFileTypeName_Debug, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_Debug)}
-            addCalculatedFieldsToBuild(zipBuild)
+            addCalculatedFieldsToBuild(zipBuild, game)
             buildList.append(zipBuild)
         flagCleanAfter = "none"
     if (buildMode in ["buildDraft"]):
@@ -160,7 +218,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         if (optionZipFiles):
             # build zip
             zipBuild = {"label": "zipping built files", "task": "zipFiles", "suffix": suffix, "gameFileType": gamefilemanager.EnumGameFileTypeName_DraftBuild, "outputPath": gfmanager.getDirectoryPathForGameType(gamefilemanager.EnumGameFileTypeName_DraftBuild)}
-            addCalculatedFieldsToBuild(zipBuild)
+            addCalculatedFieldsToBuild(zipBuild, game)
             buildList.append(zipBuild)
         flagCleanAfter = "extra"
         #
@@ -173,21 +231,12 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
 
 
     # start the build log
-    buildLog = "Building: '{}'...\n".format(buildMode)
+    currentDateTimeStr = jrfuncs.getNiceCurrentDateTime()
+    buildLog = currentDateTimeStr + " - Building: '{}'...\n".format(buildMode)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # console log
+    if (True or debugMode):
+        jrprint("Starting Task: {} for ({}/{}) on {}".format(buildMode, gameInternalName, gameName, currentDateTimeStr))
 
 
     # create options to pass to parser object
@@ -201,7 +250,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     # this may take a long time to run (minutes)
 
     try:
-        casebook = CasebookWrapper() 
+        casebook = CasebookWrapper(debugMode) 
     except Exception as e:
         raise e
 
@@ -217,12 +266,6 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         jrprint(msg)
         buildLog += msg
         buildErrorStatus = True
-
-
-
-
-
-
 
 
 
@@ -244,7 +287,14 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
             buildLog += "\n\n-----\n\n"
         buildLog += "Parser Build Log:\n" + buildLogParser
 
-    gameLeadStatsSummary = casebook.getLeadStats()["summaryString"]
+    try:
+        gameLeadStats = casebook.getLeadStats()
+        if (isinstance(gameLeadStats,dict)):
+            gameLeadStatsSummary = jrfuncs.getDictValueOrDefault(gameLeadStats,"summaryString","n/a")
+        else:
+            gameLeadStatsSummary = gameLeadStats
+    except Exception as e:
+        gameLeadStatsSummary = "n/a"
 
     # elapsed time
     # ATTN: this needs rewriting
@@ -298,6 +348,7 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         "buildDateEnd": buildDateEnd.timestamp(),
         "buildVersion": gameBuildVersion,
         "buildVersionDate": gameBuildVersionDate,
+        "buildTool": DefCbBuildString,
         "buildTextHash": gameTextHash,
         "buildError": buildErrorStatus,
         "buildLog": buildLog,
@@ -305,7 +356,8 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
         "lastBuildDateStart": buildDateStart.timestamp(),
         "lastBuildVersion": gameBuildVersion,
         "lastBuildVersionDate": gameBuildVersionDate,
-        "leadStatsSummary": gameLeadStatsSummary
+        "lastBuildTool": DefCbBuildString,
+        "leadStatsSummary": gameLeadStatsSummary,
     }
     # add task info
     if (task is not None):
@@ -326,17 +378,30 @@ def queueTaskBuildStoryPdf(gameModelPk, requestOptions, task=None):
     #
 
     # store last build log into main game buildLog
-    niceDateStr = jrfuncs.getNiceDateTime(buildDateStart)
-    game.lastBuildLog = retv + " on {}.\n".format(niceDateStr) + buildLog
+    game.lastBuildLog = retv + " on {}.\n".format(buildDateStartNiceStr) + buildLog
     if (not buildErrorStatus):
         game.lastBuildLog += "\n" + game.leadStats
 
     # save game
     game.save()
 
-    jrprint("Finished huey job '{}'; status = '{}'.".format(buildMode, queueStatus))
+    if (debugMode):
+        jrprint("Finished (huey) job '{}'; status = '{}'.".format(buildMode, queueStatus))
+
+    # log
+    logger = logging.getLogger("app")
+    msg = "Finished building {} for game ({}/{}) in {}: {}".format(buildMode, gameModelPk, gameInternalName, gameName, timeStr, retv)
+    logger.info(msg)
+
+    if (debugMode or True):
+        jrprint(msg + "\n\n")
+
 
     return retv
+
+
+
+
 
 def calcDefaultSuffixForBuildMode(buildMode):
     # remove the word "build", lowercase first letter, prefix with "_"
@@ -358,7 +423,10 @@ def generateCompleteBuildList(game, gfmanager):
     from games.models import Game
     from games import gamefilemanager
 
+    optionBuildMain = True
     optionBuildCover = True
+    #optionBuildLargeFont = True
+    optionBuildLargeFont = False
     optionBuildDebug = False
 
     buildList = []
@@ -380,16 +448,16 @@ def generateCompleteBuildList(game, gfmanager):
     gameFileType = gamefilemanager.EnumGameFileTypeName_DraftBuild
     #
 
-    if (True):
+    if (optionBuildMain):
         # programmatic
         # we make two passes since the first pass can just count the builds needed
         for stage in ["precount","run"]:
             for paperSize in Game.GameFormatPaperSizeCompleteList:
                 for layout in Game.GameFormatLayoutCompleteList:
                     # skip certain configurations
-                    columns = calcColumnsFromLayout(layout)
+                    leadColumns = calcLeadColumnsFromLayout(layout)
                     maxColumns = calcMaxColumnsFromPaperSize(paperSize)
-                    if (columns>maxColumns):
+                    if (leadColumns>maxColumns):
                         # skip it
                         continue
                     if (stage=="precount"):
@@ -400,7 +468,7 @@ def generateCompleteBuildList(game, gfmanager):
                     label = "complete build {} of {} ({} x {})".format(index, buildCount, layout, paperSize)
                     #
                     build = {"label": label, "task": "latexBuildPdf", "cleanExtras": True, "paperSize": paperSize, "layout": layout, "gameFileType": gameFileType, "gameFileType": gameFileType, "outputPath": gfmanager.getDirectoryPathForGameType(gameFileType)}
-                    addCalculatedFieldsToBuild(build)
+                    addCalculatedFieldsToBuild(build, game)
                     buildList.append(build)
 
     # summary in letter format?
@@ -411,15 +479,15 @@ def generateCompleteBuildList(game, gfmanager):
         #
         coverImageExtension = "jpg"
         build = {"label": label, "task": "latexBuildPdf", "cleanExtras": True, "paperSize": paperSize, "layout": Game.GamePreferredFormatLayout_Solo, "variant": "cover", "convert": coverImageExtension, "gameFileType": gameFileType, "outputPath": gfmanager.getDirectoryPathForGameType(gameFileType), }
-        addCalculatedFieldsToBuild(build)
+        addCalculatedFieldsToBuild(build, game)
         buildList.append(build)
 
-    if (True):
+    if (optionBuildLargeFont):
         # customs
         index += 1
         label = "complete build {} of {} (custom_soloprn_letter_largefont)".format(index, buildCount)
         build = {"label": label, "task": "latexBuildPdf", "cleanExtras": True, "exsuffix": "_largefont", "paperSize": Game.GamePreferredFormatPaperSize_Letter, "layout": Game.GamePreferredFormatLayout_Solo, "fontSize": "16", "gameFileType": gameFileType, "outputPath": gfmanager.getDirectoryPathForGameType(gameFileType) }
-        addCalculatedFieldsToBuild(build)
+        addCalculatedFieldsToBuild(build, game)
         buildList.append(build)
 
     # also debug, in preferred format
@@ -427,7 +495,7 @@ def generateCompleteBuildList(game, gfmanager):
         index += 1
         label = "complete build {} of {} (debug)".format(index, buildCount)
         build = {"label": label, "task": "latexBuildPdf", "cleanExtras": True, "paperSize": preferredFormatPaperSize, "layout": preferredFormatLayout, "variant": "debug", "gameFileType": gameFileType, "outputPath": gfmanager.getDirectoryPathForGameType(gameFileType), }
-        addCalculatedFieldsToBuild(build)
+        addCalculatedFieldsToBuild(build, game)
         buildList.append(build)
     #
 
@@ -463,7 +531,7 @@ def publishGameFiles(game):
     publishErrored = False
     currentDate = timezone.now()
     try:
-        publishResult = gameFileManager.copyPublishFiles(gamefilemanager.EnumGameFileTypeName_DraftBuild, gamefilemanager.EnumGameFileTypeName_Published)
+        publishResult = gameFileManager.copyPublishFiles(game, gamefilemanager.EnumGameFileTypeName_DraftBuild, gamefilemanager.EnumGameFileTypeName_Published)
     except Exception as e:
         msg = jrfuncs.exceptionPlusSimpleTraceback(e, "trying to copy publish files")
         jrprint(msg)
@@ -531,6 +599,7 @@ def unpublishGameFiles(game):
         "buildVersion": None,
         "buildVersionDate": None,
         "buildTextHash": None,
+        "buildTool": DefCbBuildString,
         }
     # set
     game.setBuildResults("published", buildResults)
@@ -601,7 +670,7 @@ def publishBuildFiles(buildDir, buildList, publishDir):
 # helpers
 
 
-def addCalculatedFieldsToBuild(build):
+def addCalculatedFieldsToBuild(build, game):
     #
     task = build["task"]
     if (task == "zipFiles"):
@@ -619,19 +688,33 @@ def addCalculatedFieldsToBuild(build):
 
     layout = build["layout"]
     #
-    paperSize = build['paperSize']
-    latexPaperSize = build['latexPaperSize'] if ('latexPaperSize' in build) else calcPaperSizeLatexFromPaperSize(paperSize)
-    fontSize = build['fontSize'] if ('fontSize' in build) else calcFontSizeFromPaperSize(paperSize)
-    doubleSided = build['doubleSided'] if ('doubleSided' in build) else calcDoubledSidednessFromLayout(layout)
-    leadColumns = build['leadColumns'] if ('leadColumns' in build) else calcColumnsFromLayout(layout)
-    leadBreak = build['leadBreak'] if ('leadBreak' in build) else calcLeadBreakFromLayout(layout)
+    paperSize = build["paperSize"]
+    fontSize = build["fontSize"] if ("fontSize" in build) else calcFontSizeFromPaperSize(paperSize)
+    latexPaperSize = build["latexPaperSize"] if ("latexPaperSize" in build) else calcPaperSizeLatexFromPaperSize(paperSize)
+    isNarrowPaperSize = calcIsNarrowPaperFromPaperSize(paperSize)
+    doubleSided = build["doubleSided"] if ("doubleSided" in build) else calcDoubledSidednessFromLayout(layout)
+    leadColumns = build["leadColumns"] if ("leadColumns" in build) else calcLeadColumnsFromLayout(layout)
+    leadBreak = build["leadBreak"] if ("leadBreak" in build) else calcLeadBreakFromLayout(layout)
+    #sectionBreak = build["sectionBreak"] if ("sectionBreak" in build) else calcSectionBreakFromLayout(layout)
+    sectionColumns = build["sectionColumns"] if ("sectionColumns" in build) else calcSectionColumnsFromLayout(layout)
     #
+    build["renderOptions"] = {
+        "latexFontSize": fontSize,
+        "latexPaperSize": latexPaperSize,
+        "doubleSided": doubleSided,
+        "leadColumns": leadColumns,
+        "leadBreak": leadBreak,
+        #"sectionBreak": sectionBreak,
+        "sectionColumns": sectionColumns,
+        "isNarrowPaperSize": isNarrowPaperSize,
+    }
 
-    build["latexfontSize"] = fontSize
-    build["latexPaperSize"] = latexPaperSize
-    build["doubleSided"] = doubleSided
-    build["leadColumns"] = leadColumns
-    build["leadBreak"] = leadBreak
+    # new, add gamePk to build dictionary
+    build["gamePk"] = game.pk
+
+
+    # ATTN: in order for these to propagate to render options they need to be also set in casebookwrapper.py
+
 
 
 
@@ -652,6 +735,10 @@ def calcBuildNameSuffixForVariant(build):
         suffix = "_cover"
     else:
         raise Exception("Variant mode '{}' not understood in runBuildList for label '{}'".format(buildVariant, label))
+    #
+    # improve file names?
+    suffix = suffix.replace("soloscr", "soloForScreen")
+    #suffix = suffix.replace("soloprn", "soloForPrint")
     #
     return suffix
 
@@ -683,6 +770,18 @@ def calcPaperSizeLatexFromPaperSize(paperSize):
     return paperSizeToLatexPaperSizeMap[paperSize]
 
 
+def calcIsNarrowPaperFromPaperSize(paperSize):
+    from games.models import Game
+    #
+    paperSizeToNarrowMap = {
+        Game.GamePreferredFormatPaperSize_Letter: False,
+        Game.GamePreferredFormatPaperSize_A4: False,
+        Game.GamePreferredFormatPaperSize_B5: True,
+        Game.GamePreferredFormatPaperSize_A5: True,
+    }
+    return paperSizeToNarrowMap[paperSize]
+
+
 def calcDoubledSidednessFromLayout(layout):
     # imports needing in function to avoid circular?
     from games.models import Game
@@ -696,7 +795,7 @@ def calcDoubledSidednessFromLayout(layout):
     return layoutToDoubleSidednessMap[layout]
 
 
-def calcColumnsFromLayout(layout):
+def calcLeadColumnsFromLayout(layout):
     # imports needing in function to avoid circular?
     from games.models import Game
     #
@@ -707,6 +806,20 @@ def calcColumnsFromLayout(layout):
         Game.GamePreferredFormatLayout_TwoCol: 2,            
     }
     return layoutToColumnsMap[layout]
+
+
+def calcSectionColumnsFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToColumnsMap = {
+        Game.GamePreferredFormatLayout_Solo: 1,
+        Game.GamePreferredFormatLayout_SoloPrint: 1,
+        Game.GamePreferredFormatLayout_OneCol: 1,
+        Game.GamePreferredFormatLayout_TwoCol: 2,            
+    }
+    return layoutToColumnsMap[layout]
+
 
 
 def calcLeadBreakFromLayout(layout):
@@ -720,6 +833,20 @@ def calcLeadBreakFromLayout(layout):
         Game.GamePreferredFormatLayout_TwoCol: "none",
     }
     return layoutToLeadBreakMap[layout]
+
+
+def calcSectionBreakFromLayout(layout):
+    # imports needing in function to avoid circular?
+    from games.models import Game
+    #
+    layoutToBreakMap = {
+        Game.GamePreferredFormatLayout_Solo: "soloFacing",
+        Game.GamePreferredFormatLayout_SoloPrint: "soloFacing",
+        Game.GamePreferredFormatLayout_OneCol: "before",
+        Game.GamePreferredFormatLayout_TwoCol: "before",
+    }
+    return layoutToBreakMap[layout]
+
 
 
 def calcMaxColumnsFromPaperSize(paperSize):
@@ -810,5 +937,22 @@ def progressCallbackTaskBuildFunc(gameModelPk, buildMode, progressDict):
     # tell caller to continue
     return True
 # ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

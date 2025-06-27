@@ -1,0 +1,299 @@
+
+
+% CASEBOOK LATEX PREAMBLE - NEWSPAPER FUNCS
+
+
+
+% HELPER COMMANDS
+%
+% NEWSPAPER
+\newcommand{\npNewsPaperBegin}[0]{
+\begingroup
+}
+%
+\newcommand{\npNewsPaperEnd}[0]{
+\restoregeometry
+\endgroup
+}
+
+
+%
+% BANNER
+\newcommand{\npBanner}[1]{
+  % Include the image so it fills the text width
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{#1}
+\par
+\vspace{1mm}
+\end{minipage}
+}
+
+% UNDER BANNER LINES
+\newcommand{\npBannerLines}[0]{
+\begin{minipage}{\linewidth}
+  \noindent\rule{\linewidth}{0.5pt}\\[-\baselineskip]
+  \vspace{1mm} \\[-\baselineskip]
+  \noindent\rule{\linewidth}{0.5pt}
+\end{minipage}
+}
+
+% UNDER BANNER
+\newcommand{\npUnderBanner}[3]{
+\begingroup
+\npBannerLines
+\noindent\makebox[0pt][l]{~~~#1}%
+\hfill%
+\makebox[0pt]{#2}%
+\hfill%
+\makebox[0pt][r]{#3~~~}
+\\[-.25\baselineskip]
+\npBannerLines
+\\[-1.5\baselineskip]
+\endgroup
+}
+
+
+
+
+%
+% UNDER BANNER 2
+\newcommand{\npUnderBannerAbove}[3]{
+\begingroup
+ \setstretch{0.8}
+\vspace{-0.075\linewidth}
+\noindent\begin{center}{#2}\end{center}
+\begingroup
+\vspace{-2em}
+#1 \hfill #3
+\endgroup
+\vspace{0.02\linewidth}
+\endgroup
+}
+
+
+
+%
+% UNDER BANNER 2
+\newcommand{\npUnderBannerAboveOlder}[3]{
+\begingroup
+ \setstretch{0.8}
+ \vspace{-1.55cm}
+\noindent\begin{center}{#2}\end{center}
+\begingroup
+\vspace{-1.5em} #1 \hfill #3
+\endgroup
+ \vspace{0.25cm}
+\endgroup
+}
+
+
+
+
+%
+% HEADLINE
+\newcommand{\npHeadline}[1]{
+\needspace{1in}
+\noindent\begin{minipage}{\columnwidth}
+\vspace*{0.5em}
+\setstretch{1.2}%
+\centering
+\noindent\par
+\noindent%
+#1
+\noindent\par
+\end{minipage}
+\noindent\par\nopagebreak[4]
+\vspace{0.5em}
+}
+%
+
+
+
+
+% BYLINE
+\newcommand{\npByLine}[1]{
+{\centering
+ \scriptsize
+\noindent%
+#1
+\par
+}
+\vspace{0.2cm}
+ \nopagebreak[4] 
+}
+
+
+%
+% EndLine for things like "Continued on page 4"
+\newcommand{\npEndLine}[1]{
+\par
+{\centering
+\scriptsize
+\noindent\textbf{\textit{#1}}
+\\[-\baselineskip]
+\vspace{0.2cm}
+}
+\nopagebreak[4] 
+}
+
+
+
+
+% SEPARATOR HALF
+\newcommand{\npSeparatorHalf}[0]{%
+\par\vspace*{-0.5em}\par %
+ \begin{center}%
+ \noindent\rule{0.5\columnwidth}{0.75pt}%
+ \end{center}%
+\hspace{0.2cm}
+\nopagebreak[4] 
+}
+
+% SEPARATOR FULL
+\newcommand{\npSeparatorFull}[0]{%
+\nopagebreak[4]
+\par
+\nopagebreak[4]\noindent\rule{\columnwidth}{0.75pt}%
+\par\vspace*{-0.5em}\par\nopagebreak[4] %
+}
+
+
+
+
+% ARTICLE GROUP BEGIN
+\newcommand{\npArticleGroupBegin}[1]{
+ \begingroup
+ \setlength{\columnseprule}{0.5pt}
+ \begin{multicols}{#1}
+ \raggedcolumns
+}
+
+% ARTICLE GROUP END
+\newcommand{\npArticleGroupEnd}{
+ \end{multicols}
+ \endgroup
+}
+
+
+
+% ARTICLE BEGIN
+\newcommand{\npArticleBegin}[0]{
+\needspace{1in}
+\begingroup
+\setlength{\parindent}{0.2cm}
+}
+
+% ARTICLE END
+\newcommand{\npArticleEnd}[0]{
+\nopagebreak[4]
+\npSeparatorFull
+\endgroup
+\vspace{1em}
+}
+
+
+
+% IMAGE UNBORDERED
+\newcommand{\npImage}[3]{
+\setlength{\fboxsep}{1pt} % Padding between the image and the border
+\setlength{\fboxrule}{1pt} % Thickness of the border
+\noindent\begin{minipage}{\columnwidth}
+\vspace{0.75em}
+\centering
+    \includegraphics[width=#3\columnwidth]{#1}
+  \ifstrempty{#2}{%
+  }{%
+	\captionsetup{labelformat=empty, skip=0.2cm}
+	\captionof{figure}{#2}
+  }%
+\end{minipage}
+\nopagebreak[4]%
+}
+
+
+% IMAGE BORDERED
+\newcommand{\npImageBordered}[3]{
+\setlength{\fboxsep}{1pt} % Padding between the image and the border
+\setlength{\fboxrule}{1pt} % Thickness of the border
+\noindent\begin{minipage}{\columnwidth}
+\vspace{0.75em}
+\centering
+    \tcbox[sharp corners, size=tight, colframe=black, colback=white, boxsep=2pt, boxrule=1pt] {
+    \includegraphics[width=#3\columnwidth]{#1}
+    }
+  \ifstrempty{#2}{%
+  }{%
+	\vspace{-0.75em}
+	\captionsetup{labelformat=empty, skip=0.2cm}
+	\captionof{figure}{#2}
+  }%
+\end{minipage}
+\nopagebreak[4]%
+}
+
+
+
+
+
+% WEATHER BOX AT UPPER RIGHT
+% banner box puts text in a box on right side of banner
+\newcommand{\npBannerBox}[1]{
+\begingroup
+% We place the floating box
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=south east]  at (\linewidth, 0.70cm) {
+    \tcbox[width=\weatherboxWidth, sharp corners, size=tight, colframe=black, colback=white, boxsep=3pt, boxrule=0.75pt, box align=top, halign=center, valign=center, nobeforeafter, enhanced]{
+\setstretch{0.8}
+     \parbox{\weatherboxWidth}{\tiny \textbf{#1}}
+    }
+  };
+\end{tikzpicture}
+\endgroup
+}
+
+
+
+
+
+
+% Short helper commands called by newspaper building
+%
+\newcommand{\npGeomLandscapeNarrow}{%
+\newgeometry{margin=3em, left=2em, right=2em, bottom=4em}\setlength{\footskip}{2em} %
+}
+%
+\newcommand{\npGeomLandscapeWide}{%
+\newgeometry{margin=3em, bottom=4em}\setlength{\footskip}{2em} %
+}
+
+%
+\newcommand{\npGeomPortraitWide}{%
+\newgeometry{margin=3em, top=2em, bottom=4em}\setlength{\footskip}{2em} %
+}
+%
+\newcommand{\npGeomPortraitNarrow}{%
+\newgeometry{margin=2em, top=1.5em, bottom=4em}\setlength{\footskip}{2em} %
+}
+
+%
+\newcommand{\npWeatherBoxSetupLandscape}{%
+\def\weatherboxWidth{2.8cm} \def\weatherboxMargin{2.2cm} %
+}
+%
+\newcommand{\npWeatherBoxSetupPortrait}{%
+\def\weatherboxWidth{2.8cm} \def\weatherboxMargin{2.2cm} %
+}
+%
+\newcommand{\npWeatherBoxSetupPortraitNarrow}{%
+\def\weatherboxWidth{1.8cm} \def\weatherboxMargin{1.4cm} %
+}
+
+
+\newcommand{\npTallGeom}{%
+\newgeometry{bottom=4em}\setlength{\footskip}{2em} %
+}
+
+
+\newcommand{\npGeomNone}{%
+}

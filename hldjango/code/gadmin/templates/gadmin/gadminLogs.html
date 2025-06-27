@@ -1,0 +1,68 @@
+{% extends "allauth/layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% load jrtemplatetags %}
+{% load gametemplatetags %}
+{% load static %}
+
+{% block title %}Site Logs{% endblock title %}
+
+{% block extra_head %}
+<script src="{% static "js/adminHelpers.js" %}"></script>
+{% endblock extra_head %}
+
+
+
+
+{% block content %}
+
+<div id="logContents" class="jrFileContentsBox"></div>
+
+<a href="{% url 'gadminLogs' %}">Refresh file list</a>
+
+{% if result %}
+<div>
+    RESULT OF ACTION: {{ result }}
+</div>
+<hr/>
+{% endif %}
+
+
+<br/>
+{% if logFiles %}
+<div>
+    <table border="1" class="jrGenericDictTable">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Size</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in logFiles %}
+                <tr>
+                    <td>{{ item.baseName }} (<a href="javascript:void(0);" onclick="loadUrlDisplayInElement('{{item.viewUrl}}', 'logContents', true)">tail</a> | <a href="{{item.downloadUrl}}" target="_blank">download</a> | <a href="{{item.deleteUrl}}"">delete</a>)</td>
+                    <td>{{ item.size }}</td>
+                    <td>{{ item.date }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<br/>
+
+<form method="post" id="removeLogs">
+    {% csrf_token %}
+    {{ form | crispy }}
+    <input type="hidden" id="action" name="action" value="removeLogs">
+    <button type="submit" onclick="return confirm('Are you sure?');">Delete all log files</button>
+
+
+</form>
+
+
+{% endblock content %}

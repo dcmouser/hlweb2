@@ -60,3 +60,16 @@ class EHelper():
         self.addError(msg)
 
 
+    def getErrorWarningLog(self):
+        text = ""
+        text += self.getListWithHeading("Errors", self.errors)
+        text += self.getListWithHeading("Warnings", self.warnings)
+        text += self.getListWithHeading("Info", self.infos)
+        return text
+    
+    def getListWithHeading(self, label, itemList):
+        if (len(itemList)==0):
+            return ""
+        text = label +"\n"
+        text += "\n".join(itemList)
+        return text

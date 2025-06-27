@@ -8,7 +8,7 @@ from django.shortcuts import resolve_url
 from django.http import Http404
 from django.contrib.auth.views import redirect_to_login
 
-
+from lib.jr import jrdfuncs
 
 from .models import CustomUser
 from .forms import CustomUserCreationForm, CustomUserChangeForm
@@ -23,11 +23,18 @@ class ProfileEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         # ensure access to this view only if logged in user is the owner; works with UserPassesTestMixin
         obj = self.get_object()
-        return (obj == self.request.user)
+        return (obj == self.request.user) or jrdfuncs.userIsAuthenticatedAndGadmin(self.request.user)
 
     def get_object(self):
         [user, errorResponse] = getExplicitOrDefaultToLoggedInUser(self)
         return user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add user_groups to the context, retrieving groups from the logged-in user
+        context["userGroupString"] = ", ".join(group.name for group in self.request.user.groups.all())
+        context["viewingUserHasGadamin"] = jrdfuncs.userIsAuthenticatedAndGadmin(self.request.user)
+        return context
 
 
 class ProfileView(UserPassesTestMixin, DetailView):
@@ -50,6 +57,15 @@ class ProfileView(UserPassesTestMixin, DetailView):
     def handle_no_permission(self):
         # just redirect based on errorResponse set earlier
         return self.errorResponse
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add user_groups to the context, retrieving groups from the logged-in user
+        context["userGroupString"] = ", ".join(group.name for group in self.userObj.groups.all())
+        context["viewingUserHasGadamin"] = jrdfuncs.userIsAuthenticatedAndGadmin(self.request.user)
+        context["userBggUrl"] = self.userObj.calcBggUrl()
+        return context
+
 
 
 # helpers
