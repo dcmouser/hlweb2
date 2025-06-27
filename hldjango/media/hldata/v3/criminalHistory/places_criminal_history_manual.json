@@ -1,7 +1,0 @@
-{
-"type": "FeatureCollection",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::2263" } },
-"features": [
-{ "type": "Feature", "properties": { "dName": "Rocky", "lastName": null, "firstName": null, "prefix": "", "ptype": "crimhist", "pcat": "crimhist", "ocat": null, "jregion": "", "address": "", "blockid": -1, "locid": -1, "lead": "9-9999", "label": "", "bldid": null, "offmap": null, "jextras": "", "comment": "", "apt": "", "timestamp": 1736821508.3290517, "auto": "0", "listype": null, "dirtype": null, "hint": null, "jhidden": 0, "jfrozen": 0, "jworking": 0, "sex": "M", "age": 80, "ethnicity": "Irish", "height": 67, "weight": 273, "scars": "0", "tattooString": "Flaming Dragon (neck)", "glasses": "0", "gangAffiliation": "0", "aliasString": "", "lastKnownAddress": "NH", "criminalPropensity": 0.23701491811494393, "yearsInPrison": 42, "custodyStatus": "custody", "criminalType": "underworld", "crimeSpecialty": "organizedCrime", "lastCrime": "blackmail" }, "geometry": null }
-]
-}

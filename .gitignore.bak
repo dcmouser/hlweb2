@@ -12,10 +12,6 @@ logs
 *_secret.*
 *.log
 
-media/downloads/*
-media/hldata/*
-deploy/*
-
 
 geotiffs
 OLD_v2
