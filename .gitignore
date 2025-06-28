@@ -7,6 +7,8 @@ __pycache__/
 *.db
 .env
 
+olderHlData
+
 logs
 *_secret.py
 *_secret.*
@@ -15,7 +17,6 @@ logs
 media/downloads/*
 media/hldata/*
 deploy/*
-
 
 geotiffs
 OLD_v2

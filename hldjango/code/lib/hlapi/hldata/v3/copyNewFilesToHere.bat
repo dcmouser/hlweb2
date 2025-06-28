@@ -26,14 +26,14 @@ xcopy "%sourceDir%\blocks\" ".\other" %options%
 xcopy "%sourceDir%\regions\" ".\other" %options%
 
 mkdir leadsCombined
-xcopy "%sourceDir%\people_formap\" ".\leadsCombined" %options%
-xcopy "%sourceDir%\places_formap\" ".\leadsCombined" %options%
-xcopy "%sourceDir%\places_formap_allinone\" ".\leadsCombined" %options%
+REM xcopy "%sourceDir%\people_formap\" ".\leadsCombined" %options%
+REM xcopy "%sourceDir%\places_formap\" ".\leadsCombined" %options%
+REM xcopy "%sourceDir%\places_formap_allinone\" ".\leadsCombined" %options%
 
-del ".\leadsCombined\people_formap.json.gz"
-del ".\leadsCombined\places_formap.json.gz"
-del ".\leadsCombined\places_formap_allinone.json.gz"
+REM del ".\leadsCombined\people_formap.json.gz"
+REM del ".\leadsCombined\places_formap.json.gz"
+REM del ".\leadsCombined\places_formap_allinone.json.gz"
 
-"C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\people_formap.json.gz" ".\leadsCombined\people_formap.json"
-"C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\places_formap.json.gz" ".\leadsCombined\places_formap.json"
-"C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\places_formap_allinone.json.gz" ".\leadsCombined\places_formap_allinone.json"
+REM "C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\people_formap.json.gz" ".\leadsCombined\people_formap.json"
+REM "C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\places_formap.json.gz" ".\leadsCombined\places_formap.json"
+REM "C:\Program Files\7-Zip\7z.exe" a -tgzip ".\leadsCombined\places_formap_allinone.json.gz" ".\leadsCombined\places_formap_allinone.json"
