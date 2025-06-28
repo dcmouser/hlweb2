@@ -544,7 +544,7 @@ class CbRenderBase():
         if (self.autoIdHashKeyCached is not None):
             return self.autoIdHashKeyCached
 
-        hid = self.id
+        hid = self.getIdFallbackLabel()
         if (hid is None):
             raise makeJriException("Unexpected None value for id in getAutoIdHashKey.", None)
         if (hid=="inline"):
